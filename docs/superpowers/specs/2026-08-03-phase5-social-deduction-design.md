@@ -125,16 +125,25 @@ omitted as unnecessary complexity.
 | `clue` | 30s per turn | one player | Seat order among the living; one word each. Timeout submits a skip |
 | `discussion` | 90s | `[]` | Free chat, no moves |
 | `vote` | 45s | all living | Simultaneous; ends early once every living player has voted. Timeout abstains |
-| `resolve` | none | `[]` | Instant tally |
+| `reveal-vote` | 8s | `[]` | Shows who voted for whom and who was eliminated |
 | `guess` | 30s | Mr. White | Only if Mr. White was eliminated |
 | `finished` | none | `[]` | Terminal |
 
+**There is no `resolve` phase.** A phase with no deadline and no actors would
+deadlock — nothing could advance it. Tallying happens *inside* the transition out
+of `vote` (triggered either by the last vote arriving or by `tick` at the
+deadline), which lands directly on `reveal-vote`, `guess`, `clue`, or `finished`.
+Every non-terminal phase must have a deadline, actors, or both; this is an
+invariant the implementation should assert.
+
 ### Resolution
 
+Computed in the transition out of `vote`:
+
 - Plurality target is eliminated; a tie eliminates nobody.
-- Eliminated player was Mr. White → `guess`.
-- Otherwise, if two or fewer players remain alive → Mr. White wins.
-- Otherwise → next round, back to `clue`.
+- Eliminated player was Mr. White → `reveal-vote`, then `guess`.
+- Otherwise, if two or fewer players remain alive → Mr. White wins (`finished`).
+- Otherwise → `reveal-vote`, then next round at `clue`.
 
 ### Win conditions
 
@@ -154,7 +163,7 @@ omitted as unnecessary complexity.
 
 - Own role always visible; the secret word only to civilians.
 - Other players' roles hidden until `finished`, then fully revealed.
-- Individual votes hidden during `vote`, revealed at `resolve`. This prevents
+- Individual votes hidden during `vote`, revealed at `reveal-vote`. This prevents
   bandwagoning, and matters because anything sent to the browser is readable in
   devtools regardless of what the UI renders.
 
