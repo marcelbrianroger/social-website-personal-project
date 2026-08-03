@@ -1,0 +1,108 @@
+// Prisma schema for the DUDU community platform.
+//
+// Layer split:
+//   Postgres (this file) — durable source of truth + moderation audit trail.
+//   Redis (lib/redis.ts)  — hot read path for the DUDU wall and socket pub/sub fan-out.
+//
+// Conventions: columns are snake_case via @map, timestamps are TIMESTAMPTZ (UTC only).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Moderation verdict for a DUDU submission. Messages are only ever broadcast
+/// once they reach APPROVED — PENDING must never leave the server.
+enum ModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@map("moderation_status")
+}
+
+enum RoomKind {
+  WEREWOLF
+  MR_WHITE
+
+  @@map("room_kind")
+}
+
+enum RoomStatus {
+  LOBBY
+  IN_PROGRESS
+  FINISHED
+
+  @@map("room_status")
+}
+
+/// A post on the global ephemeral wall.
+///
+/// `expiresAt` is always createdAt + 24h. Postgres does not expire rows on its
+/// own, so deletion is driven by the sweeper; Redis holds a parallel copy with a
+/// native TTL so the read path self-expires even if the sweeper is down.
+model DuduMessage {
+  id       String @id @default(uuid()) @db.Uuid
+  /// Anonymous session UUID from the signed session cookie. Not a foreign key:
+  /// anonymous identities are deliberately not persisted as user rows.
+  authorId String @map("author_id") @db.Uuid
+  nickname String @db.VarChar(48)
+  body     String @db.VarChar(280)
+
+  moderationStatus ModerationStatus @default(PENDING) @map("moderation_status")
+  /// Filter verdict detail. Retained for appeals and for tuning the classifier.
+  moderationReason String?          @map("moderation_reason") @db.VarChar(256)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+
+  // Sweeper scans by expiry.
+  @@index([expiresAt], map: "idx_dudu_messages_expires_at")
+  // Wall read path: approved messages, newest first.
+  @@index([moderationStatus, createdAt(sort: Desc)], map: "idx_dudu_messages_status_created_at")
+  @@map("dudu_messages")
+}
+
+/// A temporary boardgame room (Werewolf / Mr. White).
+model GameRoom {
+  id     String     @id @default(uuid()) @db.Uuid
+  /// Short human-shareable join code.
+  code   String     @unique @db.VarChar(8)
+  kind   RoomKind
+  status RoomStatus @default(LOBBY)
+  /// Session UUID of the room creator.
+  hostId String     @map("host_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+
+  members RoomMember[]
+
+  @@index([expiresAt], map: "idx_game_rooms_expires_at")
+  @@map("game_rooms")
+}
+
+/// Membership of a session in a room.
+model RoomMember {
+  id       String   @id @default(uuid()) @db.Uuid
+  roomId   String   @map("room_id") @db.Uuid
+  room     GameRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  /// Session UUID from the signed session cookie.
+  sessionId String  @map("session_id") @db.Uuid
+  nickname  String  @db.VarChar(48)
+
+  /// Server-authoritative secret role (e.g. WEREWOLF, VILLAGER, MR_WHITE).
+  ///
+  /// SECURITY: never include this column in any payload broadcast to a room.
+  /// Select it explicitly and send it only to its owning socket.
+  secretRole String? @map("secret_role") @db.VarChar(32)
+
+  joinedAt DateTime @default(now()) @map("joined_at") @db.Timestamptz(6)
+
+  @@unique([roomId, sessionId], map: "uq_room_members_room_id_session_id")
+  @@map("room_members")
+}

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(node --version)",
+      "PowerShell(npm --version)",
+      "PowerShell(Get-Content *)",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\roger\\\\Desktop\\\\Informatik aachen\\\\project\\\\website sosialisasi\"; Write-Output \"--- root deps ---\"; \\(Get-Content package.json | ConvertFrom-Json\\).dependencies | ConvertTo-Json; Write-Output \"--- root devDeps ---\"; \\(Get-Content package.json | ConvertFrom-Json\\).devDependencies | ConvertTo-Json)",
+      "PowerShell(npm run *)",
+      "Bash(curl -s -o /dev/null http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w 'status=%{http_code}\\\\n' -H 'x-forwarded-for: 203.0.113.10' -H 'cf-ipcountry: FR' http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w 'status=%{http_code}\\\\n' -H 'x-forwarded-for: 203.0.113.10' -H 'cf-ipcountry: DE' http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w 'status=%{http_code}\\\\n' -H 'x-forwarded-for: 203.0.113.10' -H 'cf-ipcountry: US' http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w 'status=%{http_code}\\\\n' -H 'x-forwarded-for: 203.0.113.10' http://localhost:3000/)",
+      "Bash(curl -s -D - -o /dev/null -H 'x-forwarded-for: 203.0.113.10' -H 'cf-ipcountry: FR' http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null http://localhost:4000/health)",
+      "Bash(curl -s http://localhost:4000/health)"
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "name": "dudu-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "server:dev": "npm --prefix server run dev",
+    "server:build": "npm --prefix server run build",
+    "smoke:web": "node scripts/smoke-web.mjs",
+    "smoke:socket": "npm --prefix server run smoke:handshake && npm --prefix server run smoke:rooms && npm --prefix server run smoke:matchmaking && npm --prefix server run smoke:dudu && npm --prefix server run smoke:game",
+    "verify": "npm run typecheck && npm run lint && npm run build && npm --prefix server run typecheck && npm run smoke:web"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "ioredis": "^6.0.0",
+    "jose": "^6.2.7",
+    "maxmind": "^5.0.7",
+    "next": "16.2.12",
+    "pg": "^8.22.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "socket.io-client": "^4.8.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/pg": "^8.20.3",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.12",
+    "prisma": "^7.9.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

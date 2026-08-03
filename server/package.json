@@ -1,0 +1,31 @@
+{
+  "name": "dudu-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Real-time Socket.io backend for the DUDU platform.",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "smoke:handshake": "node scripts/smoke-handshake.mjs",
+    "smoke:rooms": "node scripts/smoke-rooms.mjs",
+    "smoke:matchmaking": "node scripts/smoke-matchmaking.mjs",
+    "smoke:dudu": "node scripts/smoke-dudu.mjs",
+    "smoke:game": "node scripts/smoke-game.mjs"
+  },
+  "dependencies": {
+    "@socket.io/redis-adapter": "^8.3.0",
+    "dotenv": "^17.4.2",
+    "ioredis": "^6.0.0",
+    "jose": "^6.2.7",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "socket.io-client": "^4.8.3",
+    "tsx": "^4.23.5",
+    "typescript": "^7.0.2"
+  }
+}
