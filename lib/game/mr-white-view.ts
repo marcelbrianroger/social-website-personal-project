@@ -80,6 +80,12 @@ export interface MrWhiteTable extends MrWhiteProjection {
   actors: string[]
   finished: boolean
   result: MrWhiteResult | null
+  /**
+   * Players who have dropped, mapped to the epoch ms at which the game gives up
+   * on them. Comes from `GameView`, not the projection — presence is a property
+   * of the connection, not of the rules.
+   */
+  disconnected: Record<string, number>
   /** Server epoch ms when this arrived, for clock-skew correction. */
   serverNow: number
 }
@@ -124,6 +130,9 @@ export function asMrWhite(view: GameView | null): MrWhiteTable | null {
     actors: view.actors,
     finished: view.finished,
     result: view.result,
+    // `?? {}` for a server that has not been redeployed yet — the field is new,
+    // and a missing one must read as "nobody is missing", not crash the table.
+    disconnected: view.disconnected ?? {},
     serverNow: view.serverNow,
   }
 }
@@ -213,6 +222,20 @@ export function isAlive(table: MrWhiteTable, sessionId: string): boolean {
 
 export function isActor(table: MrWhiteTable, sessionId: string): boolean {
   return table.actors.includes(sessionId)
+}
+
+/**
+ * Epoch ms at which a missing player is auto-eliminated, or null if they are
+ * here.
+ *
+ * Only ever set for the living: the server drops the entry the moment it
+ * eliminates them, so a seat is never both "out" and "reconnecting".
+ */
+export function reconnectingUntil(
+  table: MrWhiteTable,
+  sessionId: string,
+): number | null {
+  return table.disconnected[sessionId] ?? null
 }
 
 /** Living players in seat order — the clue rotation and the vote roster. */

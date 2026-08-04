@@ -131,6 +131,25 @@ export interface GameDefinition<S, M> {
   forfeit(state: S, quittingSessionId: string): S
 
   /**
+   * Remove ONE player who is gone for good, without ending the game.
+   *
+   * The counterpart to `forfeit`, and the reason both exist: in a two-player
+   * game a departure is the end, but in an eight-seat social game it must not
+   * be — one dropped connection cannot be allowed to finish the round for seven
+   * other people.
+   *
+   * IMPLEMENTATIONS MUST REPAIR ANY PHASE THAT WAS WAITING ON THIS PLAYER.
+   * Marking them absent is not enough: a turn-based phase whose actor has left,
+   * a readiness majority measured against a denominator that includes them, and
+   * a tally that can never complete are all deadlocks — nothing would advance
+   * the game, and the clock alone cannot fix a rotation.
+   *
+   * Pure, like `tick` and `applyMove`: the engine may call it more than once
+   * across a compare-and-set retry.
+   */
+  eliminate(state: S, sessionId: string, now: number): S
+
+  /**
    * Project the state for one viewer.
    *
    * THIS IS THE ANTI-CHEAT SEAM. Werewolf and Mr. White depend on it: roles and
@@ -161,6 +180,18 @@ export interface StoredGame {
   version: number
   players: GamePlayer[]
   state: unknown
+  /**
+   * sessionId -> epoch ms at which a missing player is auto-eliminated.
+   *
+   * Engine-level rather than part of `state`, because presence is a property of
+   * the connection and not of any game's rules — Tic-Tac-Toe and Mr. White
+   * disagree about what to DO when someone vanishes, but not about the fact
+   * that they have.
+   *
+   * Optional because games written before this field existed are still sitting
+   * in Redis under the 12h TTL. Every read defaults it to `{}`.
+   */
+  disconnected?: Record<string, number>
   startedAt: string
   /**
    * Explicit boolean rather than a nullable timestamp: the Lua start script
@@ -184,6 +215,15 @@ export interface GameView {
   state: unknown
   /** Epoch ms the current phase ends, or null when untimed. */
   phaseEndsAt: number | null
+  /**
+   * Players currently missing, mapped to the epoch ms at which they are
+   * auto-eliminated.
+   *
+   * Public rather than redacted: which seat has gone quiet is visible at the
+   * table anyway, and a client that cannot tell "thinking" from "disconnected"
+   * shows a stalled screen with no explanation. Carries no role information.
+   */
+  disconnected: Record<string, number>
   /**
    * Server epoch ms at the moment this view was built.
    *

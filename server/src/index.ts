@@ -8,9 +8,13 @@ import { env } from './env.js'
 import { composeChat } from './game-chat.js'
 import {
   buildView,
+  dueDisconnects,
   dueGames,
+  expireDisconnect,
   forfeitGame,
   loadGame,
+  markDisconnected,
+  markReconnected,
   purgeGame,
   startGame,
   submitMove,
@@ -317,11 +321,23 @@ async function detach(socket: AppSocket): Promise<void> {
 /**
  * Remove a socket from its lobby and tell the remaining seats.
  *
- * Mirrors `detach`, with one difference that matters: a lobby game is a
- * multi-player game, so one person walking out forfeits it for everyone. Mr.
- * White's `forfeit` hands the win to the civilians if the impostor was the one
- * who left, and names nobody otherwise — there is no honest winner when a
- * civilian quits.
+ * THE SEAT IS FREED IMMEDIATELY, ALWAYS. That is not just courtesy to a table
+ * at capacity — it is what makes reconnecting work at all. A seat is keyed by
+ * socketId and a socketId does not survive a dropped connection, whereas game
+ * participation is keyed by sessionId and does. A player who comes back takes a
+ * new seat and keeps their old role.
+ *
+ * WHAT DOES NOT HAPPEN ANY MORE is forfeiting the game. A lobby game has four
+ * to eight people in it, and ending the round because one person's wifi blinked
+ * is not a reasonable reading of what happened. Instead their reconnect window
+ * opens; if it runs out, the sweeper eliminates them and the game carries on
+ * without them. `forfeit` still applies to a two-person video room, where there
+ * is no third party left to spoil the game for.
+ *
+ * An explicit `lobby:leave` comes through here too, and gets the same grace.
+ * Deliberate: the client emits `lobby:leave` from its unmount cleanup, so
+ * treating it as a hard quit would deny the window to a page refresh — the most
+ * common reason anyone needs to reconnect in the first place.
  */
 async function detachLobby(socket: AppSocket): Promise<void> {
   const left = await leaveLobby(socket.id)
@@ -339,13 +355,12 @@ async function detachLobby(socket: AppSocket): Promise<void> {
     })
 
   if (left.remaining === 0) {
+    // Nobody left to reconnect TO. The game dies with the table, which is the
+    // ephemerality guarantee the engine documents.
     await purgeGame(target.scope)
     io.to(target.scope).emit('game:closed')
   } else {
-    const forfeited = await forfeitGame(target.scope, left.member.sessionId)
-    if (forfeited) {
-      await broadcastGame(target, forfeited.stored, forfeited.definition)
-    }
+    await openReconnectWindow(target, left.member.sessionId)
   }
 
   await socket.leave(target.scope)
@@ -353,6 +368,65 @@ async function detachLobby(socket: AppSocket): Promise<void> {
   // A freed seat — or a table that just emptied and was delisted — changes what
   // the browser should be showing.
   await publishOpenTables()
+}
+
+/**
+ * Start counting down on a player who has left a table with a game running.
+ *
+ * SKIPPED WHEN THEY ARE STILL SEATED under another socket. A reconnecting
+ * browser opens its new connection before the old one is reaped often enough to
+ * matter, and without this check that ordering would arm an elimination against
+ * a player who is demonstrably present. Checking membership rather than
+ * assuming an order closes both interleavings: arrive-then-drop never arms,
+ * and drop-then-arrive is disarmed by `lobby:join`.
+ *
+ * `markDisconnected` returns null for everything else not worth a countdown —
+ * no game, a finished one, a mid-game watcher, or a window already open.
+ */
+async function openReconnectWindow(
+  target: GameTarget,
+  sessionId: string,
+): Promise<void> {
+  if (await isSeated(target, sessionId)) return
+
+  const opened = await markDisconnected(
+    target.scope,
+    sessionId,
+    env.disconnectGraceMs,
+  )
+  if (!opened) return
+
+  // Read back after writing. A reconnect landing between the membership check
+  // above and the write just made would otherwise leave a player who is sitting
+  // at the table counting down to elimination — narrow, but the failure is
+  // silent and thirty seconds later.
+  if (await isSeated(target, sessionId)) {
+    await closeReconnectWindow(target, sessionId)
+    return
+  }
+
+  // Broadcast so the table sees "reconnecting" rather than a seat that has
+  // simply stopped responding.
+  await broadcastGame(target, opened.stored, opened.definition)
+}
+
+async function isSeated(target: GameTarget, sessionId: string): Promise<boolean> {
+  return (await membersOf(target)).some((member) => member.sessionId === sessionId)
+}
+
+/**
+ * Stop counting down, because the player is back.
+ *
+ * Called from every path that seats someone, so "any join cancels the window"
+ * is an invariant rather than an argument about interleavings. Cheap when there
+ * is nothing to cancel — `markReconnected` returns null and nothing is sent.
+ */
+async function closeReconnectWindow(
+  target: GameTarget,
+  sessionId: string,
+): Promise<void> {
+  const closed = await markReconnected(target.scope, sessionId)
+  if (closed) await broadcastGame(target, closed.stored, closed.definition)
 }
 
 /** Whether a socket is still connected, anywhere in the cluster. */
@@ -583,6 +657,10 @@ io.on('connection', (socket) => {
           you: seated.find((member) => member.socketId === socket.id),
           capacity: LOBBY_CAPACITY,
         })
+
+        // Sitting here is proof of presence, so any countdown against this
+        // session is void — even on the idempotent path.
+        await closeReconnectWindow(lobbyTarget(lobbyId), session.sessionId)
         return
       }
 
@@ -622,6 +700,11 @@ io.on('connection', (socket) => {
         you: member,
         capacity: LOBBY_CAPACITY,
       })
+
+      // Back inside the grace window? Cancel the elimination first, so the
+      // board this player is about to receive already shows them present — and
+      // so does everyone else's.
+      await closeReconnectWindow(target, session.sessionId)
 
       // Someone arriving mid-game gets the board immediately, projected for
       // them — otherwise they sit on an empty screen until the next phase.
@@ -907,24 +990,52 @@ duduSubscriber.on('message', (channel: string, payload: string) => {
  * Granularity means a phase can end up to a second late. That is fine for a
  * social game — the countdown is advisory, and the server stays authoritative
  * on whether a move arrived in time.
+ *
+ * It sweeps two indexes on the same interval: phase deadlines, and reconnect
+ * windows that have run out. Both are stored the same way and for the same
+ * reason — a `setTimeout` would die with the process and would not exist on the
+ * other nodes.
  */
 const SWEEP_INTERVAL_MS = 1_000
+
+/** Which primitive a game scope belongs to, for the sweeper's fan-out. */
+function targetOf(scope: string): GameTarget {
+  return gameScope.isLobby(scope)
+    ? lobbyTarget(gameScope.lobbyIdOf(scope))
+    : roomTarget(scope)
+}
 
 async function sweepDeadlines(): Promise<void> {
   for (const scope of await dueGames()) {
     const ticked = await tickGame(scope)
     if (!ticked) continue
 
-    const target = gameScope.isLobby(scope)
-      ? lobbyTarget(gameScope.lobbyIdOf(scope))
-      : roomTarget(scope)
+    await broadcastGame(targetOf(scope), ticked.stored, ticked.definition)
+  }
+}
 
-    await broadcastGame(target, ticked.stored, ticked.definition)
+/**
+ * Give up on players whose reconnect window has run out.
+ *
+ * Separate pass from the phase sweep, and run first: eliminating a missing
+ * player can itself close the phase they were holding up — the last outstanding
+ * vote, the clue nobody could follow — and doing it before the deadline sweep
+ * means the table sees one transition rather than two in consecutive seconds.
+ */
+async function sweepDisconnects(): Promise<void> {
+  for (const { scope, sessionId } of await dueDisconnects()) {
+    const expired = await expireDisconnect(scope, sessionId)
+    if (!expired) continue
+
+    await broadcastGame(targetOf(scope), expired.stored, expired.definition)
   }
 }
 
 const sweeper = setInterval(() => {
-  void sweepDeadlines().catch((error: unknown) => {
+  void (async () => {
+    await sweepDisconnects()
+    await sweepDeadlines()
+  })().catch((error: unknown) => {
     console.error('[sweeper] tick failed:', error)
   })
 }, SWEEP_INTERVAL_MS)

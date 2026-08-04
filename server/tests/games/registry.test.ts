@@ -142,6 +142,40 @@ describe('every registered definition honours the contract', () => {
         )
       })
 
+      it('removes one player without leaving the game unable to advance', () => {
+        const state = definition.createInitialState(players)
+        const departed = players[0]!.sessionId
+
+        const next = definition.eliminate(state, departed, Date.now())
+
+        // The deadlock this guards against: a game that is neither over, nor has
+        // anyone who may act, nor has a clock that would advance it. Nothing
+        // could ever move it again.
+        assert.ok(
+          definition.result(next) !== null ||
+            definition.actors(next).length > 0 ||
+            definition.deadline(next) !== null,
+          'eliminating a player left the game with no way to advance',
+        )
+
+        assert.equal(
+          definition.actors(next).includes(departed),
+          false,
+          'a player who is gone must not still be asked to act',
+        )
+      })
+
+      it('does not mutate state when eliminating a player', () => {
+        const state = definition.createInitialState(players)
+        const snapshot = JSON.parse(JSON.stringify(state))
+
+        // The engine may call this more than once across a compare-and-set
+        // retry, so a mutation would corrupt the state the retry reads.
+        definition.eliminate(state, players[0]!.sessionId, Date.now())
+
+        assert.deepEqual(state, snapshot)
+      })
+
       it('projects a view for players and observers alike', () => {
         const state = definition.createInitialState(players)
 

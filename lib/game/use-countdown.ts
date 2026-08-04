@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react'
 
 /**
- * Milliseconds left in the current phase, corrected for client clock skew.
+ * The current time on the SERVER's clock, ticking.
  *
- * `phaseEndsAt` is server epoch ms and a browser clock can be minutes out, so
- * comparing it against a raw `Date.now()` shows the wrong number — a negative
- * one on a fast clock, which reads as "time's up" while the server is still
- * accepting moves. Each `game:state` push carries `serverNow`, which pins the
- * offset at the moment the state was sent.
+ * A browser clock can be minutes out, so comparing a server deadline against a
+ * raw `Date.now()` shows the wrong number — a negative one on a fast clock,
+ * which reads as "time's up" while the server is still accepting moves. Each
+ * `game:state` push carries `serverNow`, which pins the offset at the moment
+ * the state was sent.
  *
  * Two things are load-bearing in how this is written:
  *
@@ -20,11 +20,13 @@ import { useEffect, useState } from 'react'
  *    The effect version renders one stale frame first and trips
  *    `react-hooks/set-state-in-effect` — same reason `lib/game/use-game.ts:36`
  *    resets its board that way.
+ *
+ * `ticking` exists so a component with nothing to count down does not hold an
+ * interval open. Callers with several deadlines to render — a phase clock plus
+ * a reconnect window per absent player — take this directly and subtract, rather
+ * than running one interval each.
  */
-export function useCountdown(
-  phaseEndsAt: number | null,
-  serverNow: number,
-): number | null {
+export function useServerNow(serverNow: number, ticking: boolean): number {
   const [now, setNow] = useState(serverNow)
   const [seenServerNow, setSeenServerNow] = useState(serverNow)
 
@@ -34,7 +36,7 @@ export function useCountdown(
   }
 
   useEffect(() => {
-    if (phaseEndsAt === null) return
+    if (!ticking) return
 
     const offset = serverNow - Date.now()
 
@@ -42,7 +44,17 @@ export function useCountdown(
     // of lagging up to a full second behind the server.
     const id = window.setInterval(() => setNow(Date.now() + offset), 250)
     return () => window.clearInterval(id)
-  }, [phaseEndsAt, serverNow])
+  }, [ticking, serverNow])
+
+  return now
+}
+
+/** Milliseconds left in the current phase, corrected for client clock skew. */
+export function useCountdown(
+  phaseEndsAt: number | null,
+  serverNow: number,
+): number | null {
+  const now = useServerNow(serverNow, phaseEndsAt !== null)
 
   return phaseEndsAt === null ? null : Math.max(0, phaseEndsAt - now)
 }

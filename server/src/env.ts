@@ -35,5 +35,14 @@ export const env = {
   port: Number(process.env.SOCKET_PORT ?? '4000'),
   corsOrigin: process.env.SOCKET_CORS_ORIGIN ?? 'http://localhost:3000',
   redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
+  /**
+   * How long a player who drops mid-game has to come back before the game
+   * eliminates them and carries on without them.
+   *
+   * Tunable so the smoke script can drive a short window instead of waiting out
+   * a real one. Long enough for a browser refresh or a phone changing cell,
+   * short enough that a table is not held hostage by someone who has left.
+   */
+  disconnectGraceMs: Number(process.env.DISCONNECT_GRACE_MS ?? '30000'),
   isProduction: process.env.NODE_ENV === 'production',
 } as const

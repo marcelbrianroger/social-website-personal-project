@@ -734,6 +734,309 @@ describe('Mr. White — chat audience', () => {
   })
 })
 
+/**
+ * Auto-elimination — what happens when a dropped player never comes back.
+ *
+ * Source of truth:
+ * docs/superpowers/specs/2026-08-04-disconnect-lifecycle-design.md
+ *
+ * The half of this that is easy to get wrong is not the removal, it is the
+ * REPAIR. Marking someone absent and stopping there leaves the table deadlocked:
+ * the clue phase waiting on an actor who will never speak, a readiness majority
+ * measured against someone who cannot press the button, a tally that can never
+ * complete. Most of the assertions below are about the phase the game lands on,
+ * not about the `eliminated` array.
+ *
+ * Every fixture pins the impostor rather than taking whoever `createInitialState`
+ * rolled, because "a civilian dropped" and "Mr. White dropped" are different
+ * rules and a random role would make the test flap between them.
+ */
+describe('Mr. White — auto-elimination', () => {
+  /** An arbitrary fixed clock, so a new phase deadline can be asserted exactly. */
+  const NOW = 1_800_000_000_000
+
+  /** A fresh game with a chosen impostor. Seat order is PLAYERS order. */
+  function dealt(mrWhite: any, impostorSeat: number): any {
+    const base = mrWhite.createInitialState(PLAYERS)
+    const impostor = base.order[impostorSeat]
+
+    const roles: Record<string, string> = {}
+    for (const id of base.order as string[]) {
+      roles[id] = id === impostor ? 'mr-white' : 'civilian'
+    }
+
+    return { ...base, roles }
+  }
+
+  /** Seat order as a fixed-length tuple, so destructuring gives plain strings. */
+  function seats(state: any): [string, string, string, string] {
+    const [a, b, c, d] = state.order as string[]
+    return [a!, b!, c!, d!]
+  }
+
+  describe('repairing the clue phase', () => {
+    it('passes the floor when the player holding it drops', async () => {
+      const mrWhite = await loadMrWhite()
+      // Dave is the impostor, so the seat holding the floor (Alice) is a
+      // civilian and her leaving does not end the game.
+      const state = { ...dealt(mrWhite, 3), phase: 'clue' }
+      const holder = mrWhite.actors(state)[0]
+
+      const next = mrWhite.eliminate(state, holder, NOW)
+
+      assert.equal(next.phase, 'clue')
+      assert.notEqual(
+        mrWhite.actors(next)[0],
+        holder,
+        'the rotation must move on, or the round waits forever',
+      )
+      assert.equal(
+        next.phaseEndsAt,
+        NOW + 30_000,
+        'the next speaker gets a full clock, not the remains of someone else’s',
+      )
+    })
+
+    it('leaves the clock alone when the dropped player was not speaking', async () => {
+      const mrWhite = await loadMrWhite()
+      const base = dealt(mrWhite, 3)
+      const [, , carol] = seats(base)
+      const state = { ...base, phase: 'clue' }
+
+      const next = mrWhite.eliminate(state, carol, NOW)
+
+      assert.equal(
+        next.phaseEndsAt,
+        state.phaseEndsAt,
+        'the current speaker must not be handed extra seconds for someone else’s dropped connection',
+      )
+      assert.deepEqual(mrWhite.actors(next), mrWhite.actors(state))
+    })
+
+    it('opens the discussion when the last player yet to speak drops', async () => {
+      const mrWhite = await loadMrWhite()
+      const base = dealt(mrWhite, 0)
+      const [alice, bob, carol, dave] = seats(base)
+      const state = {
+        ...base,
+        phase: 'clue',
+        clues: { [alice]: 'tall', [bob]: 'salt', [carol]: 'beam' },
+      }
+      assert.equal(mrWhite.actors(state)[0], dave, 'fixture: Dave speaks last')
+
+      const next = mrWhite.eliminate(state, dave, NOW)
+
+      assert.equal(next.phase, 'discussion')
+      assert.equal(next.phaseEndsAt, NOW + 90_000)
+    })
+  })
+
+  describe('repairing the discussion', () => {
+    it('opens the vote when the smaller table turns readiness into a majority', async () => {
+      const mrWhite = await loadMrWhite()
+      const base = dealt(mrWhite, 3)
+      const [alice, bob, carol] = seats(base)
+      // Two of four is half, not a majority — the discussion is still open.
+      const state = { ...base, phase: 'discussion', readyToVote: [alice, bob] }
+
+      const next = mrWhite.eliminate(state, carol, NOW)
+
+      assert.equal(
+        next.phase,
+        'vote',
+        'two of three IS a majority; without the recheck the table sits out the full 90s',
+      )
+      assert.deepEqual(next.readyToVote, [], 'and readiness resets with it')
+      assert.deepEqual(next.votes, {})
+    })
+
+    it('keeps the discussion open when it is still not a majority', async () => {
+      const mrWhite = await loadMrWhite()
+      const base = dealt(mrWhite, 3)
+      const [alice, , carol] = seats(base)
+      const state = { ...base, phase: 'discussion', readyToVote: [alice] }
+
+      const next = mrWhite.eliminate(state, carol, NOW)
+
+      assert.equal(next.phase, 'discussion', 'one of three is not a majority')
+    })
+
+    it('drops the departed player’s own readiness vote', async () => {
+      const mrWhite = await loadMrWhite()
+      const base = dealt(mrWhite, 3)
+      const [alice] = seats(base)
+      const state = { ...base, phase: 'discussion', readyToVote: [alice] }
+
+      const next = mrWhite.eliminate(state, alice, NOW)
+
+      assert.deepEqual(
+        next.readyToVote,
+        [],
+        'a player who is gone cannot still be counted as wanting to move on',
+      )
+    })
+  })
+
+  describe('repairing the vote', () => {
+    it('resolves once the last outstanding voter drops', async () => {
+      const mrWhite = await loadMrWhite()
+      const base = dealt(mrWhite, 3)
+      const [alice, bob, carol, dave] = seats(base)
+      // Everyone but Carol has voted, and the table is leaning towards Dave.
+      const state = {
+        ...base,
+        phase: 'vote',
+        votes: { [alice]: dave, [bob]: dave, [dave]: alice },
+      }
+
+      const next = mrWhite.eliminate(state, carol, NOW)
+
+      assert.notEqual(
+        next.phase,
+        'vote',
+        'the tally can complete now, so the table should not sit out the clock',
+      )
+      assert.deepEqual(
+        next.eliminated.slice().sort(),
+        [carol, dave].sort(),
+        'Carol left and Dave was voted out',
+      )
+    })
+
+    it('discards votes cast for the departed player', async () => {
+      const mrWhite = await loadMrWhite()
+      const base = dealt(mrWhite, 3)
+      const [alice, bob, carol, dave] = seats(base)
+      // The whole table had converged on Carol — who then dropped.
+      const state = {
+        ...base,
+        phase: 'vote',
+        votes: { [alice]: carol, [bob]: carol, [dave]: carol },
+      }
+
+      const next = mrWhite.eliminate(state, carol, NOW)
+
+      assert.deepEqual(
+        next.eliminated,
+        [carol],
+        'a surviving vote against someone already out would eliminate them twice',
+      )
+      assert.deepEqual(next.votes, {})
+      assert.equal(next.phase, 'vote', 'nobody living has voted yet, so the vote continues')
+    })
+  })
+
+  describe('when it ends the game', () => {
+    it('hands the win to the civilians when Mr. White drops', async () => {
+      const mrWhite = await loadMrWhite()
+      const base = dealt(mrWhite, 3)
+      const [alice, bob, carol, dave] = seats(base)
+      const state = { ...base, phase: 'discussion' }
+
+      const next = mrWhite.eliminate(state, dave, NOW)
+
+      assert.equal(next.phase, 'finished')
+      assert.deepEqual(mrWhite.result(next), {
+        winnerSessionIds: [alice, bob, carol],
+        team: 'civilians',
+        reason: 'forfeit',
+      })
+    })
+
+    it('hands the win to Mr. White when the table drops to the final two', async () => {
+      const mrWhite = await loadMrWhite()
+      const base = dealt(mrWhite, 3)
+      const [alice, bob, , dave] = seats(base)
+      // Alice is already out; Bob leaving puts Mr. White in the final two, which
+      // is the same survival rule a vote applies.
+      const state = { ...base, phase: 'discussion', eliminated: [alice] }
+
+      const next = mrWhite.eliminate(state, bob, NOW)
+
+      assert.equal(next.phase, 'finished')
+      assert.deepEqual(mrWhite.result(next), {
+        winnerSessionIds: [dave],
+        team: 'mr-white',
+        reason: 'win',
+      })
+    })
+
+    it('does not end a guess phase when a civilian drops', async () => {
+      const mrWhite = await loadMrWhite()
+      const base = dealt(mrWhite, 3)
+      const [alice, , , dave] = seats(base)
+      // Mr. White has been voted out and owes an answer. Two civilians left
+      // would trip a naive "final two" check, but the impostor is already out —
+      // the game hinges on the guess, not on who is still seated.
+      const state = { ...base, phase: 'guess', eliminated: [dave] }
+
+      const next = mrWhite.eliminate(state, alice, NOW)
+
+      assert.equal(next.phase, 'guess')
+      assert.equal(mrWhite.result(next), null)
+    })
+  })
+
+  describe('no-ops', () => {
+    it('leaves a finished game alone', async () => {
+      const mrWhite = await loadMrWhite()
+      const state = { ...dealt(mrWhite, 3), phase: 'finished' }
+
+      assert.deepEqual(mrWhite.eliminate(state, state.order[0], NOW), state)
+    })
+
+    it('ignores someone who was never dealt in', async () => {
+      const mrWhite = await loadMrWhite()
+      const state = dealt(mrWhite, 3)
+
+      assert.deepEqual(mrWhite.eliminate(state, 'session-nobody', NOW), state)
+    })
+
+    it('ignores a player who is already out', async () => {
+      const mrWhite = await loadMrWhite()
+      const base = dealt(mrWhite, 3)
+      const state = { ...base, phase: 'discussion', eliminated: [base.order[0]] }
+
+      assert.deepEqual(mrWhite.eliminate(state, base.order[0], NOW), state)
+    })
+
+    it('does not mutate the state it was given', async () => {
+      const mrWhite = await loadMrWhite()
+      const base = dealt(mrWhite, 3)
+      const [alice, bob, carol] = seats(base)
+      const state = {
+        ...base,
+        phase: 'discussion',
+        readyToVote: [alice],
+        votes: { [bob]: carol },
+      }
+      const snapshot = JSON.parse(JSON.stringify(state))
+
+      // The engine may call this more than once across a compare-and-set retry,
+      // so a mutation here would corrupt the state the retry reads.
+      mrWhite.eliminate(state, carol, NOW)
+
+      assert.deepEqual(state, snapshot)
+    })
+  })
+
+  it('closes the eliminated player out of the game', async () => {
+    const mrWhite = await loadMrWhite()
+    const base = dealt(mrWhite, 3)
+    const [alice, bob] = seats(base)
+    const state = { ...base, phase: 'vote' }
+
+    const next = mrWhite.eliminate(state, alice, NOW)
+
+    assert.equal(
+      mrWhite.validateMove(next, alice, { type: 'vote', target: bob }).ok,
+      false,
+      'auto-elimination has to be the same "out" the rest of the rules already know',
+    )
+    assert.equal(mrWhite.actors(next).includes(alice), false)
+  })
+})
+
 describe('Phase 5 engine generalization', () => {
   it('exposes tickGame for the deadline sweeper', PENDING, async () => {
     const engine: any = await import(ENGINE_MODULE)

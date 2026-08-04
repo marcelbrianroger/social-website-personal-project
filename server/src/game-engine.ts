@@ -7,7 +7,7 @@ import type {
   GameView,
   StoredGame,
 } from './games/types.js'
-import { ROOM_TTL_SECONDS, keys, redis } from './redis.js'
+import { ROOM_TTL_SECONDS, disconnectEntry, keys, redis } from './redis.js'
 
 /**
  * Redis-backed game state machine.
@@ -107,12 +107,33 @@ export async function loadGame(scope: string): Promise<StoredGame | null> {
 }
 
 export async function purgeGame(scope: string): Promise<void> {
-  // The deadline index has to go too, or the sweeper keeps waking up for a game
-  // that no longer exists.
+  // Both indexes have to go too, or the sweeper keeps waking up for a game that
+  // no longer exists. The disconnect index is keyed per player, so its members
+  // have to be read off the game before it is deleted.
+  const stored = await loadGame(scope)
+  const pending = Object.keys(stored?.disconnected ?? {}).map((sessionId) =>
+    disconnectEntry.encode(scope, sessionId),
+  )
+
   await Promise.all([
     redis.del(keys.game(scope)),
     redis.zrem(keys.gameDeadlines, scope),
+    ...(pending.length > 0 ? [redis.zrem(keys.gameDisconnects, ...pending)] : []),
   ])
+}
+
+/** A copy of `pending` without one entry. */
+function withoutPlayer(
+  pending: Record<string, number>,
+  sessionId: string,
+): Record<string, number> {
+  const rest: Record<string, number> = {}
+
+  for (const [id, deadline] of Object.entries(pending)) {
+    if (id !== sessionId) rest[id] = deadline
+  }
+
+  return rest
 }
 
 /**
@@ -139,6 +160,10 @@ export function buildView(
     result: stored.result,
     state: definition.viewFor(stored.state, sessionId),
     phaseEndsAt: stored.finished ? null : definition.deadline(stored.state),
+    // Emptied once finished, like `actors` and `phaseEndsAt` above: a game that
+    // has ended has no pending eliminations, and leaving the map populated
+    // would render a reconnect countdown next to the final result.
+    disconnected: stored.finished ? {} : (stored.disconnected ?? {}),
     // Stamped per recipient so the client can correct for a skewed local clock.
     serverNow: Date.now(),
   }
@@ -257,6 +282,7 @@ export async function startGame(
     version: 1,
     players,
     state: definition.createInitialState(players),
+    disconnected: {},
     startedAt: new Date().toISOString(),
     finished: false,
     result: null,
@@ -383,6 +409,251 @@ export async function forfeitGame(
       return { stored: next, definition }
     }
     if (written === -1) return null
+  }
+
+  return null
+}
+
+// --- Presence --------------------------------------------------------------
+//
+// A dropped connection is not the same event as quitting, and the difference is
+// worth thirty seconds. Everything below implements that window.
+//
+// Deliberately the same shape as the phase clock: a deadline written into the
+// game record, indexed in a Redis sorted set, advanced by the sweeper. A
+// `setTimeout` would die with the process and would not exist on the other
+// nodes, so a reconnect window has to be data. Two nodes expiring the same
+// player is harmless for the same reason a duplicate `tick` is — the CAS loser
+// re-reads, finds the entry gone, and stops.
+
+export type PresenceChange = { stored: StoredGame; definition: AnyGameDefinition }
+
+/**
+ * Start a player's reconnect window.
+ *
+ * Returns null when there is nothing to arm: no game, a finished one, someone
+ * who was never dealt in, or a window already running.
+ */
+export async function markDisconnected(
+  scope: string,
+  sessionId: string,
+  graceMs: number,
+): Promise<PresenceChange | null> {
+  const member = disconnectEntry.encode(scope, sessionId)
+
+  for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt += 1) {
+    const stored = await loadGame(scope)
+    if (!stored || stored.finished) return null
+
+    const definition = getGameDefinition(stored.gameId)
+    if (!definition) return null
+
+    // Someone who sat down mid-game is watching, not playing. Nothing waits on
+    // them, so nothing needs to expire.
+    if (!stored.players.some((player) => player.sessionId === sessionId)) return null
+
+    const pending = stored.disconnected ?? {}
+
+    // Already counting down. Restarting the clock on a duplicate disconnect
+    // would let a connection that flaps hold its seat open indefinitely.
+    if (sessionId in pending) return null
+
+    const deadline = Date.now() + graceMs
+
+    const next: StoredGame = {
+      ...stored,
+      version: stored.version + 1,
+      disconnected: { ...pending, [sessionId]: deadline },
+    }
+
+    const written = await scripts.gameCas(
+      keys.game(scope),
+      String(stored.version),
+      JSON.stringify(next),
+      String(GAME_TTL_SECONDS),
+    )
+
+    if (written === 1) {
+      // Indexed only after the write lands, so a losing CAS cannot leave the
+      // sweeper an entry for a countdown that was never recorded.
+      await redis.zadd(keys.gameDisconnects, deadline, member)
+      return { stored: next, definition }
+    }
+
+    if (written === -1) return null
+  }
+
+  return null
+}
+
+/**
+ * Cancel a player's reconnect window because they came back.
+ *
+ * Returns null when no window was running, which is the ordinary case for
+ * anyone sitting down at a table normally.
+ */
+export async function markReconnected(
+  scope: string,
+  sessionId: string,
+): Promise<PresenceChange | null> {
+  const member = disconnectEntry.encode(scope, sessionId)
+
+  for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt += 1) {
+    const stored = await loadGame(scope)
+
+    if (!stored) {
+      await redis.zrem(keys.gameDisconnects, member)
+      return null
+    }
+
+    const pending = stored.disconnected ?? {}
+
+    if (!(sessionId in pending)) {
+      // Nothing to cancel. The index is cleared anyway: a game purged while a
+      // window was open can leave an orphan, and this is the cheapest place to
+      // notice one.
+      await redis.zrem(keys.gameDisconnects, member)
+      return null
+    }
+
+    const definition = getGameDefinition(stored.gameId)
+    if (!definition) return null
+
+    const next: StoredGame = {
+      ...stored,
+      version: stored.version + 1,
+      disconnected: withoutPlayer(pending, sessionId),
+    }
+
+    const written = await scripts.gameCas(
+      keys.game(scope),
+      String(stored.version),
+      JSON.stringify(next),
+      String(GAME_TTL_SECONDS),
+    )
+
+    if (written === 1) {
+      await redis.zrem(keys.gameDisconnects, member)
+      return { stored: next, definition }
+    }
+
+    if (written === -1) {
+      await redis.zrem(keys.gameDisconnects, member)
+      return null
+    }
+  }
+
+  return null
+}
+
+/**
+ * Reconnect windows that have run out.
+ *
+ * Read by the same per-node sweeper that drains `dueGames`, and costs the same:
+ * proportional to windows actually expiring, not to players connected.
+ */
+export async function dueDisconnects(
+  now: number = Date.now(),
+): Promise<Array<{ scope: string; sessionId: string }>> {
+  const members = await redis.zrangebyscore(keys.gameDisconnects, 0, now)
+  const due: Array<{ scope: string; sessionId: string }> = []
+
+  for (const member of members) {
+    const decoded = disconnectEntry.decode(member)
+
+    // Not something we wrote. Dropped rather than skipped, or the sweeper would
+    // trip over it once a second forever.
+    if (!decoded) {
+      await redis.zrem(keys.gameDisconnects, member)
+      continue
+    }
+
+    due.push(decoded)
+  }
+
+  return due
+}
+
+/**
+ * Give up on a player who never came back.
+ *
+ * The game decides what that means — `eliminate` removes them AND repairs
+ * whatever phase was waiting on them, which is what stops the table freezing.
+ * Returns null whenever there is nothing to do, so a duplicate sweep is a no-op
+ * rather than a second elimination.
+ */
+export async function expireDisconnect(
+  scope: string,
+  sessionId: string,
+): Promise<PresenceChange | null> {
+  const member = disconnectEntry.encode(scope, sessionId)
+
+  for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt += 1) {
+    const stored = await loadGame(scope)
+
+    // The game is gone — purged, or expired under its TTL. So is the reason to
+    // keep sweeping for it.
+    if (!stored) {
+      await redis.zrem(keys.gameDisconnects, member)
+      return null
+    }
+
+    const pending = stored.disconnected ?? {}
+    const deadline = pending[sessionId]
+
+    // They came back, and this entry is the leftover.
+    if (deadline === undefined) {
+      await redis.zrem(keys.gameDisconnects, member)
+      return null
+    }
+
+    // The game ended some other way while they were away. No elimination is
+    // owed, and `buildView` already hides the stale entry on a finished game.
+    if (stored.finished) {
+      await redis.zrem(keys.gameDisconnects, member)
+      return null
+    }
+
+    // Indexed under an earlier deadline that has since moved. Left in place
+    // rather than removed, because the later one is still owed.
+    if (Date.now() < deadline) return null
+
+    const definition = getGameDefinition(stored.gameId)
+    if (!definition) return null
+
+    const nextState = definition.eliminate(stored.state, sessionId, Date.now())
+    const result = definition.result(nextState)
+
+    const next: StoredGame = {
+      ...stored,
+      version: stored.version + 1,
+      state: nextState,
+      disconnected: withoutPlayer(pending, sessionId),
+      finished: result !== null,
+      result,
+    }
+
+    const written = await scripts.gameCas(
+      keys.game(scope),
+      String(stored.version),
+      JSON.stringify(next),
+      String(GAME_TTL_SECONDS),
+    )
+
+    if (written === 1) {
+      await redis.zrem(keys.gameDisconnects, member)
+      // The repaired phase carries a new deadline. Without reindexing, the game
+      // would sit in whatever phase `eliminate` moved it to and never advance.
+      await indexDeadline(scope, next, definition)
+      return { stored: next, definition }
+    }
+
+    if (written === -1) {
+      await redis.zrem(keys.gameDisconnects, member)
+      return null
+    }
+
+    // written === 0 (version moved) or -2 (corrupt): re-read and try again.
   }
 
   return null

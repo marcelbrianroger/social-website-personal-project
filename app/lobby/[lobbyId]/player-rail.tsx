@@ -3,10 +3,12 @@
 import {
   isActor,
   isAlive,
+  reconnectingUntil,
   voteTally,
   type MrWhitePlayer,
   type MrWhiteTable,
 } from '@/lib/game/mr-white-view'
+import { toSeconds, useServerNow } from '@/lib/game/use-countdown'
 import type { LobbyMember } from '@/lib/socket/events'
 
 import { DISPLAY_HEADING, EYEBROW, PANEL } from './controls'
@@ -50,6 +52,11 @@ export function PlayerRail({
 
   const tally = table ? voteTally(table) : {}
 
+  // One interval for the whole rail rather than one per seat: every reconnect
+  // window is measured against the same server clock, so they can share it.
+  const awaiting = table ? Object.keys(table.disconnected).length > 0 : false
+  const now = useServerNow(table?.serverNow ?? 0, awaiting)
+
   return (
     <section className={`${PANEL} p-4`} aria-label="Players">
       <div className="flex items-baseline justify-between gap-3">
@@ -78,6 +85,9 @@ export function PlayerRail({
           const spoke = table ? player.sessionId in table.clues : false
           const votes = tally[player.sessionId] ?? 0
           const revealedRole = table?.roles?.[player.sessionId]
+          const eliminatedAt = table ? reconnectingUntil(table, player.sessionId) : null
+          const reconnectingIn =
+            eliminatedAt === null ? null : toSeconds(Math.max(0, eliminatedAt - now))
 
           return (
             <li
@@ -117,13 +127,23 @@ export function PlayerRail({
                 )}
               </div>
 
-              {/* One status line per seat. Ranked: out, then holding the
-                  floor, then the clue they gave. Never more than one. */}
+              {/* One status line per seat. Ranked: out, then gone but not yet
+                  out, then holding the floor, then the clue they gave. Never
+                  more than one.
+
+                  "reconnecting" outranks "active" because a seat can be both:
+                  a player who drops while holding the floor keeps it until
+                  their window runs out. The yellow fill stays — the table IS
+                  blocked on them — but the line has to say why. */}
               <p className="mt-1 font-mono text-[0.625rem] leading-snug text-ink-soft">
                 {!table ? (
                   'waiting'
                 ) : !alive ? (
                   <span className="uppercase tracking-wide">eliminated</span>
+                ) : reconnectingIn !== null ? (
+                  <span className="uppercase tracking-wide text-ink">
+                    reconnecting {reconnectingIn}s
+                  </span>
                 ) : active ? (
                   <span className="uppercase tracking-wide text-ink">
                     {table.phase === 'vote' ? 'voting' : 'active'}
