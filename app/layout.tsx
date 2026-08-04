@@ -1,21 +1,44 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Courier_Prime, Karla } from "next/font/google";
+
+import { SiteFooter, SiteHeader } from "./chrome";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+/*
+ * Type.
+ *
+ * Bricolage Grotesque is deliberately a little awkward — the flat-topped 'a',
+ * the odd 'g'. Set heavy and tight it reads as a hand-lettered mading header
+ * rather than a corporate display face.
+ *
+ * Courier Prime is a real typewriter face, and it is doing the most work of the
+ * three: every timestamp, nickname and label is "typed", which is what sells
+ * cheap print without a single texture image.
+ */
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-bricolage",
   subsets: ["latin"],
+  axes: ["wdth"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const karla = Karla({
+  variable: "--font-karla",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const courier = Courier_Prime({
+  variable: "--font-courier",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "DUDU",
+  title: "Social Aachen Website — ada yang masih bangun",
   description:
-    "Ephemeral community platform — anonymous wall, video matchmaking, and boardgame rooms.",
+    "Mading anonim buat anak Indonesia di Aachen. Tulis apa aja, hilang sendiri setelah 24 jam. Video call sama yang lagi online. Nggak perlu daftar.",
 };
 
 export default function RootLayout({
@@ -25,10 +48,20 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="de"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang="id"
+      className={`${bricolage.variable} ${karla.variable} ${courier.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-paper text-ink">
+        {/* Paper grain. Decorative, fixed, never interactive. */}
+        <div
+          aria-hidden="true"
+          className="grain pointer-events-none fixed inset-0 z-50"
+        />
+
+        <SiteHeader />
+        <main className="flex-1">{children}</main>
+        <SiteFooter />
+      </body>
     </html>
   );
 }

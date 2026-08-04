@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 
+import { ConnectionStatus, SHELL, SystemNote } from '@/app/chrome'
 import { hasTurnConfigured } from '@/lib/webrtc/ice-config'
 import { useP2PRoom } from '@/lib/webrtc/use-p2p-room'
 
@@ -9,13 +10,21 @@ import { GameBoard } from './game-board'
 import { VideoTile } from './video-tile'
 
 const PHASE_LABEL: Record<string, string> = {
-  idle: 'Not connected',
-  'requesting-media': 'Requesting camera…',
-  joining: 'Joining room…',
-  searching: 'Searching for a match…',
-  'in-room': 'In room',
-  error: 'Error',
+  idle: 'belum nyambung',
+  'requesting-media': 'minta izin kamera',
+  joining: 'lagi masuk',
+  searching: 'lagi nyari',
+  'in-room': 'di dalam ruang',
+  error: 'error',
 }
+
+/** Filled control. One per view, at most. */
+const PRIMARY =
+  'border-2 border-ink bg-ink px-6 py-2.5 font-mono text-sm text-paper transition-colors hover:bg-pink hover:text-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-paper'
+
+/** Outline control, for everything that is not the main action. */
+const SECONDARY =
+  'border-2 border-ink px-5 py-2.5 font-mono text-sm text-ink transition-colors hover:bg-yellow disabled:opacity-40 disabled:hover:bg-transparent'
 
 export function RoomClient() {
   const {
@@ -43,70 +52,68 @@ export function RoomClient() {
   const busy = phase === 'requesting-media' || phase === 'joining'
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-6 py-12">
-      <header className="flex flex-wrap items-baseline justify-between gap-3">
+    <div className={`${SHELL} py-12 sm:py-16`}>
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-zinc-500">
-            DUDU · P2P Video
+          <p className="font-mono text-xs lowercase tracking-wide text-ink-soft">
+            ruang video
           </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-black dark:text-zinc-50">
-            Room test
+          <h1
+            className="mt-3 font-display text-[clamp(1.875rem,5vw,3rem)] leading-[1.02] tracking-[-0.02em]"
+            style={{ fontVariationSettings: "'wght' 800, 'wdth' 92" }}
+          >
+            Berdua aja, nggak lewat siapa-siapa.
           </h1>
         </div>
 
-        <div className="text-right text-sm">
-          <div className="text-zinc-500">
-            {PHASE_LABEL[phase] ?? phase}
-            {roomId && <> · <span className="font-mono">{roomId}</span></>}
-          </div>
-          <div className="font-mono text-xs text-zinc-500">
-            {session ? session.nickname : 'connecting…'}
-          </div>
-        </div>
-      </header>
+        <ConnectionStatus
+          connected={phase !== 'idle' && phase !== 'error'}
+          nickname={session?.nickname ?? null}
+          detail={`${PHASE_LABEL[phase] ?? phase}${roomId ? ` · ${roomId}` : ''}`}
+        />
+      </div>
 
-      <section className="mt-8 rounded-xl border border-black/10 p-4 dark:border-white/15">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <section className="mt-10 border-2 border-ink bg-stock p-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="text-sm font-medium text-black dark:text-zinc-100">
-              Find a match
+            <h2
+              className="font-display text-xl leading-tight"
+              style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
+            >
+              Cari teman ngobrol
             </h2>
-            <p className="mt-0.5 text-sm text-zinc-500">
+            <p className="mt-2 max-w-md text-[0.9375rem] leading-relaxed text-ink">
               {searching
-                ? `Waiting for a partner${queuePosition ? ` · ${queuePosition} in queue` : ''}…`
-                : 'Get paired automatically with whoever is waiting.'}
+                ? `Lagi nunggu partner${queuePosition ? ` · nomor ${queuePosition} di antrean` : ''}…`
+                : 'Pencet sekali. Begitu ada orang lain yang juga nunggu, kalian langsung dimasukin ke satu ruang.'}
             </p>
           </div>
 
           {searching ? (
-            <button
-              type="button"
-              onClick={cancelMatch}
-              className="rounded-lg border border-black/15 px-4 py-2 text-sm dark:border-white/15"
-            >
-              Cancel
+            <button type="button" onClick={cancelMatch} className={SECONDARY}>
+              Berhenti nyari
             </button>
           ) : (
             <button
               type="button"
               onClick={() => void findMatch()}
               disabled={inRoom || busy}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-40"
+              className={PRIMARY}
             >
-              Find Match
+              Cari sekarang
             </button>
           )}
         </div>
       </section>
 
-      <div className="mt-6 flex items-center gap-3 text-xs uppercase tracking-widest text-zinc-400">
-        <span className="h-px flex-1 bg-black/10 dark:bg-white/15" />
-        or join by ID
-        <span className="h-px flex-1 bg-black/10 dark:bg-white/15" />
+      <div className="mt-8 flex items-center gap-4 font-mono text-xs lowercase text-ink-soft">
+        <span className="h-0.5 flex-1 bg-ink" />
+        atau masuk pakai id ruang
+        <span className="h-0.5 flex-1 bg-ink" />
       </div>
 
       <form
-        className="mt-6 flex flex-wrap gap-3"
+        className="mt-8 flex flex-wrap gap-3"
         onSubmit={(event) => {
           event.preventDefault()
           if (!inRoom && input.trim()) void join(input.trim())
@@ -116,65 +123,50 @@ export function RoomClient() {
           value={input}
           onChange={(event) => setInput(event.target.value)}
           disabled={inRoom || busy || searching}
-          placeholder="Room ID (e.g. aachen-1)"
-          aria-label="Room ID"
-          className="min-w-52 flex-1 rounded-lg border border-black/15 bg-white px-3 py-2 font-mono text-sm outline-none placeholder:text-zinc-400 focus:border-emerald-500 disabled:opacity-50 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-100"
+          placeholder="aachen-1"
+          aria-label="ID ruang"
+          className="min-w-52 flex-1 border-2 border-ink bg-stock px-4 py-2.5 font-mono text-sm text-ink outline-none placeholder:text-ink-soft/70 disabled:opacity-50"
         />
 
         {inRoom ? (
-          <button
-            type="button"
-            onClick={leave}
-            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500"
-          >
-            Leave
+          <button type="button" onClick={leave} className={SECONDARY}>
+            Keluar ruang
           </button>
         ) : (
           <button
             type="submit"
             disabled={busy || searching || !input.trim()}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-40"
+            className={PRIMARY}
           >
-            {busy ? 'Working…' : 'Join'}
+            {busy ? 'Masuk…' : 'Masuk'}
           </button>
         )}
 
         {inRoom && (
           <>
-            <button
-              type="button"
-              onClick={toggleMic}
-              className="rounded-lg border border-black/15 px-4 py-2 text-sm dark:border-white/15"
-            >
-              {micEnabled ? 'Mute' : 'Unmute'}
+            <button type="button" onClick={toggleMic} className={SECONDARY}>
+              {micEnabled ? 'Matiin mic' : 'Nyalain mic'}
             </button>
-            <button
-              type="button"
-              onClick={toggleCamera}
-              className="rounded-lg border border-black/15 px-4 py-2 text-sm dark:border-white/15"
-            >
-              {cameraEnabled ? 'Camera off' : 'Camera on'}
+            <button type="button" onClick={toggleCamera} className={SECONDARY}>
+              {cameraEnabled ? 'Matiin kamera' : 'Nyalain kamera'}
             </button>
           </>
         )}
       </form>
 
       {error && (
-        <p
-          role="alert"
-          className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300"
-        >
+        <SystemNote alert className="mt-5">
           {error}
-        </p>
+        </SystemNote>
       )}
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+      <div className="mt-10 grid gap-5 sm:grid-cols-2">
         <VideoTile
           stream={localStream}
-          label={session ? `${session.nickname} (you)` : 'You'}
+          label={session ? `${session.nickname} (kamu)` : 'Kamu'}
           muted
           mirrored
-          status={localStream ? undefined : 'Camera off'}
+          status={localStream ? undefined : 'kamera mati'}
         />
 
         {peers.map((peer) => (
@@ -187,8 +179,9 @@ export function RoomClient() {
         ))}
 
         {inRoom && peers.length === 0 && (
-          <div className="grid aspect-video place-items-center rounded-xl border border-dashed border-black/15 text-sm text-zinc-500 dark:border-white/15">
-            Waiting for someone to join <span className="mx-1 font-mono">{roomId}</span>
+          <div className="grid aspect-video place-items-center border-2 border-dashed border-rule px-6 text-center text-sm text-ink-soft">
+            Nunggu orang lain masuk ke{' '}
+            <span className="ml-1 font-mono text-ink">{roomId}</span>
           </div>
         )}
       </div>
@@ -202,19 +195,21 @@ export function RoomClient() {
         />
       )}
 
-      <section className="mt-10 space-y-2 text-sm leading-6 text-zinc-500">
+      <div className="mt-12 max-w-2xl space-y-3 border-t-2 border-ink pt-5 text-sm leading-relaxed text-ink-soft">
         <p>
-          Open this page in a second browser window and join the same Room ID.
-          Rooms hold two people.
+          Buka halaman ini di jendela kedua terus masuk pakai ID ruang yang sama.
+          Satu ruang cuma muat dua orang.
         </p>
         {!hasTurnConfigured() && (
           <p>
-            No TURN server is configured, so only STUN is in use. Two peers on
-            the same network will connect; peers behind symmetric NAT may stay
-            at <code className="font-mono">checking</code> and never connect.
+            Belum ada server TURN, jadi cuma STUN yang jalan. Dua orang di
+            jaringan yang sama bisa nyambung; kalau di balik symmetric NAT bisa
+            mentok di{' '}
+            <code className="font-mono text-ink">checking</code> dan nggak pernah
+            nyambung.
           </p>
         )}
-      </section>
+      </div>
     </div>
   )
 }

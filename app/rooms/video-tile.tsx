@@ -7,6 +7,9 @@ import { useEffect, useRef } from 'react'
  *
  * `srcObject` holds a live MediaStream and cannot be expressed as a JSX
  * attribute, so it is assigned imperatively against a ref.
+ *
+ * The label sits on an ink scrim rather than the paper ground: a camera feed is
+ * arbitrarily dark, and the name has to stay legible over whatever is behind it.
  */
 export function VideoTile({
   stream,
@@ -35,7 +38,7 @@ export function VideoTile({
   }, [stream])
 
   return (
-    <div className="relative aspect-video overflow-hidden rounded-xl border border-white/10 bg-zinc-900">
+    <div className="relative aspect-video overflow-hidden border-2 border-ink bg-stock">
       <video
         ref={videoRef}
         autoPlay
@@ -47,15 +50,15 @@ export function VideoTile({
       />
 
       {!stream && (
-        <div className="absolute inset-0 grid place-items-center text-sm text-zinc-500">
-          {status ?? 'Waiting for video…'}
+        <div className="absolute inset-0 grid place-items-center font-mono text-xs text-ink-soft">
+          {status ?? 'nunggu video'}
         </div>
       )}
 
-      <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-gradient-to-t from-black/80 to-transparent px-3 py-2">
-        <span className="truncate text-sm font-medium text-white">{label}</span>
+      <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-ink px-3 py-2">
+        <span className="truncate font-mono text-xs text-paper">{label}</span>
         {status && (
-          <span className="shrink-0 rounded bg-black/50 px-1.5 py-0.5 font-mono text-[11px] text-zinc-300">
+          <span className="shrink-0 font-mono text-[0.625rem] text-paper/70">
             {status}
           </span>
         )}

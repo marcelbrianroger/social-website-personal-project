@@ -1,28 +1,136 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * SOCIAL AACHEN WEBSITE — "mading"
+ *
+ * A mading (majalah dinding) is the wall magazine pinned up in every Indonesian
+ * school: paper notices, hand-lettered headers, slightly crooked, made by
+ * students for students. It is already what this site is — a board you pin a
+ * note to and someone takes it down a day later — and it lands on the same
+ * object as the German Aushang corkboard this audience now lives with.
+ *
+ * The rendering is RISO PRINT, not a corkboard pastiche. No fake tape, no cork
+ * texture, no drop shadows pretending to be objects. What a riso actually gives
+ * you: two or three flat spot inks on cheap paper, ink that OVERPRINTS where it
+ * overlaps, and no gradients of any kind. That is the whole visual grammar.
+ *
+ * INK DISCIPLINE — the rule that keeps this from turning into a circus:
+ *   ink / ink-soft  carry every piece of text. Nothing else does.
+ *   pink            large display type, rules, pin marks. NEVER small text —
+ *                   it sits at 2.1:1 on paper and would fail outright.
+ *   yellow          flat fills only, always with ink on top (9.3:1). This is
+ *                   how links work here: highlighted, like a marker on paper.
+ */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@theme {
+  /* Cheap paper, greyed rather than cream. Two stocks, as a real print job. */
+  --color-paper: #e9e5d8;
+  --color-stock: #ded8c7;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* The key ink. Reads black in mass, unmistakably blue in the thin strokes. */
+  --color-ink: #16284b;
+  --color-ink-soft: #46536c;
+
+  /* Rules and hairlines, so borders never go pure black. */
+  --color-rule: #b9b3a2;
+
+  /* Fluorescent pink. Cheap, loud, joyful — the point is that it is not tasteful. */
+  --color-pink: #ff4e8e;
+
+  /* Fill only. Never a letterform. */
+  --color-yellow: #ffc93d;
+
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-karla), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-courier), ui-monospace, monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: var(--color-yellow);
+  color: var(--color-ink);
+}
+
+/* Quality floor: keyboard focus is always visible, and loud about it. */
+:focus-visible {
+  outline: 3px solid var(--color-pink);
+  outline-offset: 2px;
+}
+
+/*
+ * Paper grain.
+ *
+ * Generated rather than an image file, so nothing external loads. Kept at 3.5%
+ * because the job is to stop the page reading as flat white — not to look like
+ * a texture was applied to it.
+ */
+.grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.035;
+}
+
+/*
+ * A slip of paper on the board.
+ *
+ * `multiply` is the whole idea: where two slips overlap, the inks darken the
+ * way a second pass through a riso does. Isolated so the blend resolves against
+ * the board rather than punching through to the page behind it.
+ */
+.board {
+  isolation: isolate;
+}
+
+.slip {
+  mix-blend-mode: multiply;
+}
+
+/*
+ * Taken down.
+ *
+ * A note reaching the end of its 24 hours is not deleted, it is unpinned: it
+ * swings off the pin and drops. The rotation origin is the pin mark, top-left,
+ * which is what makes it read as paper coming off a board rather than a div
+ * fading out.
+ */
+@keyframes unpin {
+  0% {
+    transform: rotate(var(--tilt, 0deg));
+    opacity: 1;
+  }
+  35% {
+    transform: rotate(calc(var(--tilt, 0deg) + 7deg));
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(calc(var(--tilt, 0deg) + 14deg)) translateY(28px);
+    opacity: 0;
+  }
+}
+
+@keyframes pin-up {
+  from {
+    opacity: 0;
+    transform: rotate(calc(var(--tilt, 0deg) - 4deg)) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(var(--tilt, 0deg));
+  }
+}
+
+.animate-unpin {
+  transform-origin: 18px 18px;
+  animation: unpin 620ms cubic-bezier(0.5, 0, 0.75, 0.4) forwards;
+}
+
+.animate-pin-up {
+  animation: pin-up 380ms ease-out both;
 }
 
 /*
@@ -32,7 +140,7 @@ body {
  * replays — including when the same rejection happens twice in a row, which a
  * class toggle alone would not re-trigger.
  */
-@keyframes dudu-shake {
+@keyframes shake {
   0%,
   100% {
     transform: translateX(0);
@@ -46,11 +154,18 @@ body {
 }
 
 .animate-reject {
-  animation: dudu-shake 0.32s ease-in-out;
+  animation: shake 0.32s ease-in-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-reject {
+  .animate-reject,
+  .animate-unpin,
+  .animate-pin-up {
     animation: none;
+  }
+
+  /* Expiry still has to resolve without motion. */
+  .animate-unpin {
+    opacity: 0;
   }
 }

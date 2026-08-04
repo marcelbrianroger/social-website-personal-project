@@ -3,9 +3,8 @@ import type { Metadata } from 'next'
 import { RoomClient } from './room-client'
 
 export const metadata: Metadata = {
-  title: 'Video rooms · SOCIAL AACHEN WEBSITE',
-  description:
-    'Two people to a room. Audio and video travel straight from one browser to the other.',
+  title: 'Room test · DUDU',
+  description: 'P2P video room test harness.',
 }
 
 /**
