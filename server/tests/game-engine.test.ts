@@ -50,8 +50,63 @@ async function startTicTacToe(roomId: string): Promise<StoredGame> {
   return (started as { ok: true; stored: StoredGame }).stored
 }
 
-function boardOf(stored: StoredGame): (string | null)[] {
-  return (stored.state as TicTacToeState).board
+/** Every cell of every local board, flattened. 81 of them. */
+function marksOf(stored: StoredGame): (string | null)[] {
+  return (stored.state as TicTacToeState).boards.flat()
+}
+
+function cellAt(stored: StoredGame, board: number, cell: number): string | null {
+  return (stored.state as TicTacToeState).boards[board]?.[cell] ?? null
+}
+
+const EMPTY_GRID = Array.from({ length: 81 }, () => null)
+
+/**
+ * A complete legal game: X takes local boards 0, 1 and 2 along their middle
+ * rows, winning the top row of the global board on the seventeenth move.
+ *
+ * Spelled out rather than searched for because the movement constraint makes
+ * "any five moves" no longer a win — the cell each player takes dictates the
+ * board the other must answer in, so a finished game is a specific script. X
+ * plays the odd-numbered moves.
+ */
+const X_WINS_TOP_ROW: Array<[number, number]> = [
+  [0, 3],
+  [3, 0],
+  [0, 4],
+  [4, 0],
+  [0, 5],
+  [5, 1],
+  [1, 3],
+  [3, 1],
+  [1, 4],
+  [4, 1],
+  [1, 5],
+  [5, 2],
+  [2, 3],
+  [3, 2],
+  [2, 4],
+  [4, 2],
+  [2, 5],
+]
+
+/** Submit `moves` in order, alternating Alice and Bob. */
+async function playOut(
+  roomId: string,
+  moves: Array<[number, number]>,
+): Promise<void> {
+  for (const [index, [board, cell]] of moves.entries()) {
+    const sessionId = index % 2 === 0 ? alice.sessionId : bob.sessionId
+    const result = await submitMove(roomId, sessionId, { board, cell })
+
+    assert.equal(
+      result.ok,
+      true,
+      `test setup: move ${index + 1} (${board}, ${cell}) should be legal, got ${
+        (result as { reason?: string }).reason
+      }`,
+    )
+  }
 }
 
 beforeEach(resetRedis)
@@ -107,7 +162,7 @@ describe('starting a game', () => {
     assert.equal(stored.finished, false)
     assert.equal(stored.result, null)
     assert.deepEqual(stored.players, [alice, bob])
-    assert.deepEqual(boardOf(stored), Array.from({ length: 9 }, () => null))
+    assert.deepEqual(marksOf(stored), EMPTY_GRID)
   })
 
   it('persists the game so another node can read it', async () => {
@@ -138,7 +193,7 @@ describe('starting a game', () => {
   it('returns the running game instead of restarting it', async () => {
     const roomId = uniqueRoomId()
     await startTicTacToe(roomId)
-    await submitMove(roomId, alice.sessionId, { cell: 0 })
+    await submitMove(roomId, alice.sessionId, { board: 0, cell: 0 })
 
     const again = await startGame(roomId, 'tic-tac-toe', [alice, bob])
 
@@ -148,7 +203,10 @@ describe('starting a game', () => {
       2,
       'a second Start must not wipe a game in progress',
     )
-    assert.equal(boardOf((again as { ok: true; stored: StoredGame }).stored)[0], 'X')
+    assert.equal(
+      cellAt((again as { ok: true; stored: StoredGame }).stored, 0, 0),
+      'X',
+    )
   })
 
   describe('two players pressing Start at the same moment', () => {
@@ -203,16 +261,7 @@ describe('starting a game', () => {
     const roomId = uniqueRoomId()
     await startTicTacToe(roomId)
 
-    // X takes the top row: 0, 1, 2. O answers on 3 and 4.
-    for (const [sessionId, cell] of [
-      [alice.sessionId, 0],
-      [bob.sessionId, 3],
-      [alice.sessionId, 1],
-      [bob.sessionId, 4],
-      [alice.sessionId, 2],
-    ] as const) {
-      await submitMove(roomId, sessionId, { cell })
-    }
+    await playOut(roomId, X_WINS_TOP_ROW)
 
     const finished = await loadGame(roomId)
     assert.equal(finished?.finished, true, 'test setup: the game should be over')
@@ -221,15 +270,18 @@ describe('starting a game', () => {
 
     assert.equal(rematch.ok, true)
     const stored = (rematch as { ok: true; stored: StoredGame }).stored
-    assert.equal(stored.version, 1, 'a rematch starts a fresh game, not version 6')
+    assert.equal(stored.version, 1, 'a rematch starts a fresh game, not version 18')
     assert.equal(stored.finished, false)
-    assert.deepEqual(boardOf(stored), Array.from({ length: 9 }, () => null))
+    assert.deepEqual(marksOf(stored), EMPTY_GRID)
   })
 })
 
 describe('submitting a move', () => {
   it('refuses when no game is running', async () => {
-    const result = await submitMove(uniqueRoomId(), alice.sessionId, { cell: 0 })
+    const result = await submitMove(uniqueRoomId(), alice.sessionId, {
+      board: 0,
+      cell: 0,
+    })
 
     assert.deepEqual(result, { ok: false, reason: 'no-game' })
   })
@@ -238,7 +290,10 @@ describe('submitting a move', () => {
     const roomId = uniqueRoomId()
     await startTicTacToe(roomId)
 
-    const result = await submitMove(roomId, mallory.sessionId, { cell: 0 })
+    const result = await submitMove(roomId, mallory.sessionId, {
+      board: 0,
+      cell: 0,
+    })
 
     assert.deepEqual(
       result,
@@ -251,13 +306,13 @@ describe('submitting a move', () => {
     const roomId = uniqueRoomId()
     await startTicTacToe(roomId)
 
-    await submitMove(roomId, mallory.sessionId, { cell: 0 })
-    await submitMove(roomId, bob.sessionId, { cell: 0 })
+    await submitMove(roomId, mallory.sessionId, { board: 0, cell: 0 })
+    await submitMove(roomId, bob.sessionId, { board: 0, cell: 0 })
 
     const stored = await loadGame(roomId)
 
     assert.equal(stored?.version, 1, 'a refused move must not bump the version')
-    assert.deepEqual(boardOf(stored as StoredGame), Array.from({ length: 9 }, () => null))
+    assert.deepEqual(marksOf(stored as StoredGame), EMPTY_GRID)
   })
 
   it('passes a rule rejection through unchanged', async () => {
@@ -266,30 +321,52 @@ describe('submitting a move', () => {
 
     // The engine must not flatten the rules' vocabulary into a generic
     // "invalid" — the UI explains the refusal using this string.
-    assert.deepEqual(await submitMove(roomId, bob.sessionId, { cell: 0 }), {
-      ok: false,
-      reason: 'not-your-turn',
-    })
-    assert.deepEqual(await submitMove(roomId, alice.sessionId, { cell: 99 }), {
-      ok: false,
-      reason: 'cell-out-of-range',
-    })
+    assert.deepEqual(
+      await submitMove(roomId, bob.sessionId, { board: 0, cell: 0 }),
+      { ok: false, reason: 'not-your-turn' },
+    )
+    assert.deepEqual(
+      await submitMove(roomId, alice.sessionId, { board: 99, cell: 0 }),
+      { ok: false, reason: 'board-out-of-range' },
+    )
+    assert.deepEqual(
+      await submitMove(roomId, alice.sessionId, { board: 0, cell: 99 }),
+      { ok: false, reason: 'cell-out-of-range' },
+    )
     assert.deepEqual(await submitMove(roomId, alice.sessionId, 'nope'), {
       ok: false,
       reason: 'malformed-move',
     })
   })
 
+  it('passes the movement constraint through as its own rejection', async () => {
+    const roomId = uniqueRoomId()
+    await startTicTacToe(roomId)
+
+    // X takes cell 2, which pins O to local board 2. Anywhere else is refused
+    // by the rules, and the engine must not blur that into a generic error.
+    await submitMove(roomId, alice.sessionId, { board: 4, cell: 2 })
+
+    assert.deepEqual(
+      await submitMove(roomId, bob.sessionId, { board: 4, cell: 0 }),
+      { ok: false, reason: 'wrong-board' },
+    )
+    assert.equal(
+      (await submitMove(roomId, bob.sessionId, { board: 2, cell: 0 })).ok,
+      true,
+    )
+  })
+
   it('applies a legal move and bumps the version', async () => {
     const roomId = uniqueRoomId()
     await startTicTacToe(roomId)
 
-    const result = await submitMove(roomId, alice.sessionId, { cell: 4 })
+    const result = await submitMove(roomId, alice.sessionId, { board: 4, cell: 4 })
 
     assert.equal(result.ok, true)
     const stored = (result as { ok: true; stored: StoredGame }).stored
     assert.equal(stored.version, 2)
-    assert.equal(boardOf(stored)[4], 'X')
+    assert.equal(cellAt(stored, 4, 4), 'X')
     assert.deepEqual(await loadGame(roomId), stored, 'the write is persisted')
   })
 
@@ -297,7 +374,7 @@ describe('submitting a move', () => {
     const roomId = uniqueRoomId()
     await startTicTacToe(roomId)
 
-    await submitMove(roomId, alice.sessionId, { cell: 4 })
+    await submitMove(roomId, alice.sessionId, { board: 4, cell: 4 })
     const stored = await loadGame(roomId)
 
     assert.deepEqual(
@@ -310,16 +387,13 @@ describe('submitting a move', () => {
     const roomId = uniqueRoomId()
     await startTicTacToe(roomId)
 
-    for (const [sessionId, cell] of [
-      [alice.sessionId, 0],
-      [bob.sessionId, 3],
-      [alice.sessionId, 1],
-      [bob.sessionId, 4],
-    ] as const) {
-      await submitMove(roomId, sessionId, { cell })
-    }
+    await playOut(roomId, X_WINS_TOP_ROW.slice(0, -1))
 
-    const winning = await submitMove(roomId, alice.sessionId, { cell: 2 })
+    const [board, cell] = X_WINS_TOP_ROW[X_WINS_TOP_ROW.length - 1] as [
+      number,
+      number,
+    ]
+    const winning = await submitMove(roomId, alice.sessionId, { board, cell })
 
     assert.equal(winning.ok, true)
     const stored = (winning as { ok: true; stored: StoredGame }).stored
@@ -330,7 +404,7 @@ describe('submitting a move', () => {
     })
 
     assert.deepEqual(
-      await submitMove(roomId, bob.sessionId, { cell: 5 }),
+      await submitMove(roomId, bob.sessionId, { board: 8, cell: 8 }),
       { ok: false, reason: 'game-finished' },
       'a finished game accepts nothing further',
     )
@@ -345,8 +419,8 @@ describe('submitting a move', () => {
       // Without compare-and-set the second write would overwrite the first,
       // and the board would show one mark while the version claimed two moves.
       const results = await Promise.all([
-        submitMove(roomId, alice.sessionId, { cell: 0 }),
-        submitMove(roomId, alice.sessionId, { cell: 8 }),
+        submitMove(roomId, alice.sessionId, { board: 0, cell: 0 }),
+        submitMove(roomId, alice.sessionId, { board: 8, cell: 8 }),
       ])
 
       const accepted = results.filter((result) => result.ok)
@@ -360,9 +434,9 @@ describe('submitting a move', () => {
       const stored = await loadGame(roomId)
       assert.equal(stored?.version, 2, 'one move, one version bump')
       assert.equal(
-        boardOf(stored as StoredGame).filter((cell) => cell !== null).length,
+        marksOf(stored as StoredGame).filter((cell) => cell !== null).length,
         1,
-        'the board must carry exactly one mark',
+        'the grid must carry exactly one mark',
       )
     })
 
@@ -371,14 +445,18 @@ describe('submitting a move', () => {
       await startTicTacToe(roomId)
 
       const results = await Promise.all([
-        submitMove(roomId, alice.sessionId, { cell: 0 }),
-        submitMove(roomId, bob.sessionId, { cell: 0 }),
+        submitMove(roomId, alice.sessionId, { board: 0, cell: 0 }),
+        submitMove(roomId, bob.sessionId, { board: 0, cell: 0 }),
       ])
 
       assert.equal(results.filter((result) => result.ok).length, 1)
 
       const stored = await loadGame(roomId)
-      assert.equal(boardOf(stored as StoredGame)[0], 'X', 'Alice moves first, so X owns cell 0')
+      assert.equal(
+        cellAt(stored as StoredGame, 0, 0),
+        'X',
+        'Alice moves first, so X owns board 0 cell 0',
+      )
       assert.equal(stored?.version, 2)
     })
 
@@ -386,31 +464,32 @@ describe('submitting a move', () => {
       const roomId = uniqueRoomId()
       await startTicTacToe(roomId)
 
-      // Eight requests, only some of which are legal at the moment they land.
-      // Whatever the interleaving, the stored board must stay a board: no cell
-      // written twice, and the version must equal the number of marks plus one.
-      await Promise.all([
-        submitMove(roomId, alice.sessionId, { cell: 0 }),
-        submitMove(roomId, bob.sessionId, { cell: 1 }),
-        submitMove(roomId, alice.sessionId, { cell: 2 }),
-        submitMove(roomId, bob.sessionId, { cell: 5 }),
-        submitMove(roomId, alice.sessionId, { cell: 6 }),
-        submitMove(roomId, bob.sessionId, { cell: 7 }),
-        submitMove(roomId, alice.sessionId, { cell: 8 }),
-        submitMove(roomId, bob.sessionId, { cell: 3 }),
-      ])
+      // Eight requests fired at once, from a script that is legal in order.
+      // Interleaving decides how many actually land — a move that arrives
+      // before the one that unpins its board is correctly refused. Whatever
+      // survives, the stored grid must stay a grid: no cell written twice, and
+      // the version equal to the number of marks plus one.
+      await Promise.all(
+        X_WINS_TOP_ROW.slice(0, 8).map(([board, cell], index) =>
+          submitMove(
+            roomId,
+            index % 2 === 0 ? alice.sessionId : bob.sessionId,
+            { board, cell },
+          ),
+        ),
+      )
 
       const stored = (await loadGame(roomId)) as StoredGame
-      const marks = boardOf(stored).filter((cell) => cell !== null)
+      const marks = marksOf(stored).filter((cell) => cell !== null)
 
       assert.equal(
         stored.version,
         marks.length + 1,
-        'every version bump corresponds to exactly one mark on the board',
+        'every version bump corresponds to exactly one mark on the grid',
       )
 
-      const xs = boardOf(stored).filter((cell) => cell === 'X').length
-      const os = boardOf(stored).filter((cell) => cell === 'O').length
+      const xs = marksOf(stored).filter((cell) => cell === 'X').length
+      const os = marksOf(stored).filter((cell) => cell === 'O').length
       assert.ok(
         xs - os === 0 || xs - os === 1,
         `X and O must alternate, got ${xs} X and ${os} O`,
@@ -457,15 +536,7 @@ describe('forfeiting', () => {
     const roomId = uniqueRoomId()
     await startTicTacToe(roomId)
 
-    for (const [sessionId, cell] of [
-      [alice.sessionId, 0],
-      [bob.sessionId, 3],
-      [alice.sessionId, 1],
-      [bob.sessionId, 4],
-      [alice.sessionId, 2],
-    ] as const) {
-      await submitMove(roomId, sessionId, { cell })
-    }
+    await playOut(roomId, X_WINS_TOP_ROW)
 
     const before = await loadGame(roomId)
     assert.equal(await forfeitGame(roomId, bob.sessionId), null)
@@ -537,10 +608,10 @@ describe('ephemerality', () => {
     await redis.set(keys.game(roomId), 'not-json')
 
     assert.equal(await loadGame(roomId), null)
-    assert.deepEqual(await submitMove(roomId, alice.sessionId, { cell: 0 }), {
-      ok: false,
-      reason: 'no-game',
-    })
+    assert.deepEqual(
+      await submitMove(roomId, alice.sessionId, { board: 0, cell: 0 }),
+      { ok: false, reason: 'no-game' },
+    )
   })
 })
 
@@ -552,7 +623,7 @@ describe('buildView — the redaction seam', () => {
     const view = buildView(stored, ticTacToe as AnyGameDefinition, alice.sessionId)
 
     assert.equal(view.gameId, 'tic-tac-toe')
-    assert.equal(view.label, 'Tic-Tac-Toe')
+    assert.equal(view.label, 'Ultimate Tic-Tac-Toe')
     assert.equal(view.version, 1)
     assert.deepEqual(view.actors, [alice.sessionId])
     assert.equal(view.finished, false)

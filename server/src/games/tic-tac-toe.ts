@@ -6,24 +6,58 @@ import type {
 } from './types.js'
 
 /**
- * Tic-Tac-Toe — the proof-of-concept implementation of the generic contract.
+ * Ultimate Tic-Tac-Toe — a 3×3 grid of 3×3 Tic-Tac-Toe boards.
  *
- * Chosen because the rules are trivial, which keeps the interesting parts
- * visible: every move is validated server-side against stored state, and the
- * client can do nothing but propose a cell index.
+ * Win a local board and you own that square of the global board; own three
+ * global squares in a line and you win the game.
+ *
+ * THE RULE THAT MAKES IT A GAME: the *cell* you take names the *local board*
+ * your opponent must play in next. Taking cell 4 sends them to local board 4,
+ * wherever you happened to be. So a move is never just "where do I want a
+ * mark" — it is also "where am I willing to send them".
+ *
+ * The escape hatch is what most of the code below is about: if the board they
+ * are sent to is already decided — won, or full with no line — there is nothing
+ * to play for there, so the constraint lifts and they may choose any open
+ * board. `activeBoardIndex: null` is that state, and it is also the opening
+ * position, since the first move is unconstrained by definition.
+ *
+ * Everything is still validated server-side against stored state; the client
+ * can do nothing but propose a (board, cell) pair.
  */
 
 export type Mark = 'X' | 'O'
 
+/**
+ * What has become of one local board.
+ *
+ * `'draw'` is not cosmetic: a full board with no line belongs to nobody, but it
+ * is just as closed as a won one, and it counts toward the grid being full. A
+ * plain `Mark | null` would force every consumer to re-derive that from the
+ * cells.
+ */
+export type BoardOutcome = Mark | 'draw' | null
+
 export interface TicTacToeState {
-  /** Row-major, length 9. */
-  board: (Mark | null)[]
+  /** Nine local boards, each row-major and length 9. `boards[board][cell]`. */
+  boards: (Mark | null)[][]
+  /** Row-major, length 9. Who owns each local board. */
+  globalBoard: BoardOutcome[]
+  /** Per local board, the three cells that won it. For UI highlighting. */
+  localWinningLines: (number[] | null)[]
+  /**
+   * The local board the mover MUST play in, or null for "any open board".
+   *
+   * Null is legitimate and common — it is the opening position, and it is what
+   * happens every time a move points at a board that is already decided.
+   */
+  activeBoardIndex: number | null
   /** sessionIds in play order. Index 0 plays X and moves first. */
   order: string[]
   /** Index into `order` for whoever moves next. */
   turn: number
   winnerSessionId: string | null
-  /** Board indices forming the winning line, for UI highlighting. */
+  /** LOCAL BOARD indices forming the winning line, for UI highlighting. */
   winningLine: number[] | null
   draw: boolean
   /** Set when the game ended because someone walked away. */
@@ -31,6 +65,9 @@ export interface TicTacToeState {
 }
 
 export interface CellMove {
+  /** Which local board, 0–8. */
+  board: number
+  /** Which cell within that board, 0–8. Also names the next local board. */
   cell: number
 }
 
@@ -51,32 +88,59 @@ function markFor(state: TicTacToeState, sessionId: string): Mark | null {
   return index === 0 ? 'X' : 'O'
 }
 
+function isFinished(state: TicTacToeState): boolean {
+  return Boolean(state.winnerSessionId) || state.draw || Boolean(state.forfeitedBy)
+}
+
 /** Hand the game to whoever is left. A finished game keeps its result. */
 function concede(state: TicTacToeState, quittingSessionId: string): TicTacToeState {
-  if (state.winnerSessionId || state.draw || state.forfeitedBy) return state
+  if (isFinished(state)) return state
   return { ...state, forfeitedBy: quittingSessionId }
 }
 
-function findWinningLine(board: (Mark | null)[]): { mark: Mark; line: number[] } | null {
+function isCoordinate(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 8
+}
+
+/**
+ * The three cells of the line `mark` completed, or null.
+ *
+ * Shared by both scales: `cells` is a local board's nine squares, or the global
+ * board's nine local outcomes. `'draw'` never matches because it is filtered
+ * out first — three drawn boards in a row are three boards nobody won, not a
+ * win for somebody called "draw".
+ */
+function findWinningLine(cells: BoardOutcome[]): { mark: Mark; line: number[] } | null {
   for (const line of LINES) {
     const [a, b, c] = line as [number, number, number]
-    const first = board[a]
-    if (first && first === board[b] && first === board[c]) {
+    const first = cells[a]
+    if (first && first !== 'draw' && first === cells[b] && first === cells[c]) {
       return { mark: first, line }
     }
   }
   return null
 }
 
+/** Nothing left to play for here: won outright, or full with no line. */
+function isDecided(state: TicTacToeState, board: number): boolean {
+  return state.globalBoard[board] !== null
+}
+
 export const ticTacToe: GameDefinition<TicTacToeState, CellMove> = {
   id: 'tic-tac-toe',
-  label: 'Tic-Tac-Toe',
+  label: 'Ultimate Tic-Tac-Toe',
   minPlayers: 2,
   maxPlayers: 2,
 
   createInitialState(players: GamePlayer[]): TicTacToeState {
     return {
-      board: Array.from({ length: 9 }, () => null),
+      boards: Array.from({ length: 9 }, () =>
+        Array.from({ length: 9 }, () => null),
+      ),
+      globalBoard: Array.from({ length: 9 }, () => null),
+      localWinningLines: Array.from({ length: 9 }, () => null),
+      // The opening move goes anywhere — there is no previous cell to obey.
+      activeBoardIndex: null,
       order: players.map((player) => player.sessionId),
       turn: 0,
       winnerSessionId: null,
@@ -93,7 +157,7 @@ export const ticTacToe: GameDefinition<TicTacToeState, CellMove> = {
    * strictly sequential game simply returns a one-element list.
    */
   actors(state: TicTacToeState): string[] {
-    if (state.winnerSessionId || state.draw || state.forfeitedBy) return []
+    if (isFinished(state)) return []
 
     const mover = state.order[state.turn]
     return mover ? [mover] : []
@@ -115,7 +179,7 @@ export const ticTacToe: GameDefinition<TicTacToeState, CellMove> = {
   },
 
   validateMove(state: TicTacToeState, sessionId: string, raw: unknown) {
-    if (state.winnerSessionId || state.draw || state.forfeitedBy) {
+    if (isFinished(state)) {
       return { ok: false as const, reason: 'game-finished' }
     }
 
@@ -133,17 +197,33 @@ export const ticTacToe: GameDefinition<TicTacToeState, CellMove> = {
       return { ok: false as const, reason: 'malformed-move' }
     }
 
+    const board = (raw as Record<string, unknown>)['board']
     const cell = (raw as Record<string, unknown>)['cell']
 
-    if (typeof cell !== 'number' || !Number.isInteger(cell) || cell < 0 || cell > 8) {
+    if (!isCoordinate(board)) {
+      return { ok: false as const, reason: 'board-out-of-range' }
+    }
+
+    if (!isCoordinate(cell)) {
       return { ok: false as const, reason: 'cell-out-of-range' }
     }
 
-    if (state.board[cell] !== null) {
+    // Being pinned outranks the board being decided: "you must play there" is
+    // what the player can act on, and a pinned board is open by construction —
+    // the constraint lifts the moment its target closes.
+    if (state.activeBoardIndex !== null && board !== state.activeBoardIndex) {
+      return { ok: false as const, reason: 'wrong-board' }
+    }
+
+    if (isDecided(state, board)) {
+      return { ok: false as const, reason: 'board-closed' }
+    }
+
+    if (state.boards[board]?.[cell] !== null) {
       return { ok: false as const, reason: 'cell-taken' }
     }
 
-    return { ok: true as const, move: { cell } }
+    return { ok: true as const, move: { board, cell } }
   },
 
   applyMove(state: TicTacToeState, sessionId: string, move: CellMove): TicTacToeState {
@@ -151,19 +231,49 @@ export const ticTacToe: GameDefinition<TicTacToeState, CellMove> = {
     // validateMove already proved membership; this keeps applyMove total.
     if (!mark) return state
 
-    const board = [...state.board]
-    board[move.cell] = mark
+    // The nested board is copied too — sharing it would let a stored state be
+    // mutated out from under the engine's compare-and-set retry.
+    const boards = [...state.boards]
+    const local = [...(boards[move.board] ?? Array.from({ length: 9 }, () => null))]
+    local[move.cell] = mark
+    boards[move.board] = local
 
-    const won = findWinningLine(board)
-    const full = board.every((cell) => cell !== null)
+    const globalBoard = [...state.globalBoard]
+    const localWinningLines = [...state.localWinningLines]
+
+    // Only an undecided board can change hands, so a stray move into a settled
+    // one could never rewrite its owner even if validation let it through.
+    if (globalBoard[move.board] === null) {
+      const localWin = findWinningLine(local)
+
+      if (localWin) {
+        globalBoard[move.board] = localWin.mark
+        localWinningLines[move.board] = localWin.line
+      } else if (local.every((cell) => cell !== null)) {
+        globalBoard[move.board] = 'draw'
+      }
+    }
+
+    const won = findWinningLine(globalBoard)
+    const gridFull = globalBoard.every((outcome) => outcome !== null)
+    const finished = Boolean(won) || gridFull
+
+    // The cell just taken names the next local board — unless there is nothing
+    // left to play for there, in which case the next player goes anywhere.
+    const target = move.cell
+    const activeBoardIndex =
+      finished || globalBoard[target] !== null ? null : target
 
     return {
       ...state,
-      board,
+      boards,
+      globalBoard,
+      localWinningLines,
+      activeBoardIndex,
       turn: (state.turn + 1) % state.order.length,
       winnerSessionId: won ? sessionId : null,
       winningLine: won ? won.line : null,
-      draw: !won && full,
+      draw: !won && gridFull,
     }
   },
 
@@ -200,8 +310,9 @@ export const ticTacToe: GameDefinition<TicTacToeState, CellMove> = {
   },
 
   viewFor(state: TicTacToeState): unknown {
-    // Tic-Tac-Toe is perfect information — every player may see everything, so
-    // no redaction is needed. Games with hidden roles strip them here.
+    // Ultimate Tic-Tac-Toe is perfect information — every player may see
+    // everything, so no redaction is needed. Games with hidden roles strip
+    // them here.
     return state
   },
 }

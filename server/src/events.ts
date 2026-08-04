@@ -154,9 +154,27 @@ export interface ChatResult {
 
 export type { GameView } from './games/types.js'
 
+/**
+ * Ultimate Tic-Tac-Toe's slice of the wire.
+ *
+ * Re-exported from the rules rather than restated, so the shape the client
+ * narrows `GameView.state` to is literally the shape the server computes. The
+ * frontend mirrors these in `lib/socket/events.ts` — the two packages build
+ * separately, so that copy has to be kept in step by hand.
+ */
+export type {
+  BoardOutcome,
+  CellMove,
+  Mark,
+  TicTacToeState,
+} from './games/tic-tac-toe.js'
+
 export interface MoveResult {
   ok: boolean
-  /** Why the move was refused, e.g. 'not-your-turn', 'cell-taken'. */
+  /**
+   * Why the move was refused, e.g. 'not-your-turn', 'cell-taken', or — in
+   * Ultimate Tic-Tac-Toe — 'wrong-board' and 'board-closed'.
+   */
   reason?: string
 }
 

@@ -99,12 +99,26 @@ function emitAck(socket, event, ...args) {
 }
 
 /** Play a move and wait for the broadcast that move produced. */
-async function move(socket, cell) {
+async function move(socket, board, cell) {
   const before = socket.latestView?.version ?? 0
-  const ack = await emitAck(socket, 'game:move', { cell })
+  const ack = await emitAck(socket, 'game:move', { board, cell })
   const view = ack?.ok ? await waitForVersion(socket, before + 1) : null
   return { ack, view }
 }
+
+/**
+ * A complete legal game: X takes local boards 0, 1 and 2 along their middle
+ * rows, winning the top row of the global board on the seventeenth move.
+ *
+ * Scripted rather than improvised because the movement constraint means the
+ * cell each player takes dictates the board the other must answer in — five
+ * arbitrary moves no longer win anything. X plays the odd-numbered entries.
+ */
+const X_WINS_TOP_ROW = [
+  [0, 3], [3, 0], [0, 4], [4, 0], [0, 5], [5, 1],
+  [1, 3], [3, 1], [1, 4], [4, 1], [1, 5], [5, 2],
+  [2, 3], [3, 2], [2, 4], [4, 2], [2, 5],
+]
 
 const ROOM = `game-${Date.now().toString(36)}`
 
@@ -134,27 +148,44 @@ try {
   const bobInitial = await waitForVersion(bob, 1)
 
   check('both players receive state', Boolean(initial && bobInitial), true)
-  check('board starts empty', initial?.state?.board?.every((c) => c === null), true)
+  check(
+    'every local board starts empty',
+    initial?.state?.boards?.every((b) => b.every((c) => c === null)),
+    true,
+  )
+  check('no local board is owned yet', initial?.state?.globalBoard?.every((o) => o === null), true)
+  check('the opening move may go anywhere', initial?.state?.activeBoardIndex, null)
   check('starter moves first', initial?.actors?.[0], alice.session.sessionId)
   check('both see the same turn', bobInitial?.actors?.[0], alice.session.sessionId)
   check('game is not finished', initial?.finished, false)
 
   console.log('\nServer-side move validation')
 
-  const outOfTurn = await emitAck(bob, 'game:move', { cell: 0 })
+  const outOfTurn = await emitAck(bob, 'game:move', { board: 0, cell: 0 })
   check('moving out of turn is refused', outOfTurn?.reason, 'not-your-turn')
 
-  check('non-integer cell is refused', (await emitAck(alice, 'game:move', { cell: 1.5 }))?.reason, 'cell-out-of-range')
-  check('negative cell is refused', (await emitAck(alice, 'game:move', { cell: -1 }))?.reason, 'cell-out-of-range')
-  check('cell past the board is refused', (await emitAck(alice, 'game:move', { cell: 9 }))?.reason, 'cell-out-of-range')
+  check('non-integer cell is refused', (await emitAck(alice, 'game:move', { board: 0, cell: 1.5 }))?.reason, 'cell-out-of-range')
+  check('negative cell is refused', (await emitAck(alice, 'game:move', { board: 0, cell: -1 }))?.reason, 'cell-out-of-range')
+  check('cell past the board is refused', (await emitAck(alice, 'game:move', { board: 0, cell: 9 }))?.reason, 'cell-out-of-range')
+  check('board past the grid is refused', (await emitAck(alice, 'game:move', { board: 9, cell: 0 }))?.reason, 'board-out-of-range')
+  check('a move with no board is refused', (await emitAck(alice, 'game:move', { cell: 0 }))?.reason, 'board-out-of-range')
   check('malformed move is refused', (await emitAck(alice, 'game:move', 'nope'))?.reason, 'malformed-move')
 
-  const first = await move(alice, 0)
+  const first = await move(alice, 0, 3)
   check('legal move is accepted', first.ack?.ok, true)
-  check('board records the mark', first.view?.state?.board?.[0], 'X')
+  check('board records the mark', first.view?.state?.boards?.[0]?.[3], 'X')
   check('turn passes to the opponent', first.view?.actors?.[0], bob.session.sessionId)
 
-  check('taken cell is refused', (await emitAck(bob, 'game:move', { cell: 0 }))?.reason, 'cell-taken')
+  // The rule that makes it Ultimate: X took cell 3, so O is pinned to board 3.
+  check('the cell taken names the next board', first.view?.state?.activeBoardIndex, 3)
+  check('playing outside that board is refused', (await emitAck(bob, 'game:move', { board: 0, cell: 0 }))?.reason, 'wrong-board')
+
+  // O answers in board 3 with cell 0, which sends X back to board 0 — where
+  // X's own first mark is already sitting on cell 3.
+  const second = await move(bob, 3, 0)
+  check('the pinned move is accepted', second.ack?.ok, true)
+  check('and pins the opponent in turn', second.view?.state?.activeBoardIndex, 0)
+  check('taken cell is refused', (await emitAck(alice, 'game:move', { board: 0, cell: 3 }))?.reason, 'cell-taken')
 
   // An outsider must not be able to reach someone else's game. Room capacity is
   // 2, so a third party can never be in the room — they are stopped at the room
@@ -162,23 +193,35 @@ try {
   const mallory = await connect('Mallory')
   check(
     'an outsider cannot move in a room they are not in',
-    (await emitAck(mallory, 'game:move', { cell: 4 }))?.reason,
+    (await emitAck(mallory, 'game:move', { board: 4, cell: 4 }))?.reason,
     'not-in-a-room',
   )
   await emitAck(mallory, 'room:join', `${ROOM}-x`)
   check(
     'being in a different room gives no game',
-    (await emitAck(mallory, 'game:move', { cell: 4 }))?.reason,
+    (await emitAck(mallory, 'game:move', { board: 4, cell: 4 }))?.reason,
     'no-game',
   )
 
   console.log('\nPlaying to a win')
 
-  // X: 0,1,2 across the top. O: 3,4.
-  await move(bob, 3)
-  await move(alice, 1)
-  await move(bob, 4)
-  const winning = await move(alice, 2)
+  // Two of the seventeen scripted moves are already down.
+  let localWin = null
+  for (const [index, [board, cell]] of X_WINS_TOP_ROW.slice(2, -1).entries()) {
+    const socket = index % 2 === 0 ? alice : bob
+    const played = await move(socket, board, cell)
+    check(`scripted move ${index + 3} is legal`, played.ack?.ok, true)
+    if (played.view?.state?.globalBoard?.[0] === 'X' && !localWin) {
+      localWin = played.view
+    }
+  }
+
+  check('winning a local board claims a global square', localWin?.state?.globalBoard?.[0], 'X')
+  check('the local winning line is exposed', localWin?.state?.localWinningLines?.[0], [3, 4, 5])
+  check('a local win is not the game', localWin?.finished, false)
+
+  const [lastBoard, lastCell] = X_WINS_TOP_ROW[X_WINS_TOP_ROW.length - 1]
+  const winning = await move(alice, lastBoard, lastCell)
 
   check('winning move is accepted', winning.ack?.ok, true)
   check('winner is recorded', winning.view?.result?.winnerSessionIds, [alice.session.sessionId])
@@ -186,7 +229,7 @@ try {
   check('game reports finished', winning.view?.finished, true)
   check('no turn once finished', winning.view?.actors, [])
   check('winning line is exposed for the UI', winning.view?.state?.winningLine, [0, 1, 2])
-  check('moves after the end are refused', (await emitAck(bob, 'game:move', { cell: 5 }))?.reason, 'game-finished')
+  check('moves after the end are refused', (await emitAck(bob, 'game:move', { board: 8, cell: 8 }))?.reason, 'game-finished')
 
   console.log('\nEphemerality')
 

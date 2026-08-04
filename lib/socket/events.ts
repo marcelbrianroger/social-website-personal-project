@@ -197,6 +197,57 @@ export interface GameView {
   serverNow: number
 }
 
+// --- Ultimate Tic-Tac-Toe --------------------------------------------------
+
+/**
+ * MIRRORS `server/src/games/tic-tac-toe.ts`.
+ *
+ * `GameView.state` is `unknown` because the engine is game-agnostic; this is
+ * what a `gameId: 'tic-tac-toe'` view narrows to. Perfect information, so
+ * unlike Mr. White nothing is stripped — what the server stores is what every
+ * viewer receives.
+ */
+export type Mark = 'X' | 'O'
+
+/**
+ * What has become of one local board.
+ *
+ * `'draw'` is load-bearing, not decoration: a full board with no line belongs
+ * to nobody, yet it is every bit as closed as a won one — you cannot play in
+ * it, and being sent to it frees you to go anywhere.
+ */
+export type BoardOutcome = Mark | 'draw' | null
+
+export interface TicTacToeState {
+  /** Nine local boards, each row-major and length 9. `boards[board][cell]`. */
+  boards: (Mark | null)[][]
+  /** Row-major, length 9. Who owns each local board. */
+  globalBoard: BoardOutcome[]
+  /** Per local board, the three cells that won it. For highlighting. */
+  localWinningLines: (number[] | null)[]
+  /**
+   * The local board the mover MUST play in, or null for "any open board".
+   *
+   * The whole game in one field: the cell someone takes names the board their
+   * opponent has to answer in. Null is normal — it is the opening position,
+   * and it is what happens whenever that named board is already decided.
+   */
+  activeBoardIndex: number | null
+  order: string[]
+  turn: number
+  winnerSessionId: string | null
+  /** LOCAL BOARD indices (0–8) forming the winning line on the global board. */
+  winningLine: number[] | null
+  draw: boolean
+  forfeitedBy: string | null
+}
+
+/** Move intent. Both are 0–8; the server decides whether it is legal. */
+export interface CellMove {
+  board: number
+  cell: number
+}
+
 export interface MoveResult {
   ok: boolean
   reason?: string
@@ -212,6 +263,11 @@ export const MOVE_ERROR_TEXT: Record<string, string> = {
   'not-your-turn': "It's not your turn.",
   'cell-taken': 'That square is already taken.',
   'cell-out-of-range': 'That is not a square on the board.',
+  'board-out-of-range': 'That is not a board on the grid.',
+  // Ultimate Tic-Tac-Toe's two new ways to be wrong. `wrong-board` is the one
+  // players hit constantly while learning the game.
+  'wrong-board': 'You have to play in the highlighted board.',
+  'board-closed': 'That board is already decided.',
   'malformed-move': 'That move made no sense.',
   'game-finished': 'The game is already over.',
   'not-a-player': 'You are watching, not playing.',
