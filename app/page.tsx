@@ -59,7 +59,7 @@ export default async function Home() {
                 href="/rooms"
                 className="border-2 border-ink px-6 py-3 font-mono text-sm text-ink transition-colors hover:bg-yellow"
               >
-                Cari teman ngobrol
+                Buka ruang video
               </Link>
             </div>
           </div>
@@ -126,7 +126,11 @@ export default async function Home() {
             selain mading
           </p>
 
-          <div className="mt-10 grid grid-cols-1 gap-y-10 sm:gap-x-10 md:grid-cols-3">
+          {/* Satu kartu per tujuan, bukan per pintu masuk. Nyari partner sama
+              masuk pakai ID ruang dua-duanya nyampe di /rooms, jadi dua-duanya
+              diceritain di kartu yang sama — bukan dipisah jadi dua kartu yang
+              kelihatan kayak dua fitur beda. */}
+          <div className="mt-10 grid grid-cols-1 gap-y-10 sm:gap-x-10 md:grid-cols-2">
             <article className="flex flex-col border-t-2 border-ink pt-5">
               <h3
                 className="font-display text-xl leading-tight"
@@ -135,9 +139,11 @@ export default async function Home() {
                 Ruang video
               </h3>
               <p className="mt-3 flex-1 text-[0.9375rem] leading-relaxed text-ink">
-                Dua orang per ruang. Video sama suaranya jalan langsung dari
-                browser ke browser, nggak lewat server kami — jadi di sisi kami
-                emang nggak ada apa-apa buat direkam.
+                Dua orang per ruang. Pencet sekali terus tunggu sampai ada yang
+                juga lagi nunggu — atau masuk pakai ID ruang kalau udah
+                janjian. Video sama suaranya jalan langsung dari browser ke
+                browser, nggak lewat server kami, jadi di sisi kami emang nggak
+                ada apa-apa buat direkam. Di dalem ruang bisa main tic-tac-toe.
               </p>
               <Link
                 href="/rooms"
@@ -152,44 +158,20 @@ export default async function Home() {
                 className="font-display text-xl leading-tight"
                 style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
               >
-                Cari teman ngobrol
+                Mr. White
               </h3>
               <p className="mt-3 flex-1 text-[0.9375rem] leading-relaxed text-ink">
-                Pencet sekali, terus tunggu. Begitu ada orang lain yang juga
-                lagi nunggu, kalian berdua langsung dimasukin ke satu ruang.
-                Yang duluan nunggu, duluan dapet.
+                Empat sampai delapan orang, nggak pakai video. Semua pegang satu
+                kata rahasia — kecuali satu orang, yang harus pura-pura tau.
+                Papannya dipegang server; browser kamu cuma bisa minta jalan,
+                nggak pernah bisa nentuin sendiri.
               </p>
               <Link
-                href="/rooms"
+                href="/lobby"
                 className={`mt-5 self-start ${MARKER} py-0.5 text-sm`}
               >
-                Cari sekarang
+                buka/gabung permainan
               </Link>
-            </article>
-
-            <article className="flex flex-col border-t-2 border-ink pt-5">
-              <h3
-                className="font-display text-xl leading-tight"
-                style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
-              >
-                Game
-              </h3>
-              <p className="mt-3 flex-1 text-[0.9375rem] leading-relaxed text-ink">
-                Mainnya di dalam ruang, papannya dipegang server. Browser kamu
-                cuma bisa minta jalan — nggak pernah bisa nentuin sendiri.
-              </p>
-
-              {/* Build state, not decoration. Both labels are true today. */}
-              <dl className="mt-5 space-y-1 font-mono text-[0.6875rem]">
-                <div className="flex items-baseline justify-between gap-3 border-b border-rule pb-1">
-                  <dt>tic-tac-toe</dt>
-                  <dd className="text-ink-soft">bisa dimainkan</dd>
-                </div>
-                <div className="flex items-baseline justify-between gap-3 border-b border-rule pb-1">
-                  <dt>mr. white</dt>
-                  <dd className="text-ink-soft">masih digambar</dd>
-                </div>
-              </dl>
             </article>
           </div>
         </div>

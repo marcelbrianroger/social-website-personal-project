@@ -102,12 +102,17 @@ function parse(raw: string | null): StoredGame | null {
   }
 }
 
-export async function loadGame(roomId: string): Promise<StoredGame | null> {
-  return parse(await redis.get(keys.game(roomId)))
+export async function loadGame(scope: string): Promise<StoredGame | null> {
+  return parse(await redis.get(keys.game(scope)))
 }
 
-export async function purgeGame(roomId: string): Promise<void> {
-  await redis.del(keys.game(roomId))
+export async function purgeGame(scope: string): Promise<void> {
+  // The deadline index has to go too, or the sweeper keeps waking up for a game
+  // that no longer exists.
+  await Promise.all([
+    redis.del(keys.game(scope)),
+    redis.zrem(keys.gameDeadlines, scope),
+  ])
 }
 
 /**
@@ -129,11 +134,107 @@ export function buildView(
       sessionId: id,
       nickname,
     })),
-    currentTurn: stored.finished ? null : definition.currentTurn(stored.state),
+    actors: stored.finished ? [] : definition.actors(stored.state),
     finished: stored.finished,
     result: stored.result,
     state: definition.viewFor(stored.state, sessionId),
+    phaseEndsAt: stored.finished ? null : definition.deadline(stored.state),
+    // Stamped per recipient so the client can correct for a skewed local clock.
+    serverNow: Date.now(),
   }
+}
+
+/**
+ * Keep the sweeper's index in step with the game.
+ *
+ * Called after every successful write. A finished or untimed game is removed
+ * rather than left with a stale score, so `dueGames` never hands back a scope
+ * that has nothing to do.
+ */
+async function indexDeadline(
+  scope: string,
+  stored: StoredGame,
+  definition: AnyGameDefinition,
+): Promise<void> {
+  const due = stored.finished ? null : definition.deadline(stored.state)
+
+  if (due === null) {
+    await redis.zrem(keys.gameDeadlines, scope)
+  } else {
+    await redis.zadd(keys.gameDeadlines, due, scope)
+  }
+}
+
+/**
+ * Game scopes whose current phase is due.
+ *
+ * Read by the per-node sweeper roughly once a second. Cost scales with games
+ * that are actually due, not with games running — an untimed game is never in
+ * the index in the first place.
+ */
+export async function dueGames(now: number = Date.now()): Promise<string[]> {
+  return redis.zrangebyscore(keys.gameDeadlines, 0, now)
+}
+
+/**
+ * Advance a game whose phase deadline has passed.
+ *
+ * Shares `submitMove`'s compare-and-set discipline, and needs no distributed
+ * lock: two nodes sweeping the same due game both go through the CAS, and the
+ * loser re-reads, calls `tick` again, gets null because the phase already moved,
+ * and stops. Duplicate ticks are therefore harmless rather than a double
+ * advance — which is what `tick`'s purity buys.
+ */
+export async function tickGame(
+  scope: string,
+): Promise<{ stored: StoredGame; definition: AnyGameDefinition } | null> {
+  for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt += 1) {
+    const stored = await loadGame(scope)
+
+    if (!stored || stored.finished) {
+      // Nothing to advance, and nothing that should stay in the index.
+      await redis.zrem(keys.gameDeadlines, scope)
+      return null
+    }
+
+    const definition = getGameDefinition(stored.gameId)
+    if (!definition) return null
+
+    const nextState = definition.tick(stored.state, Date.now())
+    // Not due yet, or already advanced by whoever won the race.
+    if (nextState === null) return null
+
+    const result = definition.result(nextState)
+
+    const next: StoredGame = {
+      ...stored,
+      version: stored.version + 1,
+      state: nextState,
+      finished: result !== null,
+      result,
+    }
+
+    const written = await scripts.gameCas(
+      keys.game(scope),
+      String(stored.version),
+      JSON.stringify(next),
+      String(GAME_TTL_SECONDS),
+    )
+
+    if (written === 1) {
+      await indexDeadline(scope, next, definition)
+      return { stored: next, definition }
+    }
+
+    if (written === -1) {
+      await redis.zrem(keys.gameDeadlines, scope)
+      return null
+    }
+
+    // written === 0 (version moved) or -2 (corrupt): re-read and try again.
+  }
+
+  return null
 }
 
 export async function startGame(
@@ -171,6 +272,10 @@ export async function startGame(
 
   const stored = parse(authoritative) ?? proposed
   const storedDefinition = getGameDefinition(stored.gameId) ?? definition
+
+  // A timed game has to enter the sweeper's index the moment it starts, or its
+  // first phase would never expire.
+  await indexDeadline(roomId, stored, storedDefinition)
 
   return { ok: true, stored, definition: storedDefinition }
 }
@@ -222,7 +327,10 @@ export async function submitMove(
       String(GAME_TTL_SECONDS),
     )
 
-    if (written === 1) return { ok: true, stored: next, definition }
+    if (written === 1) {
+      await indexDeadline(roomId, next, definition)
+      return { ok: true, stored: next, definition }
+    }
     if (written === -1) return { ok: false, reason: 'no-game' }
 
     // written === 0 (version moved) or -2 (corrupt): re-read and try again.
@@ -270,7 +378,10 @@ export async function forfeitGame(
       String(GAME_TTL_SECONDS),
     )
 
-    if (written === 1) return { stored: next, definition }
+    if (written === 1) {
+      await indexDeadline(roomId, next, definition)
+      return { stored: next, definition }
+    }
     if (written === -1) return null
   }
 

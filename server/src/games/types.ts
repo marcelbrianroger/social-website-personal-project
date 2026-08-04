@@ -29,13 +29,35 @@ export interface GamePlayer {
 }
 
 export interface GameResult {
-  /** Winning player's sessionId, or null for a draw. */
-  winnerSessionId: string | null
+  /**
+   * Everyone who won. Empty for a draw, or for a game nobody won.
+   *
+   * A list rather than a single id because social-deduction games are won by a
+   * TEAM: "the civilians" is three or four sessionIds, not one.
+   */
+  winnerSessionIds: string[]
+  /** Which side won, for team games. Absent when winning is individual. */
+  team?: string
   reason: 'win' | 'draw' | 'forfeit'
 }
 
 export type MoveValidation<M> =
   | { ok: true; move: M }
+  | { ok: false; reason: string }
+
+/**
+ * Who may hear a chat message.
+ *
+ * The rules decide, not the transport — a dead player talking to other dead
+ * players and a living table talking openly are the same event with different
+ * audiences. The engine resolves `to` (sessionIds) to sockets and emits per
+ * recipient, exactly as `game:state` already does.
+ *
+ * Chat never enters game state, never bumps the version, and is never
+ * persisted.
+ */
+export type ChatAudience =
+  | { ok: true; channel: string; to: string[] }
   | { ok: false; reason: string }
 
 export interface GameDefinition<S, M> {
@@ -47,8 +69,48 @@ export interface GameDefinition<S, M> {
   /** Build the opening position. Player order is fixed here. */
   createInitialState(players: GamePlayer[]): S
 
-  /** sessionId of whoever may move next, or null when the game is over. */
-  currentTurn(state: S): string | null
+  /**
+   * Everyone who may act right now.
+   *
+   * One concept covering sequential and simultaneous play: Tic-Tac-Toe returns
+   * the single player whose turn it is, a vote phase returns every living
+   * player, and a discussion phase returns nobody. The alternative — a
+   * `currentTurn` for turn-based games plus a parallel path for simultaneous
+   * ones — would fork every consumer in the engine.
+   *
+   * Empty means "nobody may move", which is legal only while something else can
+   * still advance the game (see `deadline`).
+   */
+  actors(state: S): string[]
+
+  /**
+   * Epoch ms at which the current phase ends, or null if it is untimed.
+   *
+   * The engine indexes this in a Redis sorted set so the deadline sweeper can
+   * find games that are actually due, rather than polling every running game.
+   * Storing the deadline as data — not as a live `setTimeout` — is also what
+   * makes it survive a process restart.
+   */
+  deadline(state: S): number | null
+
+  /**
+   * Advance a phase whose deadline has passed. MUST be pure.
+   *
+   * Returns the next state, or null when there is nothing to do. The null is
+   * load-bearing: two nodes can sweep the same due game at the same moment, and
+   * the one that loses the compare-and-set re-reads and ticks again. It has to
+   * find nothing left to do, or the phase would advance twice.
+   */
+  tick(state: S, now: number): S | null
+
+  /**
+   * Who may hear a chat message from `sessionId` right now.
+   *
+   * Lives on the definition because the audience is a rule: the same message is
+   * public during discussion, restricted to the dead after elimination, and
+   * refused outright during a clue round.
+   */
+  chatAudience(state: S, sessionId: string): ChatAudience
 
   /**
    * Decide whether `raw` (untrusted client input) is a legal move right now.
@@ -115,9 +177,21 @@ export interface GameView {
   label: string
   version: number
   players: Array<Pick<GamePlayer, 'sessionId' | 'nickname'>>
-  /** sessionId whose turn it is, or null when finished. */
-  currentTurn: string | null
+  /** sessionIds who may act right now. Empty when nobody may, or when finished. */
+  actors: string[]
   finished: boolean
   result: GameResult | null
   state: unknown
+  /** Epoch ms the current phase ends, or null when untimed. */
+  phaseEndsAt: number | null
+  /**
+   * Server epoch ms at the moment this view was built.
+   *
+   * A browser clock can be minutes out, so `phaseEndsAt` compared against a raw
+   * client `Date.now()` shows the wrong number — negative on a fast clock,
+   * which reads as "time's up" while the server is still accepting moves. The
+   * client pins `offset = serverNow - Date.now()` once per push and renders
+   * against that.
+   */
+  serverNow: number
 }

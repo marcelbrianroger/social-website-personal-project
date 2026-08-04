@@ -65,11 +65,11 @@ describe('listing games', () => {
     }
   })
 
-  it('currently offers Tic-Tac-Toe', () => {
+  it('offers Tic-Tac-Toe and Mr. White', () => {
     assert.deepEqual(
       listGames().map((entry) => entry.id),
-      ['tic-tac-toe'],
-      'Phase 5 games are designed but not yet registered — see mr-white.pending.test.ts',
+      ['tic-tac-toe', 'mr-white'],
+      'Werewolf is still out of scope pending its own spec',
     )
   })
 })
@@ -120,7 +120,7 @@ describe('every registered definition honours the contract', () => {
 
       it('survives hostile move input without throwing', () => {
         const state = definition.createInitialState(players)
-        const mover = definition.currentTurn(state) ?? players[0]!.sessionId
+        const mover = definition.actors(state)[0] ?? players[0]!.sessionId
 
         for (const raw of [null, undefined, 'x', 42, [], {}, { cell: -1 }]) {
           assert.doesNotThrow(

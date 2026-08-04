@@ -55,16 +55,22 @@ export function GameBoard({
   if (!roomId) return null
 
   const state = asTicTacToe(view)
-  const myTurn = Boolean(view && !view.finished && view.currentTurn === sessionId)
+  // `actors` is the generalised turn: a simultaneous game returns every player
+  // who may act, but Tic-Tac-Toe is strictly sequential, so it is always empty
+  // or a single id. `sessionId` may be null, and an empty list yields undefined
+  // — which never equals null, so a spectator is correctly never "on turn".
+  const myTurn = Boolean(view && !view.finished && view.actors[0] === sessionId)
   const myMark: Mark | null =
     state && sessionId ? (state.order[0] === sessionId ? 'X' : 'O') : null
 
   function outcomeText(current: GameView): string {
     if (!current.result) return ''
-    const { winnerSessionId, reason } = current.result
+    const { winnerSessionIds, reason } = current.result
 
+    // A draw returns before this, so the list is never empty by the time it is
+    // read — Tic-Tac-Toe wins and forfeits both name exactly one survivor.
     if (reason === 'draw') return 'Seri.'
-    if (winnerSessionId === sessionId) {
+    if (winnerSessionIds[0] === sessionId) {
       return reason === 'forfeit' ? 'Kamu menang — lawannya keluar.' : 'Kamu menang.'
     }
     return reason === 'forfeit' ? 'Gamenya ditinggal.' : 'Kamu kalah.'

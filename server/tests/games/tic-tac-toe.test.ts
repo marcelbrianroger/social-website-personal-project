@@ -40,8 +40,8 @@ function play(cells: number[], from = opening()): TicTacToeState {
   let state = from
 
   for (const cell of cells) {
-    const mover = ticTacToe.currentTurn(state)
-    assert.notEqual(mover, null, `no player may move at cell ${cell}`)
+    const [mover] = ticTacToe.actors(state)
+    assert.notEqual(mover, undefined, `no player may move at cell ${cell}`)
 
     const validation = ticTacToe.validateMove(state, mover as string, { cell })
     assert.equal(validation.ok, true, `cell ${cell} should have been legal`)
@@ -72,16 +72,16 @@ describe('the opening position', () => {
     const state = opening()
 
     assert.deepEqual(state.board, Array.from({ length: 9 }, () => null))
-    assert.equal(ticTacToe.currentTurn(state), alice.sessionId)
+    assert.deepEqual(ticTacToe.actors(state), [alice.sessionId])
     assert.equal(ticTacToe.result(state), null, 'a fresh game is not over')
   })
 
   it('seats players in the order they were passed', () => {
     const reversed = ticTacToe.createInitialState([bob, alice])
 
-    assert.equal(
-      ticTacToe.currentTurn(reversed),
-      bob.sessionId,
+    assert.deepEqual(
+      ticTacToe.actors(reversed),
+      [bob.sessionId],
       'seat order is the caller’s decision, not the definition’s',
     )
   })
@@ -210,8 +210,8 @@ describe('applying a move', () => {
   })
 
   it('passes the turn', () => {
-    assert.equal(ticTacToe.currentTurn(play([0])), bob.sessionId)
-    assert.equal(ticTacToe.currentTurn(play([0, 1])), alice.sessionId)
+    assert.deepEqual(ticTacToe.actors(play([0])), [bob.sessionId])
+    assert.deepEqual(ticTacToe.actors(play([0, 1])), [alice.sessionId])
   })
 })
 
@@ -231,7 +231,7 @@ describe('finishing', () => {
 
       assert.deepEqual(
         ticTacToe.result(state),
-        { winnerSessionId: alice.sessionId, reason: 'win' },
+        { winnerSessionIds: [alice.sessionId], reason: 'win' },
         `line ${line.join('')} should win`,
       )
       assert.deepEqual(
@@ -239,9 +239,9 @@ describe('finishing', () => {
         line,
         'the winning line is published so the UI can highlight it',
       )
-      assert.equal(
-        ticTacToe.currentTurn(state),
-        null,
+      assert.deepEqual(
+        ticTacToe.actors(state),
+        [],
         'nobody moves in a finished game',
       )
     }
@@ -253,10 +253,10 @@ describe('finishing', () => {
     assert.equal(state.draw, true)
     assert.equal(state.winnerSessionId, null)
     assert.deepEqual(ticTacToe.result(state), {
-      winnerSessionId: null,
+      winnerSessionIds: [],
       reason: 'draw',
     })
-    assert.equal(ticTacToe.currentTurn(state), null)
+    assert.deepEqual(ticTacToe.actors(state), [])
   })
 
   it('reports nothing while the game is still running', () => {
@@ -269,10 +269,10 @@ describe('forfeiting', () => {
     const state = ticTacToe.forfeit(play([0, 1]), alice.sessionId)
 
     assert.deepEqual(ticTacToe.result(state), {
-      winnerSessionId: bob.sessionId,
+      winnerSessionIds: [bob.sessionId],
       reason: 'forfeit',
     })
-    assert.equal(ticTacToe.currentTurn(state), null)
+    assert.deepEqual(ticTacToe.actors(state), [])
   })
 
   it('leaves a decided game alone', () => {
@@ -284,7 +284,7 @@ describe('forfeiting', () => {
 
     assert.equal(state, won, 'a finished state is returned untouched')
     assert.deepEqual(ticTacToe.result(state), {
-      winnerSessionId: alice.sessionId,
+      winnerSessionIds: [alice.sessionId],
       reason: 'win',
     })
   })

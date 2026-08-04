@@ -1,29 +1,42 @@
 import assert from 'node:assert/strict'
-import { describe, it } from 'node:test'
+import { after, describe, it } from 'node:test'
 
 import type { GamePlayer } from '../../src/games/types.js'
+import { teardownRedis } from '../helpers/harness.js'
 
 /**
- * Mr. White — PENDING. Phase 5 is designed but not implemented.
+ * Mr. White — the Phase 5 spec suite, now live.
  *
  * Source of truth: docs/superpowers/specs/2026-08-03-phase5-social-deduction-design.md
- * (Status: awaiting review). At the time of writing, games/registry.ts registers
- * only Tic-Tac-Toe, and games/types.ts still exposes the Phase 4 contract
- * (`currentTurn`, `winnerSessionId`) rather than the generalized one
- * (`actors`, `winnerSessionIds`, `tick`, `deadline`, `chatAudience`).
  *
- * Every test below is skipped, so the suite stays green. They exist as the red
- * baseline for whoever builds Phase 5: delete the `skip` option on a block, and
- * it should fail until the corresponding behaviour exists. Werewolf is not
- * covered at all — the design doc puts it out of scope pending its own spec.
+ * These were written as a skipped red baseline before any implementation
+ * existed. The implementation landed, so the skip is gone and every assertion
+ * below now runs against real code. Werewolf is still not covered at all — the
+ * design doc puts it out of scope pending its own spec.
  *
- * Modules are imported dynamically through a non-literal specifier so this file
- * compiles and runs while those modules do not yet exist.
+ * ONE FIXTURE WAS CORRECTED, and only a fixture: see the note on 'eliminates
+ * the plurality target'. As scaffolded it tallied 2-2, identical to the tie
+ * case it sits next to, so the two tests contradicted each other. No assertion
+ * was weakened to make the implementation pass.
+ *
+ * The dynamic imports through a non-literal specifier are a leftover from when
+ * these modules did not exist. They still resolve, so they are left alone
+ * rather than churned — the `any` typing that comes with them is the cost.
  */
 
 const MR_WHITE_MODULE = '../../src/games/mr-white.js'
 const LOBBY_MODULE = '../../src/lobby.js'
 const ENGINE_MODULE = '../../src/game-engine.js'
+
+/**
+ * The engine and lobby imports below reach src/redis.ts, which opens three
+ * connections at module load. Two are the Socket.io adapter's and go unused
+ * here, but an open handle is still an open handle — without this the process
+ * finishes every assertion and then hangs forever waiting on the event loop.
+ *
+ * Not needed while this suite was skipped, because nothing was ever imported.
+ */
+after(teardownRedis)
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -55,9 +68,13 @@ function mrWhiteOf(state: any): string {
   )![0]
 }
 
-const PENDING = {
-  skip: 'Phase 5 is a design doc; no implementation exists yet.',
-} as const
+/**
+ * Formerly `{ skip: ... }`.
+ *
+ * Kept as an empty options object rather than deleted from 39 call sites, so
+ * the diff that turned this suite on is one line and reviewable as such.
+ */
+const PENDING = {} as const
 
 describe('Mr. White — role assignment', () => {
   it('gives exactly one player the Mr. White role', PENDING, async () => {
@@ -386,6 +403,153 @@ describe('Mr. White — moves', () => {
   })
 })
 
+describe('Mr. White — a clue is one word', () => {
+  it('accepts a single word', PENDING, async () => {
+    const mrWhite = await loadMrWhite()
+    const state = { ...mrWhite.createInitialState(PLAYERS), phase: 'clue' }
+    const [actor] = mrWhite.actors(state)
+
+    assert.equal(
+      mrWhite.validateMove(state, actor, { type: 'clue', word: '  bright  ' }).ok,
+      true,
+      'surrounding space is trimmed, not treated as a second word',
+    )
+  })
+
+  it('refuses a phrase', PENDING, async () => {
+    const mrWhite = await loadMrWhite()
+    const state = { ...mrWhite.createInitialState(PLAYERS), phase: 'clue' }
+    const [actor] = mrWhite.actors(state)
+
+    // A phrase can describe the secret outright, which hands Mr. White the
+    // answer off the screen — the single word IS the game.
+    for (const word of ['tall and bright', 'sea\nside', 'by\tthe coast']) {
+      assert.deepEqual(
+        mrWhite.validateMove(state, actor, { type: 'clue', word }),
+        { ok: false, reason: 'not-one-word' },
+        `"${word}" is more than one word`,
+      )
+    }
+  })
+
+  it('refuses one absurdly long word', PENDING, async () => {
+    const mrWhite = await loadMrWhite()
+    const state = { ...mrWhite.createInitialState(PLAYERS), phase: 'clue' }
+    const [actor] = mrWhite.actors(state)
+
+    // Otherwise a pasted paragraph with the spaces stripped passes as "a word".
+    assert.equal(
+      mrWhite.validateMove(state, actor, { type: 'clue', word: 'a'.repeat(200) })
+        .reason,
+      'clue-too-long',
+    )
+  })
+})
+
+describe('Mr. White — cutting the discussion short', () => {
+  function discussing(mrWhite: any) {
+    return { ...mrWhite.createInitialState(PLAYERS), phase: 'discussion' }
+  }
+
+  it('refuses a readiness vote outside the discussion', PENDING, async () => {
+    const mrWhite = await loadMrWhite()
+
+    for (const phase of ['reveal', 'clue', 'vote', 'guess']) {
+      const state = { ...mrWhite.createInitialState(PLAYERS), phase }
+
+      assert.equal(
+        mrWhite.validateMove(state, PLAYERS[0]!.sessionId, { type: 'ready' }).ok,
+        false,
+        `readiness must mean nothing during "${phase}"`,
+      )
+    }
+  })
+
+  it('refuses a readiness vote from an eliminated player', PENDING, async () => {
+    const mrWhite = await loadMrWhite()
+    const state = {
+      ...discussing(mrWhite),
+      eliminated: [PLAYERS[0]!.sessionId],
+    }
+
+    assert.equal(
+      mrWhite.validateMove(state, PLAYERS[0]!.sessionId, { type: 'ready' }).ok,
+      false,
+      'the dead do not get to hurry the living',
+    )
+  })
+
+  it('holds the discussion open below a majority', PENDING, async () => {
+    const mrWhite = await loadMrWhite()
+    let state = discussing(mrWhite)
+
+    // Two of four is half, not a majority — exactly the split still worth
+    // arguing about.
+    for (const voter of PLAYERS.slice(0, 2)) {
+      const validation = mrWhite.validateMove(state, voter.sessionId, {
+        type: 'ready',
+      })
+      state = mrWhite.applyMove(state, voter.sessionId, validation.move)
+    }
+
+    assert.equal(state.phase, 'discussion')
+    assert.equal(state.readyToVote.length, 2)
+  })
+
+  it('opens the vote once a majority is ready', PENDING, async () => {
+    const mrWhite = await loadMrWhite()
+    let state = discussing(mrWhite)
+
+    for (const voter of PLAYERS.slice(0, 3)) {
+      const validation = mrWhite.validateMove(state, voter.sessionId, {
+        type: 'ready',
+      })
+      state = mrWhite.applyMove(state, voter.sessionId, validation.move)
+    }
+
+    assert.equal(state.phase, 'vote', 'three of four ends the argument')
+    assert.deepEqual(state.readyToVote, [], 'and readiness resets with it')
+    assert.deepEqual(state.votes, {}, 'the vote opens empty')
+  })
+
+  it('lets a player take it back', PENDING, async () => {
+    const mrWhite = await loadMrWhite()
+    let state = discussing(mrWhite)
+    const voter = PLAYERS[0]!.sessionId
+
+    for (let press = 0; press < 2; press += 1) {
+      const validation = mrWhite.validateMove(state, voter, { type: 'ready' })
+      state = mrWhite.applyMove(state, voter, validation.move)
+    }
+
+    assert.deepEqual(
+      state.readyToVote,
+      [],
+      'pressing twice must undo, not count twice',
+    )
+    assert.equal(state.phase, 'discussion')
+  })
+
+  it('starts each round from zero', PENDING, async () => {
+    const mrWhite = await loadMrWhite()
+    const state = {
+      ...mrWhite.createInitialState(PLAYERS),
+      phase: 'clue',
+      readyToVote: [PLAYERS[0]!.sessionId, PLAYERS[1]!.sessionId],
+    }
+
+    // Timing out the whole clue round lands in the discussion; stale readiness
+    // carried over would end it before anyone had said a word.
+    let advanced = state
+    for (let turn = 0; turn < PLAYERS.length; turn += 1) {
+      advanced = mrWhite.tick(advanced, mrWhite.deadline(advanced) + 1)
+    }
+
+    assert.equal(advanced.phase, 'discussion')
+    assert.deepEqual(advanced.readyToVote, [])
+  })
+})
+
 describe('Mr. White — vote resolution', () => {
   it('eliminates the plurality target', PENDING, async () => {
     const mrWhite = await loadMrWhite()
@@ -395,10 +559,17 @@ describe('Mr. White — vote resolution', () => {
       string,
       string,
     ]
+    // Three votes for b against one for a — an actual plurality.
+    //
+    // As originally scaffolded this fixture read `{[a]: b, [c]: b, [d]: a,
+    // [b]: a}`, which tallies 2-2 and is therefore the SAME tally as the tie
+    // case below while expecting the opposite outcome. Satisfying both would
+    // have required resolution to depend on object key insertion order — which
+    // in practice means Redis' JSON key ordering deciding who gets voted out.
     const state = {
       ...mrWhite.createInitialState(PLAYERS),
       phase: 'vote',
-      votes: { [a]: b, [c]: b, [d]: a, [b]: a },
+      votes: { [a]: b, [c]: b, [d]: b, [b]: a },
     }
 
     const advanced = mrWhite.tick(state, mrWhite.deadline(state) + 1)

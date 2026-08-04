@@ -60,24 +60,30 @@ wire protocol end to end. These tests sit one layer below, at the module API,
 and cover what a socket client cannot easily force: simultaneous writes, lost
 updates, capacity races. The two are complementary — neither replaces the other.
 
-## Phase 5 is not implemented
+## Phase 5
 
-`games/mr-white.pending.test.ts` contains **39 skipped tests** encoding the rules
-in `docs/superpowers/specs/2026-08-03-phase5-social-deduction-design.md`
-(Status: *awaiting review*).
+`games/mr-white.test.ts` encodes the rules in
+`docs/superpowers/specs/2026-08-03-phase5-social-deduction-design.md`. It was
+written as 39 skipped tests before any implementation existed; the
+implementation landed, the skip came off, and all of it now runs.
 
-Nothing in that spec has been built yet:
+What that work put in place:
 
-- `src/games/registry.ts` registers only Tic-Tac-Toe.
-- `src/games/types.ts` still exposes the Phase 4 contract (`currentTurn`,
-  `winnerSessionId`), not the generalized one (`actors`, `winnerSessionIds`,
-  `tick`, `deadline`, `chatAudience`).
-- There is no `src/lobby.ts`, no game chat, and no deadline sweeper.
+- `src/games/types.ts` carries the generalized contract — `actors`,
+  `winnerSessionIds`, `tick`, `deadline`, `chatAudience` — replacing
+  `currentTurn` and `winnerSessionId`.
+- `src/games/mr-white.ts` implements the seven phases, both win conditions and
+  the `viewFor` redaction.
+- `src/lobby.ts` is the 8-seat membership primitive, separate from the 2-seat
+  WebRTC room.
+- `src/game-chat.ts` plus `tickGame` / `dueGames` in the engine give scoped chat
+  and the deadline sweeper.
 
-The pending tests are the red baseline for that work: remove the `PENDING`
-option from a test and it should fail until the behaviour exists. They import
-the missing modules through a non-literal specifier, so the file compiles and
-runs today.
+One fixture in that suite was corrected rather than satisfied: `eliminates the
+plurality target` originally tallied 2-2, which is the same tally as the tie
+case beside it, so the two tests contradicted each other. Making both pass would
+have required vote resolution to depend on object key insertion order. No
+assertion was weakened.
 
 **Werewolf is not covered at all.** The design doc puts it out of scope pending
 its own spec, so there is nothing to encode yet.

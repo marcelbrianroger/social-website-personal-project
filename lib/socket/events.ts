@@ -61,11 +61,95 @@ export interface PostResult {
   error?: string
 }
 
+// --- Social-game lobby -----------------------------------------------------
+
+/**
+ * A seat in a social-game lobby.
+ *
+ * Same shape as RoomPeer and deliberately a separate type: a lobby carries no
+ * WebRTC, so `socketId` here is only an address for per-recipient emits, never
+ * a signalling target.
+ */
+export interface LobbyMember {
+  socketId: string
+  sessionId: string
+  nickname: string
+  /** Epoch ms of joining. Fixes seat order, which the clue rotation walks. */
+  joinedAt: number
+}
+
+/**
+ * One open table, as shown in the browser on `/lobby`.
+ *
+ * Deliberately thin: an id, how full it is, and who opened it. No roster and no
+ * game state — anyone can watch this list without being in the lobby, so it
+ * carries nothing a player inside would consider private.
+ */
+export interface LobbySummary {
+  lobbyId: string
+  seated: number
+  capacity: number
+  /** A game is already running. You may still join, but you will be watching. */
+  inProgress: boolean
+  /** Host nickname, so a table someone told you about is recognisable. */
+  host: string | null
+}
+
+export interface LobbyJoinResult {
+  ok: boolean
+  /** Everyone already seated. Does NOT include the caller — see `you`. */
+  members: LobbyMember[]
+  /**
+   * Your own seat, exactly as the server stored it.
+   *
+   * Use this rather than inventing a `joinedAt` locally: seat order decides
+   * both the clue rotation and who the host is, and a browser clock minutes
+   * out of step would sort the roster wrong and put the Start button on the
+   * wrong person.
+   */
+  you?: LobbyMember
+  /** LOBBY_CAPACITY — 8, against ROOM_CAPACITY = 2 for the video rooms. */
+  capacity: number
+  error?: string
+}
+
+/**
+ * One chat line, already scoped to its audience by the server.
+ *
+ * Never persisted and never replayed on reconnect: a player who drops during a
+ * discussion loses the argument so far. That is the accepted cost of keeping
+ * chat out of the game state machine.
+ */
+export interface ChatMessage {
+  id: string
+  /** sessionId of the sender. */
+  from: string
+  nickname: string
+  body: string
+  /** Which audience this went to, e.g. 'table' or 'dead'. */
+  channel: string
+  /** Epoch ms. */
+  at: number
+}
+
+export interface ChatResult {
+  ok: boolean
+  error?: string
+}
+
 // --- Board games -----------------------------------------------------------
 
 export interface GameResult {
-  /** Winner's sessionId, or null for a draw. */
-  winnerSessionId: string | null
+  /**
+   * Everyone who won. Empty for a draw, or for a game nobody won.
+   *
+   * A list rather than a single id because social-deduction games are won by a
+   * TEAM: "the civilians" is three or four sessionIds. Tic-Tac-Toe returns a
+   * one-element list, or an empty one for a draw.
+   */
+  winnerSessionIds: string[]
+  /** Which side won, for team games. Absent when winning is individual. */
+  team?: string
   reason: 'win' | 'draw' | 'forfeit'
 }
 
@@ -81,11 +165,28 @@ export interface GameView {
   label: string
   version: number
   players: Array<{ sessionId: string; nickname: string }>
-  /** sessionId whose turn it is, or null when finished. */
-  currentTurn: string | null
+  /**
+   * sessionIds who may act right now. Empty when nobody may, or when finished.
+   *
+   * One concept covering sequential and simultaneous play: Tic-Tac-Toe returns
+   * the single player whose turn it is, a Mr. White vote returns every living
+   * player, and a discussion phase returns nobody.
+   */
+  actors: string[]
   finished: boolean
   result: GameResult | null
   state: unknown
+  /** Epoch ms the current phase ends, or null when the game is untimed. */
+  phaseEndsAt: number | null
+  /**
+   * Server epoch ms at the moment this view was built.
+   *
+   * A browser clock can be minutes out, so `phaseEndsAt` compared against a raw
+   * `Date.now()` shows the wrong number — negative on a fast clock, which reads
+   * as "time's up" while the server is still accepting moves. Pin
+   * `offset = serverNow - Date.now()` once per push and render against that.
+   */
+  serverNow: number
 }
 
 export interface MoveResult {
@@ -109,12 +210,53 @@ export const MOVE_ERROR_TEXT: Record<string, string> = {
   'not-in-a-room': 'You are not in a room.',
   'no-game': 'No game is running.',
   conflict: 'Someone moved at the same time. Try again.',
+
+  // Mr. White. `wrong-phase` is the common one: a 45-second vote can close
+  // between the click and the packet arriving.
+  'wrong-phase': 'That phase has already moved on.',
+  eliminated: 'You are out — the living are deciding this one.',
+  'invalid-target': 'That is not someone you can vote for.',
+  'target-eliminated': 'They are already out.',
+  'not-mr-white': 'Only Mr. White may guess the word.',
+  'not-one-word': 'One word only — no spaces.',
+  'clue-too-long': 'That is too long for one word.',
+}
+
+/** Why joining a lobby failed. */
+export const LOBBY_JOIN_ERROR_TEXT: Record<string, string> = {
+  'invalid-lobby-id':
+    'Lobby ID must be 3–32 characters: letters, digits, dash or underscore.',
+  'lobby-full': 'That lobby already has eight people in it.',
+  'already-in-lobby': 'You are already at that table.',
+}
+
+/** Why a chat message was refused. */
+export const CHAT_ERROR_TEXT: Record<string, string> = {
+  'chat-closed': 'Chat is closed during this phase.',
+  'chat-not-supported': 'There is no chat in this game.',
+  'not-a-player': 'You are watching, not playing.',
+  'not-in-a-room': 'You are not at a table.',
+  'no-game': 'No game is running.',
+  'rate-limited': 'Slow down — twenty messages per minute.',
+  'malformed-message': 'That message made no sense.',
+  'too-short': 'Write something first.',
+  'too-long': 'Too long — 280 characters maximum.',
+  'links-not-allowed': 'Links are not allowed here.',
+  'character-spam': 'That looks like character spam.',
+  'excessive-caps': 'Please stop shouting.',
+  'blocked-language': 'That message was blocked by moderation.',
+  'moderation-unavailable':
+    'Moderation is unavailable right now, so nothing can be sent. Try again shortly.',
 }
 
 export const START_ERROR_TEXT: Record<string, string> = {
   'not-in-a-room': 'Join a room before starting a game.',
   'unknown-game': 'That game does not exist.',
-  'wrong-player-count': 'Tic-Tac-Toe needs exactly two players in the room.',
+  'not-the-host': 'Only whoever opened the table can deal.',
+  // Deliberately no longer names Tic-Tac-Toe: Mr. White raises the same error
+  // and wants four to eight players, so a message about "exactly two" would be
+  // actively wrong half the time.
+  'wrong-player-count': 'Wrong number of players for that game.',
 }
 
 export interface ServerToClientEvents {
@@ -134,6 +276,21 @@ export interface ServerToClientEvents {
 
   'game:state': (view: GameView) => void
   'game:closed': () => void
+
+  'lobby:member-joined': (member: LobbyMember) => void
+  'lobby:member-left': (member: Pick<LobbyMember, 'socketId' | 'sessionId'>) => void
+
+  /** The open-table list, pushed to watchers whenever it changes. */
+  'lobby:open-tables': (lobbies: LobbySummary[]) => void
+
+  /**
+   * A chat line this client is entitled to hear.
+   *
+   * Emitted per socket after the game's `chatAudience` resolves who may hear
+   * it — a living player never receives a `dead`-channel message, and that is
+   * enforced on the server, not by this client choosing not to render it.
+   */
+  'game:chat-message': (message: ChatMessage) => void
 }
 
 export interface ClientToServerEvents {
@@ -148,10 +305,18 @@ export interface ClientToServerEvents {
   'match:find': (ack: (result: { ok: boolean; queued: boolean }) => void) => void
   'match:cancel': (ack?: (result: { ok: boolean }) => void) => void
 
+  'lobby:join': (lobbyId: string, ack: (result: LobbyJoinResult) => void) => void
+  'lobby:leave': (ack?: (result: { ok: boolean }) => void) => void
+  /** Subscribe to the open-table list. The current list arrives immediately. */
+  'lobby:watch': () => void
+  'lobby:unwatch': () => void
+
   'game:start': (gameId: string, ack: (result: StartGameResult) => void) => void
   /** Submit move *intent*. The server decides whether it is legal. */
   'game:move': (move: unknown, ack: (result: MoveResult) => void) => void
   'game:sync': (ack: (result: { ok: boolean }) => void) => void
+  /** Say something. The game's `chatAudience` decides who hears it. */
+  'game:chat': (body: string, ack: (result: ChatResult) => void) => void
 
   'webrtc:offer': (payload: { target: string; description: SignalDescription }) => void
   'webrtc:answer': (payload: { target: string; description: SignalDescription }) => void

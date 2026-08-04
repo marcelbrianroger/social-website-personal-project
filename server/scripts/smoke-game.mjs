@@ -135,8 +135,8 @@ try {
 
   check('both players receive state', Boolean(initial && bobInitial), true)
   check('board starts empty', initial?.state?.board?.every((c) => c === null), true)
-  check('starter moves first', initial?.currentTurn, alice.session.sessionId)
-  check('both see the same turn', bobInitial?.currentTurn, alice.session.sessionId)
+  check('starter moves first', initial?.actors?.[0], alice.session.sessionId)
+  check('both see the same turn', bobInitial?.actors?.[0], alice.session.sessionId)
   check('game is not finished', initial?.finished, false)
 
   console.log('\nServer-side move validation')
@@ -152,7 +152,7 @@ try {
   const first = await move(alice, 0)
   check('legal move is accepted', first.ack?.ok, true)
   check('board records the mark', first.view?.state?.board?.[0], 'X')
-  check('turn passes to the opponent', first.view?.currentTurn, bob.session.sessionId)
+  check('turn passes to the opponent', first.view?.actors?.[0], bob.session.sessionId)
 
   check('taken cell is refused', (await emitAck(bob, 'game:move', { cell: 0 }))?.reason, 'cell-taken')
 
@@ -181,10 +181,10 @@ try {
   const winning = await move(alice, 2)
 
   check('winning move is accepted', winning.ack?.ok, true)
-  check('winner is recorded', winning.view?.result?.winnerSessionId, alice.session.sessionId)
+  check('winner is recorded', winning.view?.result?.winnerSessionIds, [alice.session.sessionId])
   check('result reason is a win', winning.view?.result?.reason, 'win')
   check('game reports finished', winning.view?.finished, true)
-  check('no turn once finished', winning.view?.currentTurn, null)
+  check('no turn once finished', winning.view?.actors, [])
   check('winning line is exposed for the UI', winning.view?.state?.winningLine, [0, 1, 2])
   check('moves after the end are refused', (await emitAck(bob, 'game:move', { cell: 5 }))?.reason, 'game-finished')
 
@@ -220,7 +220,7 @@ try {
   const forfeited = await waitForVersion(dave, 2)
 
   check('remaining player is told the game ended', forfeited?.finished, true)
-  check('forfeit names the survivor as winner', forfeited?.result?.winnerSessionId, dave.session.sessionId)
+  check('forfeit names the survivor as winner', forfeited?.result?.winnerSessionIds, [dave.session.sessionId])
   check('forfeit reason is recorded', forfeited?.result?.reason, 'forfeit')
 
   await emitAck(dave, 'room:leave')

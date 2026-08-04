@@ -5,25 +5,37 @@ import { Server, type Socket } from 'socket.io'
 
 import { getWall, postMessage, wallSize } from './dudu.js'
 import { env } from './env.js'
+import { composeChat } from './game-chat.js'
 import {
   buildView,
+  dueGames,
   forfeitGame,
   loadGame,
   purgeGame,
   startGame,
   submitMove,
+  tickGame,
 } from './game-engine.js'
 import { getGameDefinition } from './games/registry.js'
 import type { AnyGameDefinition, GamePlayer, StoredGame } from './games/types.js'
 import type {
   ClientToServerEvents,
   DuduBroadcast,
+  LobbyMember,
   RoomPeer,
   ServerToClientEvents,
   SignalCandidate,
   SignalDescription,
   SocketData,
 } from './events.js'
+import {
+  LOBBY_CAPACITY,
+  getLobbyMembers,
+  getSocketLobby,
+  joinLobby,
+  leaveLobby,
+  listOpenLobbies,
+} from './lobby.js'
 import {
   dequeue,
   enqueue,
@@ -36,6 +48,7 @@ import {
 import {
   closeRedis,
   createSubscriber,
+  gameScope,
   keys,
   pubClient,
   subClient,
@@ -60,6 +73,9 @@ import { SESSION_COOKIE_NAME, readCookie, verifySession } from './session.js'
 
 /** Socket.io room every wall subscriber joins. */
 const DUDU_ROOM = 'dudu:wall'
+
+/** Socket.io room for everyone browsing the open-table list on /lobby. */
+const LOBBY_BROWSER_ROOM = 'lobby:browser'
 
 type AppServer = Server<
   ClientToServerEvents,
@@ -159,27 +175,107 @@ function isCandidate(value: unknown): value is SignalCandidate {
 
 // --- Room helpers ----------------------------------------------------------
 
+// --- Game targets ----------------------------------------------------------
+//
+// A game can be attached to either primitive: a two-person WebRTC room, or an
+// eight-seat lobby with no video at all. Everything downstream of this — start,
+// move, chat, the deadline sweeper — works the same way for both, so the
+// difference is resolved once, here, rather than branching in every handler.
+
+interface GameTarget {
+  kind: 'room' | 'lobby'
+  id: string
+  /**
+   * Namespaced game key AND the Socket.io room name.
+   *
+   * The two id spaces overlap (both allow `aachen-1`), so a lobby's scope is
+   * prefixed. Using the same string for both means a lobby can never broadcast
+   * into a video room that happens to share its id.
+   */
+  scope: string
+}
+
+function roomTarget(roomId: string): GameTarget {
+  return { kind: 'room', id: roomId, scope: gameScope.room(roomId) }
+}
+
+function lobbyTarget(lobbyId: string): GameTarget {
+  return { kind: 'lobby', id: lobbyId, scope: gameScope.lobby(lobbyId) }
+}
+
+type Occupant = { socketId: string; sessionId: string; nickname: string }
+
+async function membersOf(target: GameTarget): Promise<Occupant[]> {
+  return target.kind === 'lobby'
+    ? getLobbyMembers(target.id)
+    : getMembers(target.id)
+}
+
+/** Where this socket's game lives. A lobby wins — you cannot be in both. */
+async function resolveTarget(socketId: string): Promise<GameTarget | null> {
+  const lobbyId = await getSocketLobby(socketId)
+  if (lobbyId) return lobbyTarget(lobbyId)
+
+  const roomId = await getSocketRoom(socketId)
+  if (roomId) return roomTarget(roomId)
+
+  return null
+}
+
+/** Resolve sessionIds to the sockets currently holding them. */
+async function socketsFor(
+  target: GameTarget,
+  sessionIds: readonly string[],
+): Promise<string[]> {
+  const wanted = new Set(sessionIds)
+
+  return (await membersOf(target))
+    .filter((member) => wanted.has(member.sessionId))
+    .map((member) => member.socketId)
+}
+
 /**
  * Send the game state to every occupant, projected for each of them.
  *
- * Emitted per-socket rather than with a single `io.to(room)` because two
- * players can legitimately receive different views — `viewFor` strips hidden
- * information per viewer, and a room-wide broadcast would send one player's
- * secrets to everyone.
+ * Emitted per-socket rather than with a single `io.to(...)` because two players
+ * can legitimately receive different views — `viewFor` strips hidden
+ * information per viewer, and a broadcast would send one player's secrets to
+ * everyone. Mr. White is the reason this was built this way in Phase 4.
  */
 async function broadcastGame(
-  roomId: string,
+  target: GameTarget,
   stored: StoredGame,
   definition: AnyGameDefinition,
 ): Promise<void> {
-  const members = await getMembers(roomId)
-
-  for (const member of members) {
+  for (const member of await membersOf(target)) {
     io.to(member.socketId).emit(
       'game:state',
       buildView(stored, definition, member.sessionId),
     )
   }
+}
+
+/**
+ * Push the open-table list to everyone browsing.
+ *
+ * Called after anything that changes what the list would say: a seat taken or
+ * freed, and a game starting (which flips a table to "in progress"). Recomputed
+ * rather than patched — the list is small, and diffing it against N watchers
+ * would be more code than the read costs.
+ */
+async function publishOpenTables(): Promise<void> {
+  io.to(LOBBY_BROWSER_ROOM).emit('lobby:open-tables', await listOpenLobbies())
+}
+
+/**
+ * Advance a due phase and tell everyone, if it moved at all.
+ *
+ * Safe to call on any inbound game event: `tick` returns null when nothing is
+ * due, so the common case costs one Redis read.
+ */
+async function advance(target: GameTarget): Promise<void> {
+  const ticked = await tickGame(target.scope)
+  if (ticked) await broadcastGame(target, ticked.stored, ticked.definition)
 }
 
 /** Remove a socket from its room and tell the remaining occupants. */
@@ -199,21 +295,64 @@ async function detach(socket: AppSocket): Promise<void> {
       sessionId: left.peer.sessionId,
     })
 
+  const target = roomTarget(left.roomId)
+
   if (left.remaining === 0) {
     // Room is empty — the game dies with it. This is the guarantee that game
     // state is ephemeral: nothing outlives the room it belonged to.
-    await purgeGame(left.roomId)
+    await purgeGame(target.scope)
     io.to(left.roomId).emit('game:closed')
   } else {
     // Someone is still here. End any running game as a forfeit rather than
     // leaving them staring at a board that can never advance.
-    const forfeited = await forfeitGame(left.roomId, left.peer.sessionId)
+    const forfeited = await forfeitGame(target.scope, left.peer.sessionId)
     if (forfeited) {
-      await broadcastGame(left.roomId, forfeited.stored, forfeited.definition)
+      await broadcastGame(target, forfeited.stored, forfeited.definition)
     }
   }
 
   await socket.leave(left.roomId)
+}
+
+/**
+ * Remove a socket from its lobby and tell the remaining seats.
+ *
+ * Mirrors `detach`, with one difference that matters: a lobby game is a
+ * multi-player game, so one person walking out forfeits it for everyone. Mr.
+ * White's `forfeit` hands the win to the civilians if the impostor was the one
+ * who left, and names nobody otherwise — there is no honest winner when a
+ * civilian quits.
+ */
+async function detachLobby(socket: AppSocket): Promise<void> {
+  const left = await leaveLobby(socket.id)
+  socket.data.lobbyId = undefined
+
+  if (!left) return
+
+  const target = lobbyTarget(left.lobbyId)
+
+  io.to(target.scope)
+    .except(socket.id)
+    .emit('lobby:member-left', {
+      socketId: left.member.socketId,
+      sessionId: left.member.sessionId,
+    })
+
+  if (left.remaining === 0) {
+    await purgeGame(target.scope)
+    io.to(target.scope).emit('game:closed')
+  } else {
+    const forfeited = await forfeitGame(target.scope, left.member.sessionId)
+    if (forfeited) {
+      await broadcastGame(target, forfeited.stored, forfeited.definition)
+    }
+  }
+
+  await socket.leave(target.scope)
+
+  // A freed seat — or a table that just emptied and was delisted — changes what
+  // the browser should be showing.
+  await publishOpenTables()
 }
 
 /** Whether a socket is still connected, anywhere in the cluster. */
@@ -342,8 +481,9 @@ io.on('connection', (socket) => {
     const respond = typeof ack === 'function' ? ack : () => {}
 
     void (async () => {
-      // Queueing implies abandoning any current call.
+      // Queueing implies abandoning any current call, and any table.
       await detach(socket)
+      await detachLobby(socket)
 
       await enqueue({
         socketId: socket.id,
@@ -377,6 +517,7 @@ io.on('connection', (socket) => {
       // One room at a time, and never queued and in a room simultaneously.
       await dequeue(socket.id)
       await detach(socket)
+      await detachLobby(socket)
 
       const peer: RoomPeer = {
         socketId: socket.id,
@@ -410,6 +551,115 @@ io.on('connection', (socket) => {
     })
   })
 
+  // --- Social-game lobby -------------------------------------------------
+  //
+  // Eight seats, no WebRTC. A separate membership primitive from the video
+  // room, because ROOM_CAPACITY = 2 is a property of a full-mesh P2P call and
+  // has nothing to do with how many people can argue in a text game.
+
+  socket.on('lobby:join', (lobbyId, ack) => {
+    const respond = typeof ack === 'function' ? ack : () => {}
+
+    void (async () => {
+      /**
+       * Already here? Say so and stop.
+       *
+       * This has to come before the detach below. `detachLobby` forfeits a
+       * running game for everyone still seated, so a client that emits
+       * `lobby:join` twice for the same lobby — a re-mounted effect, a
+       * defensive re-join — would silently end the game for three other
+       * people. Idempotent rather than an error, because "I want to be at this
+       * table" is already true and refusing would make every client track
+       * whether it had joined yet.
+       */
+      const seatedAt = await getSocketLobby(socket.id)
+
+      if (seatedAt === lobbyId) {
+        const seated = await getLobbyMembers(lobbyId)
+
+        respond({
+          ok: true,
+          members: seated.filter((member) => member.socketId !== socket.id),
+          you: seated.find((member) => member.socketId === socket.id),
+          capacity: LOBBY_CAPACITY,
+        })
+        return
+      }
+
+      // One place at a time: never queued, in a video room, and seated at a
+      // table simultaneously.
+      await dequeue(socket.id)
+      await detach(socket)
+      await detachLobby(socket)
+
+      const member: LobbyMember = {
+        socketId: socket.id,
+        sessionId: session.sessionId,
+        nickname: session.nickname,
+        joinedAt: Date.now(),
+      }
+
+      const outcome = await joinLobby(lobbyId, member)
+
+      if (!outcome.ok) {
+        respond({
+          ok: false,
+          members: [],
+          capacity: LOBBY_CAPACITY,
+          error: outcome.error,
+        })
+        return
+      }
+
+      socket.data.lobbyId = lobbyId
+      const target = lobbyTarget(lobbyId)
+      await socket.join(target.scope)
+
+      socket.to(target.scope).emit('lobby:member-joined', member)
+      respond({
+        ok: true,
+        members: outcome.members,
+        you: member,
+        capacity: LOBBY_CAPACITY,
+      })
+
+      // Someone arriving mid-game gets the board immediately, projected for
+      // them — otherwise they sit on an empty screen until the next phase.
+      const stored = await loadGame(target.scope)
+      const definition = stored ? getGameDefinition(stored.gameId) : null
+
+      if (stored && definition) {
+        socket.emit('game:state', buildView(stored, definition, session.sessionId))
+      }
+
+      await publishOpenTables()
+    })()
+  })
+
+  socket.on('lobby:leave', (ack) => {
+    void detachLobby(socket).then(() => {
+      if (typeof ack === 'function') ack({ ok: true })
+    })
+  })
+
+  /**
+   * Browse the open tables.
+   *
+   * Readable without being in any lobby, which is the point — this is what the
+   * `/lobby` page shows before you have picked one. `LobbySummary` carries no
+   * roster and no game state precisely because its audience is anyone.
+   */
+  socket.on('lobby:watch', () => {
+    void (async () => {
+      await socket.join(LOBBY_BROWSER_ROOM)
+      socket.emit('lobby:open-tables', await listOpenLobbies())
+    })()
+  })
+
+  socket.on('lobby:unwatch', () => {
+    void socket.leave(LOBBY_BROWSER_ROOM)
+  })
+
   // --- Board games -------------------------------------------------------
   //
   // Clients submit intent only. The server owns the state, validates every move
@@ -420,20 +670,38 @@ io.on('connection', (socket) => {
     const respond = typeof ack === 'function' ? ack : () => {}
 
     void (async () => {
-      const roomId = await getSocketRoom(socket.id)
-      if (!roomId) {
+      const target = await resolveTarget(socket.id)
+      if (!target) {
         respond({ ok: false, error: 'not-in-a-room' })
         return
       }
 
-      const members = await getMembers(roomId)
+      const members = await membersOf(target)
+
+      /**
+       * Only the host deals.
+       *
+       * The host is whoever sat down first — `membersOf` is ordered by
+       * `joinedAt`, so this needs no stored flag and heals itself when the host
+       * leaves: the next-earliest seat inherits it rather than the table being
+       * stuck with nobody able to start.
+       *
+       * Lobbies only. A video room holds two people who can see and hear each
+       * other; a start race there resolves itself socially, and adding a gate
+       * would change behaviour nobody asked to change.
+       */
+      if (target.kind === 'lobby' && members[0]?.sessionId !== session.sessionId) {
+        respond({ ok: false, error: 'not-the-host' })
+        return
+      }
+
       const players: GamePlayer[] = members.map((member) => ({
         sessionId: member.sessionId,
         socketId: member.socketId,
         nickname: member.nickname,
       }))
 
-      const outcome = await startGame(roomId, gameId, players)
+      const outcome = await startGame(target.scope, gameId, players)
 
       if (!outcome.ok) {
         respond({ ok: false, error: outcome.error })
@@ -441,7 +709,10 @@ io.on('connection', (socket) => {
       }
 
       respond({ ok: true })
-      await broadcastGame(roomId, outcome.stored, outcome.definition)
+      await broadcastGame(target, outcome.stored, outcome.definition)
+
+      // The table flips to "in progress" in the browser.
+      if (target.kind === 'lobby') await publishOpenTables()
     })()
   })
 
@@ -449,13 +720,18 @@ io.on('connection', (socket) => {
     const respond = typeof ack === 'function' ? ack : () => {}
 
     void (async () => {
-      const roomId = await getSocketRoom(socket.id)
-      if (!roomId) {
+      const target = await resolveTarget(socket.id)
+      if (!target) {
         respond({ ok: false, reason: 'not-in-a-room' })
         return
       }
 
-      const outcome = await submitMove(roomId, session.sessionId, move)
+      // Opportunistic tick before judging the move. A vote arriving in the same
+      // instant the phase expires must be validated against the phase that is
+      // actually current, not the one the sweeper has not got to yet.
+      await advance(target)
+
+      const outcome = await submitMove(target.scope, session.sessionId, move)
 
       if (!outcome.ok) {
         // The reason travels back to the mover only. Other players are not told
@@ -465,7 +741,7 @@ io.on('connection', (socket) => {
       }
 
       respond({ ok: true })
-      await broadcastGame(roomId, outcome.stored, outcome.definition)
+      await broadcastGame(target, outcome.stored, outcome.definition)
     })()
   })
 
@@ -473,13 +749,15 @@ io.on('connection', (socket) => {
     const respond = typeof ack === 'function' ? ack : () => {}
 
     void (async () => {
-      const roomId = await getSocketRoom(socket.id)
-      if (!roomId) {
+      const target = await resolveTarget(socket.id)
+      if (!target) {
         respond({ ok: false })
         return
       }
 
-      const stored = await loadGame(roomId)
+      await advance(target)
+
+      const stored = await loadGame(target.scope)
       const definition = stored ? getGameDefinition(stored.gameId) : null
 
       if (!stored || !definition) {
@@ -489,6 +767,52 @@ io.on('connection', (socket) => {
       }
 
       socket.emit('game:state', buildView(stored, definition, session.sessionId))
+      respond({ ok: true })
+    })()
+  })
+
+  /**
+   * Table talk.
+   *
+   * The game decides the audience, the server resolves it to sockets, and the
+   * message goes out per recipient. A living player must never receive a
+   * `dead`-channel line, and that is enforced here rather than in the UI.
+   */
+  socket.on('game:chat', (body, ack) => {
+    const respond = typeof ack === 'function' ? ack : () => {}
+
+    void (async () => {
+      const target = await resolveTarget(socket.id)
+      if (!target) {
+        respond({ ok: false, error: 'not-in-a-room' })
+        return
+      }
+
+      await advance(target)
+
+      // Before a game starts — and once one has finished — a lobby falls back
+      // to talking among everyone seated. Video rooms get no fallback: they
+      // have actual voice, and text chat there would be a second, unrelated
+      // feature rather than a gap being filled.
+      const waitingRoom =
+        target.kind === 'lobby'
+          ? {
+              channel: 'lobby',
+              to: (await membersOf(target)).map((member) => member.sessionId),
+            }
+          : null
+
+      const outcome = await composeChat(target.scope, session, body, waitingRoom)
+
+      if (!outcome.ok) {
+        respond({ ok: false, error: outcome.error })
+        return
+      }
+
+      for (const socketId of await socketsFor(target, outcome.to)) {
+        io.to(socketId).emit('game:chat-message', outcome.message)
+      }
+
       respond({ ok: true })
     })()
   })
@@ -538,6 +862,7 @@ io.on('connection', (socket) => {
     void (async () => {
       await dequeue(socket.id)
       await detach(socket)
+      await detachLobby(socket)
 
       if (!env.isProduction) {
         console.log(`[socket] ${session.nickname} disconnected (${reason})`)
@@ -568,6 +893,42 @@ duduSubscriber.on('message', (channel: string, payload: string) => {
   }
 })
 
+/**
+ * Deadline sweeper.
+ *
+ * Timed phases — Mr. White's 90-second discussion, its 45-second vote — have to
+ * expire even when nobody sends anything. Every node runs this; duplicate work
+ * is harmless because `tickGame` goes through the same compare-and-set as a
+ * move, and the loser of the race re-reads and finds nothing left to do.
+ *
+ * Cost is proportional to games actually DUE, not games running: untimed games
+ * never enter the index at all, so a server full of Tic-Tac-Toe sweeps nothing.
+ *
+ * Granularity means a phase can end up to a second late. That is fine for a
+ * social game — the countdown is advisory, and the server stays authoritative
+ * on whether a move arrived in time.
+ */
+const SWEEP_INTERVAL_MS = 1_000
+
+async function sweepDeadlines(): Promise<void> {
+  for (const scope of await dueGames()) {
+    const ticked = await tickGame(scope)
+    if (!ticked) continue
+
+    const target = gameScope.isLobby(scope)
+      ? lobbyTarget(gameScope.lobbyIdOf(scope))
+      : roomTarget(scope)
+
+    await broadcastGame(target, ticked.stored, ticked.definition)
+  }
+}
+
+const sweeper = setInterval(() => {
+  void sweepDeadlines().catch((error: unknown) => {
+    console.error('[sweeper] tick failed:', error)
+  })
+}, SWEEP_INTERVAL_MS)
+
 httpServer.listen(env.port, () => {
   console.log(`[server] Socket.io listening on http://localhost:${env.port}`)
   console.log(`[server] accepting browser origin ${env.corsOrigin}`)
@@ -577,6 +938,7 @@ httpServer.listen(env.port, () => {
 async function shutdown(signal: string): Promise<void> {
   console.log(`[server] ${signal} received, shutting down`)
 
+  clearInterval(sweeper)
   await io.close()
   await duduSubscriber.quit()
   await closeRedis()

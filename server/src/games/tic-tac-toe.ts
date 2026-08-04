@@ -1,4 +1,9 @@
-import type { GameDefinition, GamePlayer, GameResult } from './types.js'
+import type {
+  ChatAudience,
+  GameDefinition,
+  GamePlayer,
+  GameResult,
+} from './types.js'
 
 /**
  * Tic-Tac-Toe — the proof-of-concept implementation of the generic contract.
@@ -75,9 +80,32 @@ export const ticTacToe: GameDefinition<TicTacToeState, CellMove> = {
     }
   },
 
-  currentTurn(state: TicTacToeState): string | null {
-    if (state.winnerSessionId || state.draw || state.forfeitedBy) return null
-    return state.order[state.turn] ?? null
+  /**
+   * Exactly one actor, or none once the game is over.
+   *
+   * The Phase 5 generalisation of `currentTurn`. Behaviour is unchanged — a
+   * strictly sequential game simply returns a one-element list.
+   */
+  actors(state: TicTacToeState): string[] {
+    if (state.winnerSessionId || state.draw || state.forfeitedBy) return []
+
+    const mover = state.order[state.turn]
+    return mover ? [mover] : []
+  },
+
+  /** Untimed. Nothing here expires, so nothing indexes into the sweeper. */
+  deadline(): number | null {
+    return null
+  },
+
+  /** Untimed, so there is never anything for the clock to advance. */
+  tick(): TicTacToeState | null {
+    return null
+  },
+
+  /** No table talk in Tic-Tac-Toe — there is nothing to deduce. */
+  chatAudience(): ChatAudience {
+    return { ok: false, reason: 'chat-not-supported' }
   },
 
   validateMove(state: TicTacToeState, sessionId: string, raw: unknown) {
@@ -133,16 +161,21 @@ export const ticTacToe: GameDefinition<TicTacToeState, CellMove> = {
     }
   },
 
+  /**
+   * `team` is deliberately omitted rather than set to undefined: winning here is
+   * individual, and an explicit `team: undefined` key would change the object's
+   * shape under a deep-equality check.
+   */
   result(state: TicTacToeState): GameResult | null {
     if (state.forfeitedBy) {
-      const winner = state.order.find((id) => id !== state.forfeitedBy) ?? null
-      return { winnerSessionId: winner, reason: 'forfeit' }
+      const winner = state.order.find((id) => id !== state.forfeitedBy)
+      return { winnerSessionIds: winner ? [winner] : [], reason: 'forfeit' }
     }
     if (state.winnerSessionId) {
-      return { winnerSessionId: state.winnerSessionId, reason: 'win' }
+      return { winnerSessionIds: [state.winnerSessionId], reason: 'win' }
     }
     if (state.draw) {
-      return { winnerSessionId: null, reason: 'draw' }
+      return { winnerSessionIds: [], reason: 'draw' }
     }
     return null
   },

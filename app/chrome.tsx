@@ -51,6 +51,9 @@ export function SiteHeader() {
             <Link href="/rooms" className="hover:bg-yellow">
               ruang
             </Link>
+            <Link href="/lobby" className="hover:bg-yellow">
+              main
+            </Link>
           </nav>
 
           <Clocks />

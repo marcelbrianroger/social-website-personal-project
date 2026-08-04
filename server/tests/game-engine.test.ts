@@ -190,7 +190,9 @@ describe('starting a game', () => {
       ])
 
       const turns = results.map((result) =>
-        result.ok ? ticTacToe.currentTurn(result.stored.state as TicTacToeState) : null,
+        result.ok
+          ? (ticTacToe.actors(result.stored.state as TicTacToeState)[0] ?? null)
+          : null,
       )
 
       assert.equal(turns[0], turns[1], 'a split decision here corrupts the game')
@@ -298,9 +300,9 @@ describe('submitting a move', () => {
     await submitMove(roomId, alice.sessionId, { cell: 4 })
     const stored = await loadGame(roomId)
 
-    assert.equal(
-      ticTacToe.currentTurn(stored?.state as TicTacToeState),
-      bob.sessionId,
+    assert.deepEqual(
+      ticTacToe.actors(stored?.state as TicTacToeState),
+      [bob.sessionId],
     )
   })
 
@@ -323,7 +325,7 @@ describe('submitting a move', () => {
     const stored = (winning as { ok: true; stored: StoredGame }).stored
     assert.equal(stored.finished, true)
     assert.deepEqual(stored.result, {
-      winnerSessionId: alice.sessionId,
+      winnerSessionIds: [alice.sessionId],
       reason: 'win',
     })
 
@@ -427,7 +429,7 @@ describe('forfeiting', () => {
     assert.notEqual(forfeited, null)
     assert.equal(forfeited?.stored.finished, true)
     assert.deepEqual(forfeited?.stored.result, {
-      winnerSessionId: bob.sessionId,
+      winnerSessionIds: [bob.sessionId],
       reason: 'forfeit',
     })
     assert.equal(forfeited?.stored.version, 2, 'the survivor is told via a new version')
@@ -552,7 +554,7 @@ describe('buildView — the redaction seam', () => {
     assert.equal(view.gameId, 'tic-tac-toe')
     assert.equal(view.label, 'Tic-Tac-Toe')
     assert.equal(view.version, 1)
-    assert.equal(view.currentTurn, alice.sessionId)
+    assert.deepEqual(view.actors, [alice.sessionId])
     assert.equal(view.finished, false)
     assert.deepEqual(
       view.players,
@@ -575,7 +577,7 @@ describe('buildView — the redaction seam', () => {
       bob.sessionId,
     )
 
-    assert.equal(view.currentTurn, null)
+    assert.deepEqual(view.actors, [])
     assert.equal(view.finished, true)
   })
 
@@ -604,7 +606,8 @@ describe('buildView — the redaction seam', () => {
       label: 'Hidden',
       minPlayers: 2,
       maxPlayers: 2,
-      currentTurn: () => alice.sessionId,
+      actors: () => [alice.sessionId],
+      deadline: () => null,
       viewFor(state: unknown, sessionId: string | null) {
         const typed = state as SecretState
         return {
