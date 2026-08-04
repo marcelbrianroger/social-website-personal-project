@@ -573,6 +573,86 @@ export const mrWhite: GameDefinition<MrWhiteState, MrWhiteMove> = {
   },
 
   /**
+   * A player who dropped and never came back.
+   *
+   * WHY THIS IS NOT `forfeit`. Ending an eight-seat game because one person's
+   * wifi blinked is the bug this replaces. But simply marking them absent is not
+   * enough either — every phase that was waiting on them would deadlock:
+   * `clue` holds for an actor who will never speak, `majorityReady` measures
+   * against a denominator that includes someone who cannot press the button, and
+   * `vote` runs the full 45 seconds because the tally can never complete. So
+   * this removes them AND lands the game on whatever phase should follow.
+   */
+  eliminate(state: MrWhiteState, sessionId: string, now: number): MrWhiteState {
+    if (state.phase === 'finished') return state
+    if (!state.order.includes(sessionId)) return state
+    if (state.eliminated.includes(sessionId)) return state
+
+    // Read BEFORE the removal, or the answer is always no: `currentClueActor`
+    // skips the eliminated, so a floor-holder goes invisible the instant they
+    // are marked out.
+    const heldTheFloor =
+      state.phase === 'clue' && currentClueActor(state) === sessionId
+
+    // Their own vote goes, and so does every vote cast FOR them. A surviving
+    // vote against someone already out lets `resolveVote` pick them as the
+    // plurality target and append them to `eliminated` a second time.
+    const votes: Record<string, string> = {}
+    for (const [voter, target] of Object.entries(state.votes)) {
+      if (voter === sessionId || target === sessionId) continue
+      votes[voter] = target
+    }
+
+    const next: MrWhiteState = {
+      ...state,
+      eliminated: [...state.eliminated, sessionId],
+      readyToVote: state.readyToVote.filter((id) => id !== sessionId),
+      votes,
+    }
+
+    // The impostor walking out is not an elimination anyone earned. Reuse the
+    // abandonment path rather than inventing a second terminal state — `result`
+    // already hands this to the civilians as a forfeit.
+    if (state.roles[sessionId] === 'mr-white') {
+      return { ...next, phase: 'finished', abandonedBy: sessionId }
+    }
+
+    // A civilian left. Same survival rule the vote applies: with Mr. White still
+    // seated in a final two, no vote could save the civilians from here.
+    if (!next.eliminated.includes(impostorOf(next)) && livingOf(next).length <= 2) {
+      return finish(next, 'mr-white')
+    }
+
+    switch (next.phase) {
+      case 'clue':
+        // Only restart the clock for a floor-holder. Doing it unconditionally
+        // would hand the current speaker extra seconds every time someone
+        // else's connection dropped.
+        if (!heldTheFloor) return next
+
+        return currentClueActor(next)
+          ? enter(next, 'clue', now)
+          : openDiscussion(next, now)
+
+      case 'discussion':
+        // The denominator shrank: two of four was not a majority, two of three
+        // is. Without this recheck the discussion runs its full 90 seconds even
+        // though everyone still present has asked to move on.
+        return majorityReady(next) ? openVote(next, now) : next
+
+      case 'vote': {
+        const pending = livingOf(next).filter((id) => !(id in next.votes))
+        return pending.length === 0 ? resolveVote(next, now) : next
+      }
+
+      // `reveal`, `reveal-vote` and `guess` are advanced by the clock alone, and
+      // none of them waits on a civilian.
+      default:
+        return next
+    }
+  },
+
+  /**
    * The redaction.
    *
    * `order` and the unredacted `roles` never appear. During `vote`, `votes` is

@@ -88,6 +88,19 @@ export const keys = {
    * untimed game (Tic-Tac-Toe) never appears here at all.
    */
   gameDeadlines: 'games:deadlines',
+  /**
+   * ZSET of `scope|sessionId` scored by the epoch ms at which a missing player
+   * is auto-eliminated.
+   *
+   * The same index-plus-sweeper shape as `gameDeadlines`, and for the same
+   * reason: a `setTimeout` would die with the process and would not exist on
+   * the other nodes, so a reconnect window has to be data.
+   *
+   * The `|` separator cannot be forged. A scope is `<roomId>` or
+   * `lobby:<lobbyId>`, both drawn from `[A-Za-z0-9_-]` plus that one prefix
+   * colon, and a sessionId is a UUID — neither can contain a pipe.
+   */
+  gameDisconnects: 'games:disconnects',
 
   /** STRING of DuduMessage JSON, carrying its own 24h TTL. */
   duduMessage: (id: string) => `dudu:message:${id}`,
@@ -116,6 +129,29 @@ export const gameScope = {
   /** Which primitive a scope came from, for the sweeper's fan-out. */
   isLobby: (scope: string) => scope.startsWith('lobby:'),
   lobbyIdOf: (scope: string) => scope.slice('lobby:'.length),
+} as const
+
+/**
+ * Members of the `gameDisconnects` index.
+ *
+ * A ZSET member is one string, but the sweeper needs both halves back to know
+ * which game to advance and whom to remove from it.
+ */
+export const disconnectEntry = {
+  encode: (scope: string, sessionId: string) => `${scope}|${sessionId}`,
+  /** Null for anything that does not look like an entry we wrote. */
+  decode: (member: string): { scope: string; sessionId: string } | null => {
+    // From the right: a sessionId is a UUID with a fixed shape, whereas a scope
+    // carries a prefix. Splitting on the last separator is the half that cannot
+    // be wrong.
+    const separator = member.lastIndexOf('|')
+    if (separator <= 0 || separator === member.length - 1) return null
+
+    return {
+      scope: member.slice(0, separator),
+      sessionId: member.slice(separator + 1),
+    }
+  },
 } as const
 
 /** DUDU messages auto-delete exactly 24 hours after posting. */

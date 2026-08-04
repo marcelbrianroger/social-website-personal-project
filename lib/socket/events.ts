@@ -179,6 +179,14 @@ export interface GameView {
   /** Epoch ms the current phase ends, or null when the game is untimed. */
   phaseEndsAt: number | null
   /**
+   * Players currently missing, mapped to the epoch ms at which they are
+   * auto-eliminated so the game can carry on without them.
+   *
+   * Always `{}` once `finished`. Compare against the same skew-corrected clock
+   * as `phaseEndsAt` — these are server epoch ms too.
+   */
+  disconnected: Record<string, number>
+  /**
    * Server epoch ms at the moment this view was built.
    *
    * A browser clock can be minutes out, so `phaseEndsAt` compared against a raw

@@ -51,6 +51,12 @@ function markFor(state: TicTacToeState, sessionId: string): Mark | null {
   return index === 0 ? 'X' : 'O'
 }
 
+/** Hand the game to whoever is left. A finished game keeps its result. */
+function concede(state: TicTacToeState, quittingSessionId: string): TicTacToeState {
+  if (state.winnerSessionId || state.draw || state.forfeitedBy) return state
+  return { ...state, forfeitedBy: quittingSessionId }
+}
+
 function findWinningLine(board: (Mark | null)[]): { mark: Mark; line: number[] } | null {
   for (const line of LINES) {
     const [a, b, c] = line as [number, number, number]
@@ -181,9 +187,16 @@ export const ticTacToe: GameDefinition<TicTacToeState, CellMove> = {
   },
 
   forfeit(state: TicTacToeState, quittingSessionId: string): TicTacToeState {
-    // A game that already ended keeps its original result.
-    if (state.winnerSessionId || state.draw || state.forfeitedBy) return state
-    return { ...state, forfeitedBy: quittingSessionId }
+    return concede(state, quittingSessionId)
+  },
+
+  /**
+   * With exactly two players, losing one IS the end — there is no game left to
+   * repair, so this is `forfeit` under another name. The distinction only earns
+   * its keep in a game where the table outlives the departure.
+   */
+  eliminate(state: TicTacToeState, sessionId: string): TicTacToeState {
+    return concede(state, sessionId)
   },
 
   viewFor(state: TicTacToeState): unknown {

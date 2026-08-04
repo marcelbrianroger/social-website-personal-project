@@ -25,7 +25,8 @@ Other entry points:
 | `rooms.test.ts` | `src/rooms.ts` | Atomic capacity, join order, leave/remaining, relay authorisation |
 | `games/tic-tac-toe.test.ts` | `GameDefinition` contract | Validation over hostile input, purity of `applyMove`, win/draw/forfeit |
 | `games/registry.test.ts` | `src/games/registry.ts` | Lookup, plus contract checks applied to **every** registered game |
-| `games/mr-white.pending.test.ts` | Phase 5 | Skipped. See below. |
+| `games/mr-white.test.ts` | Phase 5 rules | Roles, redaction, the phase clock, win conditions, auto-elimination |
+| `disconnect.test.ts` | `src/game-engine.ts` presence + `src/lobby.ts` | The reconnect window: arming, cancelling, expiry, duplicate sweeps, purge |
 
 The contract block at the bottom of `games/registry.test.ts` iterates over
 `listGames()`, so a game added later — Mr. White, Werewolf — is held to the
@@ -87,3 +88,29 @@ assertion was weakened.
 
 **Werewolf is not covered at all.** The design doc puts it out of scope pending
 its own spec, so there is nothing to encode yet.
+
+## Connection lifecycle
+
+`disconnect.test.ts` and the `Mr. White — auto-elimination` block in
+`games/mr-white.test.ts` encode
+`docs/superpowers/specs/2026-08-04-disconnect-lifecycle-design.md`.
+
+The split follows the same seam as everything else here: the *rules* for giving
+up on an absent player are pure functions in `games/mr-white.test.ts`, and the
+*machinery* — a deadline in the game record, an index the sweeper reads, a
+compare-and-set that makes a duplicate sweep a no-op — is in `disconnect.test.ts`
+against real Redis.
+
+The half that is easy to get wrong is not the removal, it is the REPAIR. Marking
+someone absent and stopping there leaves the table deadlocked: a clue phase
+waiting on an actor who will never speak, a readiness majority measured against
+someone who cannot press the button, a tally that can never complete. Most of
+the assertions are therefore about the phase the game lands on, not about the
+`eliminated` array. The contract block in `games/registry.test.ts` enforces the
+weaker version of the same property for every registered game — after an
+elimination the game must still have a result, an actor, or a clock.
+
+`scripts/smoke-disconnect.mjs` covers the wire end to end, including the one
+thing no unit test can: that a real socket dying reaches `detachLobby` at all.
+It waits out a real reconnect window, so set `DISCONNECT_GRACE_MS` low in `.env`
+and restart the server before running it.

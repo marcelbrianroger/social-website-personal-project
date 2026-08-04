@@ -1,7 +1,7 @@
 # Connection Lifecycle — Lobby Disconnects and Mr. White Auto-Elimination
 
 Date: 2026-08-04
-Status: approved
+Status: implemented
 
 ## Problem
 
