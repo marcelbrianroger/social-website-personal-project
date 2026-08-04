@@ -1,20 +1,37 @@
-# DUDU
+# Social Aachen Website
 
-Real-time community platform: P2P video matchmaking, temporary boardgame rooms
-(Werewolf, Mr. White), and the **DUDU board** — a global ephemeral wall where
-messages auto-delete 24 hours after posting and every submission passes an AI
-moderation filter before broadcast.
+An anonymous, ephemeral social platform for Indonesian students in Aachen.
 
-Access is restricted to visitors in Germany.
+Four things live here:
+
+- **DUDU wall** — a shared board. Anyone online can post; every note deletes
+  itself 24 hours later. No archive, no undo.
+- **Video rooms** — two people per room, peer-to-peer. Audio and video never
+  reach the server.
+- **Matchmaking** — press once, wait, and get paired with whoever else is
+  waiting. First in, first matched.
+- **Games** — played inside a room, on a board the server owns.
+
+There is no signup. A visitor is issued an anonymous identity on their first
+request — a UUID plus a generated nickname like `SturmUhu827` — signed into a
+cookie. Access is restricted to visitors in Germany.
+
+> **On the name.** The site is *Social Aachen Website*. **DUDU** is the name of
+> the wall, one feature among four. DUDU also survives throughout the code as an
+> internal identifier — the `dudu_session` cookie, the `dudu:*` socket events,
+> the `dudu:web` JWT issuer, the `dudu-web` / `dudu-server` packages, the
+> `dudu_postgres` / `dudu_redis` containers. Those are load-bearing: the JWT
+> issuer in particular is verified byte-for-byte by `server/src/session.ts`, and
+> renaming it breaks every socket handshake.
 
 ## Stack
 
-| Layer      | Choice                                          |
-| ---------- | ----------------------------------------------- |
-| Frontend   | Next.js 16 (App Router), TypeScript, Tailwind 4 |
-| Real-time  | Node.js + Socket.io (`/server`)                 |
-| Database   | PostgreSQL via Prisma 7                         |
-| Cache/bus  | Redis                                           |
+| Layer     | Choice                                          |
+| --------- | ----------------------------------------------- |
+| Frontend  | Next.js 16 (App Router), TypeScript, Tailwind 4 |
+| Real-time | Node.js + Socket.io (`/server`)                 |
+| Database  | PostgreSQL via Prisma 7                         |
+| Cache/bus | Redis                                           |
 
 ## Getting started
 
@@ -42,374 +59,271 @@ npm run server:dev   # http://localhost:4000
 > `SESSION_JWT_SECRET` must be **identical** for both processes — they share the
 > root `.env` for exactly this reason. A mismatch rejects every socket handshake.
 
-## Architecture
+**If `server:dev` fails with `EADDRINUSE`,** the server is already running from
+an earlier session. Closing a terminal on Windows does not stop it. Either use
+the one you have — `tsx watch` already reloads on every file change — or:
+
+```powershell
+Get-NetTCPConnection -LocalPort 4000 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+```
+
+## How it fits together
 
 ### Request gate — `proxy.ts`
 
-This is `proxy.ts`, **not** `middleware.ts`. Next.js 16 renamed the convention;
-the exported function must be named `proxy`. Proxy also runs in the **Node.js
-runtime**, and setting the `runtime` option inside it throws. `request.geo` and
-`request.ip` were removed in Next 15, so geo data is read from headers manually.
+This is `proxy.ts`, **not** `middleware.ts`. Next.js 16 renamed the convention
+and the exported function must be named `proxy`. It runs in the Node.js runtime,
+which is what lets the region lock read a MaxMind `.mmdb` file at all.
 
-It does two things, in order:
-
-1. **Region lock** — non-German traffic gets a 403 and never reaches the app.
-2. **Anonymous session** — first-time visitors are issued a signed identity.
-
-The order matters: blocked visitors must not be handed a session cookie.
+Every request passes through it: region check first, then session issue or
+refresh. Session identity is handed to Server Components as **request headers**
+(`x-dudu-session-id`, `x-dudu-session-nickname`) rather than via the cookie,
+because on a first visit the cookie only exists in the outgoing `Set-Cookie` and
+`cookies()` would still report nothing.
 
 ### Region lock — `lib/geo/`
 
-Country resolution is a chain: trusted proxy header → MaxMind GeoLite2 → unknown.
+The client IP is resolved and checked against a MaxMind GeoLite2 database. The
+`.mmdb` is licensed and not committed — download it separately into `data/`.
 
-**Header trust is opt-in and defaults to off.** `cf-ipcountry` is only
-meaningful when Cloudflare is the sole ingress *and* overwrites it; self-hosted
-behind nothing, a client can just send `cf-ipcountry: DE`. With
-`GEO_TRUST_PROXY_HEADERS=false`, the country comes from a MaxMind lookup instead
-(see `data/README.md` for the database).
-
-> **A spoof-proof region lock belongs in the reverse proxy** — nginx
-> `ngx_http_geoip2_module`, Caddy, or a CDN rule — where the real peer address
-> is known. Even the MaxMind path here depends on `x-forwarded-for`, which is
-> itself client-settable. This module is a correct default and defence in depth,
-> not a substitute for edge enforcement.
-
-`GEO_FALLBACK` decides what happens when the country cannot be determined:
-`allow` (default) or `deny`.
+Without the database present, `GEO_FALLBACK=allow` lets everything through so
+local development works. **Do not enforce strict rejection until the database is
+in place.**
 
 ### Anonymous sessions — `lib/session/`
 
-On first visit a visitor gets a UUID plus a random nickname (`StolzWolf728`),
-signed into an HS256 JWT stored in an HttpOnly cookie. No signup, no password,
-no user row — the signature is the only thing making the identity tamper-proof.
+A UUID plus a random nickname, signed into an HS256 JWT and stored in an
+HttpOnly cookie for **30 days**. There is no login, no password and no user row —
+the signature is the only thing making the identity tamper-proof.
 
-Because a cookie set on the *response* is not visible to `cookies()` during the
-same render, proxy also forwards the identity as request headers. Read it with:
+Nicknames come from `lib/session/nickname.ts`: a German adjective, a German
+animal or landmark, and three digits — `FlinkFuchs417`, `NebelBrücke203`,
+`WinterFunke126`. They are cosmetic and explicitly not unique; the UUID is the
+identity.
 
-```ts
-import { getCurrentSession } from '@/lib/session/current-session'
-
-const session = await getCurrentSession()
-```
+The token contract is **mirrored** by `server/src/session.ts`, which verifies
+these tokens at the Socket.io handshake. Changing the algorithm, issuer,
+audience or claim names requires the same change in both files.
 
 ### Real-time — `/server`
 
-A separate Node process, so **Next.js Proxy never sees its traffic**. Without an
-independent check, anyone outside Germany could skip the website and open a
-WebSocket directly.
+A separate package with its own `package.json`, `tsconfig` and build. The
+frontend cannot import from it, so the wire protocol is mirrored by hand in
+`lib/socket/events.ts` — **if you add or rename an event, change both files.**
 
-The link is the session JWT: proxy issues it only to visitors who passed the
-region lock, so a valid signature proves the holder got through. `io.use()`
-verifies it at the handshake — no geo logic is duplicated.
-
-```bash
-npm --prefix server run smoke:handshake   # server must be running
-```
-
-`server/src/session.ts` deliberately **mirrors** the token contract in
-`lib/session/session.ts` rather than importing it, because `/server` is a
-separate package with its own build. Change the algorithm, issuer, audience,
-cookie name or claim names in one and you must change the other.
+Socket.io uses `@socket.io/redis-adapter`, so rooms and broadcasts work across
+multiple nodes. Redis needs three separate connections: subscriber mode is
+exclusive, so the adapter's pub/sub clients cannot share the command client.
 
 ### Rooms and WebRTC signalling
 
-Rooms are ephemeral and implicit — the first person to join an id creates it,
-the last to leave destroys it. There is no "create room" call, which would leave
-orphans behind whenever a creator vanished. Capacity is **2**: P2P video is a
-full mesh, so upload bandwidth grows with every extra participant. Going beyond
-about four needs an SFU, not a bigger constant.
+Rooms are ephemeral and implicit: the first person to join an id creates it, the
+last to leave destroys it. `ROOM_CAPACITY = 2`.
 
-A socket occupies one room at a time; joining a second implicitly leaves the
-first, so a client navigating between rooms cannot accumulate ghost memberships.
+Membership lives in **Redis, not `socket.data`** — matchmaking can make a socket
+on another node join a room, and that node's local state would be the only place
+recording it, so relay authorisation on any other node would fail.
 
-**Who offers:** the joiner offers to everyone already present; existing
-occupants wait. That one rule avoids SDP glare — if both sides created offers
-simultaneously the negotiation deadlocks, and the usual fix (perfect
-negotiation with polite/impolite roles) is far more machinery than a two-person
-room needs.
+Capacity is enforced inside a Lua script. Two nodes checking `HLEN` separately
+would both see one member and both insert, putting three people in a two-person
+room.
 
-**The relay is authorised, not open.** Every `webrtc:*` event is checked against
-shared room membership before being forwarded, and the server stamps `from`
-with the real sender id rather than trusting the payload. Without that check any
-client could push an SDP offer at any connected socket by guessing its id and
-hijack or disrupt a call it was never part of. Malformed payloads are dropped
-rather than relayed. The server never parses SDP — it forwards sealed envelopes.
+`canRelay` is the check that stops the signalling relay being an open message
+bus. Without it, any client could push an SDP offer at any connected socket just
+by guessing its id.
 
 ### Matchmaking
 
-Instead of naming a room, users press **Find Match** and enter a Redis LIST
-queue (FIFO — pushed left, taken from the right, so nobody starves behind later
-arrivals). The moment two people are waiting, the server pairs them into a
-freshly generated random room id and tells both.
+A Redis LIST — newest pushed left, taken from the right, so it is FIFO and
+nobody starves behind later arrivals. A pair is popped in **one Lua script**, so
+two matchers can never be handed the same partner.
 
-Two things have to be atomic or the system misbehaves under concurrency:
+Match room ids are random rather than sequential (`m-` plus 20 hex chars); a
+guessable id would let someone occupy a stranger's slot before their partner
+arrives.
 
-- **Popping a pair.** Two separate `RPOP`s from different nodes can interleave
-  and hand the same partner to two people. A Lua script takes both or neither.
-- **Joining a room.** A separate `HLEN` check followed by `HSET` lets two nodes
-  both see "1 member" and both insert, putting three people in a two-person
-  room. Capacity check and insert happen in one script.
+### Game engine — `server/src/game-engine.ts` + `server/src/games/`
 
-Queue entries can go stale when someone closes their tab without cancelling, so
-each half of a popped pair is checked for liveness across the cluster
-(`io.in(id).fetchSockets()`); a surviving partner is returned to the queue
-rather than dropped.
+The engine owns persistence, turn enforcement and concurrency. The rules live in
+game definitions and know nothing about Redis or sockets — which is what lets a
+new game be added without touching transport code.
 
-Unlike a manual join there is no "newcomer" to break the offer tie, so the
-server designates exactly one side with `shouldOffer`.
+**Server authority.** Clients submit *intent* only ("cell 4"), never state. A
+client that lies about whose turn it is changes nothing; its move is validated
+against the stored state before anything is applied.
 
-### Multi-node
+**Concurrency.** A move is a read-modify-write, so every write goes through a
+compare-and-set on a version number, and a losing writer retries against the
+state that actually won.
 
-The room registry lives in Redis and `@socket.io/redis-adapter` is attached, so
-`io.to(...)`, `socketsJoin` and room membership all work across processes. This
-matters for matchmaking: the node that pairs two people is frequently not the
-node either is connected to, and it still has to put both into a room and notify
-them.
+**`viewFor` is the anti-cheat seam.** State is projected per viewer before it
+goes on the wire. Tic-Tac-Toe returns it unchanged because it has no hidden
+information, but the seam exists so hidden state is the default shape rather
+than a retrofit — hidden-role games depend on it entirely.
 
-Because of that, `socket.data.roomId` is **not** authoritative — a socket can be
-placed into a room by another node entirely. Relay authorisation always reads
-Redis via a `socketId -> roomId` reverse index.
+State lives only in Redis, carries a TTL, and is deleted the moment its room
+empties.
 
-> The Lua scripts build room key names inside the script, which Redis **Cluster**
-> forbids (all keys must be declared up front). Fine for the single instance in
-> docker-compose; moving to Cluster means passing the key in explicitly.
+### DUDU wall
 
-### Board games
-
-A generic state machine in `server/src/game-engine.ts`, with rules supplied by
-game definitions in `server/src/games/`. A definition is pure: given a state and
-a proposed move, decide legality and produce the next state. It knows nothing
-about Redis, sockets or rooms, so adding a game touches no transport code —
-write a `GameDefinition`, list it in `games/registry.ts`, done.
-
-Tic-Tac-Toe (`games/tic-tac-toe.ts`) is the proof of concept.
-
-**Server authority.** Clients submit *intent* only — `{ cell: 4 }`, never state.
-The server validates against the stored board and is the sole writer. A client
-that lies about whose turn it is, or fabricates a board, changes nothing. The UI
-disables squares it believes are unplayable, but that is a **hint, not
-enforcement**: every click is still sent and still judged server-side, because
-anything enforced in the browser can be bypassed from devtools.
-
-**`viewFor` is the anti-cheat seam.** Every piece of state a client receives is
-projected through it, per viewer. Tic-Tac-Toe is perfect information so it
-returns state unchanged — but Werewolf and Mr. White depend on this to strip
-roles and the secret word for everyone except their owner. Game state is
-therefore broadcast **per-socket**, not with one `io.to(room)` call, which would
-send one player's secrets to the whole room.
-
-**Concurrency.** A move is a read-modify-write. Two players clicking at the same
-instant would both read version N, both compute from it, and the second write
-would silently erase the first. Every write goes through a compare-and-set on
-`version`; a losing writer re-runs the whole read-validate-apply cycle, because
-a move validated against a superseded board must not be applied to the new one —
-the winner may have taken the very cell it wanted.
-
-**Seating order is explicit.** Members live in a Redis HASH and `HVALS` returns
-fields in arbitrary order, so `getMembers` sorts by a `joinedAt` stamp. Without
-that, "who is player one" is unpredictable and can differ between reads.
-
-**Ephemeral by construction.** State lives only in Redis under `game:{roomId}`,
-carries a TTL, and is deleted the moment the room empties — `leaveRoom` returns
-the remaining occupancy in the same atomic step that removes the member, so the
-purge decision needs no second round trip that another leave could interleave
-with. If one player leaves mid-game the other does not get stranded: the game
-ends as a forfeit and is retained until the room is empty, so they can see why.
-
-### The DUDU wall
-
-A global anonymous feed at `/wall` where posts vanish 24 hours after being
-written.
-
-```
-dudu:message:{id}   STRING   the payload, with a native 24h Redis TTL
-dudu:wall           ZSET     message ids scored by epoch-ms post time
-dudu:broadcast      CHANNEL  pub/sub fan-out to every socket node
-```
-
-Redis expires the payloads itself, which is what makes "auto-delete exactly 24
-hours after posting" true without a sweeper process. ZSET members do *not*
-expire, so the index would grow forever — every read prunes entries past the TTL
-and drops ids whose payload is already gone. Self-healing, no cron job.
-
-`authorId` is stored but never broadcast: the wall is anonymous, and leaking a
-stable id would let anyone correlate every post by the same person.
-
-Posting is rate limited to five per minute per session, enforced with an atomic
-`INCR`+`EXPIRE` script — done as two calls, a crash in between leaves a counter
-that never resets and locks the session out permanently.
-
-> **The moderation filter is a placeholder.** `CLAUDE.md` requires an AI text
-> moderation filter before broadcast. `server/src/moderation.ts` currently
-> implements a cheap local heuristic — length, shouting, character spam, link
-> blocking, and a tiny word list. **It will not catch harassment, hate speech,
-> coded language, or anything phrased with mild creativity.** It exists so the
-> publish path has a real gate rather than a TODO, and so swapping in a real
-> classifier is a one-function change. Implement `aiModeration()` and set
-> `MODERATION_PROVIDER=ai` before real users touch this.
->
-> The gate **fails closed**: if a configured classifier errors or times out,
-> the post is rejected rather than published.
+Redis only, never Postgres. Messages carry a 24-hour TTL (`DUDU_TTL_SECONDS`), a
+sorted set indexes them by post time, and a pub/sub channel fans approved
+messages to every node. Posts are rate limited per session and pass a moderation
+filter before broadcast.
 
 ### Data
 
-Postgres holds the durable schema; Redis is the hot path and the pub/sub bus.
+Postgres holds the Prisma schema and migrations. **The realtime server does not
+currently write to it** — the wall is Redis-only, so there is no durable
+moderation audit trail yet.
 
-> The Phase 1 `dudu_messages` table is **not currently written**. The realtime
-> server has no Prisma client, so the durable moderation audit trail is
-> unwritten — the wall lives entirely in Redis today. Add `@prisma/client` to
-> `/server`, or route writes through a Next.js route handler, to close this.
+## Design
+
+The interface direction is **mading** — the *majalah dinding*, the wall magazine
+pinned up in every Indonesian school. It is already what the site is: a board
+you pin a note to and someone takes down a day later. It also lands on the same
+object as the German *Aushang* corkboard this audience now lives with.
+
+Rendered as riso print: flat spot inks on cheap paper, ink that overprints where
+it overlaps, no gradients.
+
+| Token    | Value     | Rule                                             |
+| -------- | --------- | ------------------------------------------------ |
+| `ink`    | `#16284B` | All text and rules                               |
+| `paper`  | `#E9E5D8` | Ground                                           |
+| `stock`  | `#DED8C7` | Second paper, for slips and panels               |
+| `pink`   | `#FF4E8E` | Large display, marks. **Never small text** — 2.1:1 |
+| `yellow` | `#FFC93D` | Fill only, always with ink on top — 9.3:1        |
+
+Type: **Bricolage Grotesque** (poster headers), **Karla** (reading),
+**Courier Prime** (every typed label, timestamp and id).
+
+Because pink cannot legally carry small text, links are ink over a yellow fill —
+which is also just what a marker on a noticeboard looks like.
+
+Interface copy is Indonesian, mixing in the German words this audience uses
+daily (`Anmeldung`, `Bürgeramt`, `Mensa`, `WG-Zimmer`, `Pontstraße`).
+
+Drop design references into `design/` — see `design/README.md`.
 
 ## Testing
 
-There is no unit-test framework yet. What exists are two smoke suites that
-assert the security boundaries end-to-end against real running processes.
+Two independent layers.
 
-### Everything at once
+### Integration tests — `server/tests/`
 
-```bash
-docker compose up -d       # Postgres + Redis must be up
-npm run verify             # typecheck + lint + build + server typecheck + web smoke
-```
-
-`verify` does **not** cover the socket suites, because they need the socket
-server running. Full sequence:
+Run against the **real Redis** from `docker-compose`, on database 15.
 
 ```bash
-npm run verify
-npm run server:dev          # separate terminal, leave running
-npm run smoke:socket        # handshake + rooms
+npm test
 ```
 
-### Web smoke — `npm run smoke:web`
+The logic under test is mostly Lua — atomic room join, atomic pair pop,
+compare-and-set on the game version. A mocked client would execute none of it,
+so a mocked suite would only assert that we call the functions we call.
 
-Requires a build first (`npm run build`). Boots its own `next start` on port
-3101 with strict geo settings, asserts, and tears down — it does not touch your
-dev server, and it overrides every geo variable explicitly so results do not
-depend on your `.env`.
+`server/tests/helpers/harness.ts` refuses to run unless it is pointed at db 15,
+because the suite calls `flushdb` and doing that on db 0 would wipe a dev
+server's rooms, queue and wall. `npm test` passes `--test-concurrency=1`:
+node:test runs test *files* in parallel by default, and a flush in one would
+wipe another's fixtures mid-assertion.
 
-23 checks covering: the allow/deny matrix, `no-store` on 403, blocked requests
-receiving no cookie, cookie flags, identity rendering on the *first* visit,
-identity stability across visits, and a tampered cookie being rejected rather
-than trusted.
+| File                              | Focus                                                        |
+| --------------------------------- | ------------------------------------------------------------ |
+| `matchmaking.test.ts`             | FIFO, dedupe, cancel, atomic pair pop under concurrency       |
+| `game-engine.test.ts`             | Atomic start, compare-and-set, forfeit, TTL, `buildView`      |
+| `rooms.test.ts`                   | Atomic capacity, join order, relay authorisation              |
+| `games/tic-tac-toe.test.ts`       | Rules over hostile input, `applyMove` purity                  |
+| `games/registry.test.ts`          | Lookup, plus contract checks applied to **every** game        |
+| `games/mr-white.pending.test.ts`  | Skipped. The Phase 5 spec as a red baseline                   |
 
-### Handshake smoke — `npm --prefix server run smoke:handshake`
+The contract block in `games/registry.test.ts` iterates `listGames()`, so a game
+added later inherits those checks with no edit.
 
-Requires the socket server running. Six cases: no token, garbage token, token
-signed with the wrong secret, wrong issuer, wrong audience — all must be
-rejected; a valid token must be accepted.
+### Smoke scripts — `server/scripts/`
 
-This is the test that matters most. It is the only thing stopping someone
-outside Germany from skipping the website and opening a WebSocket directly.
+Drive real sockets against a running server and cover the wire protocol end to
+end. Start both processes first, then `npm run smoke:socket`.
 
-### Rooms smoke — `npm --prefix server run smoke:rooms`
+The two layers are complementary. Smoke scripts prove the protocol works; the
+integration tests force the races a socket client cannot easily reproduce —
+simultaneous writes, lost updates, capacity contention.
 
-Requires the socket server running. 19 checks covering room id validation,
-capacity, peer-joined/peer-left notifications, slot reuse after leaving, and
-disconnect cleanup — plus the signalling security cases:
+### Not covered
 
-- an offer is delivered within a room, stamped with the real sender id
-- an offer missing `sdp` is dropped, not relayed
-- a **cross-room** offer is blocked
-- a **cross-room** ICE candidate is blocked
-- an offer from a socket in no room at all is blocked
-
-### Matchmaking smoke — `npm --prefix server run smoke:matchmaking`
-
-16 checks: a lone user waits rather than matching, two waiters land in the
-*same* generated room, each sees the other as peer, exactly one is told to
-offer, the pair can actually signal each other, cancel works and is idempotent,
-and a **stale queue entry from a vanished socket does not produce a match**.
-
-### DUDU smoke — `npm --prefix server run smoke:dudu`
-
-19 checks: posting, broadcast to subscribers, history, and that the broadcast
-does **not** leak `authorId`. Asserts the TTL directly against Redis (`ttl` is
-~86400 and `expiresAt - createdAt` is exactly 24h). Covers every moderation
-rejection path and the five-per-minute rate limit.
-
-### Game smoke — `npm --prefix server run smoke:game`
-
-34 checks. Start guards (no room, unknown game, wrong player count), then every
-rejection path proven **server-side**: out of turn, non-integer cell, negative
-cell, off-board cell, malformed payload, taken cell, moving after the end, and
-an outsider reaching another room's game. Then a game played to a win, and
-ephemerality asserted directly against Redis — state exists while the room
-lives, survives while one player remains, and is **gone** once the room empties.
-Finally the forfeit path when a player disconnects mid-game.
-
-### Manual check — P2P video
-
-```bash
-docker compose up -d
-npm run dev            # terminal 1
-npm run server:dev     # terminal 2
-```
-
-Open <http://localhost:3000/rooms> in **two** browser windows. Either press
-**Find Match** in both — they pair automatically — or enter the same Room ID in
-both and join. You should see two video tiles per window and the peer state
-reach `connected`.
-
-Once two people are in a room, press **Start game** for Tic-Tac-Toe. Clicking an
-opponent's square, or playing out of turn, gets refused by the server and the
-board shakes.
-
-For the wall, open <http://localhost:3000/wall> in two windows and post: the
-message should appear in both immediately, with a countdown to its expiry.
-
-> `getUserMedia` requires a secure context. `http://localhost` counts; a LAN
-> address like `http://192.168.1.5:3000` does **not**, and the camera request
-> will fail. Testing across two physical devices needs HTTPS.
-
-Use two different browsers (or a normal + private window) — two tabs in the
-same profile share a session cookie and therefore the same identity.
-
-### Not covered yet
-
-There is no automated test of an actual media connection: the smoke tests
-verify signalling is relayed and authorised, but a real ICE handshake needs two
-browsers and is checked by hand. Also untested: the nickname generator,
-`client-ip.ts` parsing, Redis pub/sub fan-out (no publisher exists yet), and
-Prisma writes — only that the schema migrates.
+No automated test of a real media connection — signalling is verified, but an
+actual ICE handshake needs two browsers and is checked by hand. Also untested:
+the nickname generator, `client-ip.ts` parsing, and Prisma writes beyond the
+schema migrating.
 
 ## Status
 
-Working and verified: region lock, anonymous sessions, socket handshake auth,
-Prisma schema + migration, Redis-backed room registry with the Socket.io Redis
-adapter, WebRTC signalling relay with same-room authorisation, automatic
-matchmaking, the DUDU wall with a 24h TTL, and a server-authoritative board-game
-engine with Tic-Tac-Toe. UI at `/rooms` and `/wall`.
+**Working:** region lock, anonymous sessions, socket handshake auth, Prisma
+schema and migration, Redis room registry with the Socket.io Redis adapter,
+WebRTC signalling with same-room authorisation, matchmaking, the DUDU wall with
+its 24h TTL, and a server-authoritative game engine running Tic-Tac-Toe.
 
-**Room capacity is the binding constraint on games.** It is fixed at 2 for the
-P2P video mesh, so Werewolf and Mr. White cannot run until rooms support more
-players than a mesh call sensibly allows — those two concerns will need to
-separate.
+**Werewolf and Mr. White are not built.** `server/src/games/registry.ts`
+registers only Tic-Tac-Toe. A design spec for Mr. White exists but is marked
+*awaiting review*, and Werewolf is explicitly out of scope pending its own spec.
+`server/src/games/types.ts` still carries the Phase 4 contract (`currentTurn`,
+`winnerSessionId`), not the generalized one the spec proposes (`actors`,
+`winnerSessionIds`, `tick`, `deadline`, `chatAudience`). There is no lobby, no
+game chat and no deadline sweeper.
 
-**The moderation filter is a heuristic placeholder, not the AI filter
-`CLAUDE.md` requires.** See the DUDU wall section above.
+**Room capacity is the binding constraint.** It is fixed at 2 for the P2P video
+mesh, so social-deduction games cannot run until rooms and lobbies separate into
+two different primitives.
+
+**The moderation filter is a heuristic placeholder,** not the AI filter
+`CLAUDE.md` calls for.
 
 **No TURN server.** Only public STUN is configured, so peers behind symmetric
-NAT will not connect. See the WebRTC section in `.env.example`.
+NAT will not connect.
 
-**Postgres is not written by the realtime server** — the wall is Redis-only
-today, so there is no durable moderation audit trail.
+**Postgres is not written by the realtime server.**
 
-Also not built yet: Werewolf and Mr. White (the engine and the `viewFor`
-redaction seam are in place; the games themselves are not), reconnect-into-a-
-running-game beyond `game:sync`, and any pairing preferences in matchmaking (it
-is purely first-come-first-served).
+Also missing: reconnect into a running game beyond `game:sync`, and any pairing
+preference in matchmaking — it is purely first-come-first-served.
+
+## Branches
+
+| Branch                            | Contains                                            |
+| --------------------------------- | --------------------------------------------------- |
+| `main`                            | Phase 1–4 platform, original scaffolding UI          |
+| `feature/phase5-social-deduction` | The above **plus** the test suite and the mading design |
+
+The integration tests and the design system are committed on the feature branch
+and are **not** on `main`. `git switch feature/phase5-social-deduction` to get
+them.
 
 ## Scripts
 
-| Command                    | Purpose                          |
-| -------------------------- | -------------------------------- |
-| `npm run dev`              | Next.js dev server               |
-| `npm run build`            | Production build                 |
-| `npm run typecheck`        | TypeScript, no emit              |
-| `npm run lint`             | ESLint                           |
-| `npm run db:migrate`       | Create + apply a migration       |
-| `npm run db:studio`        | Prisma Studio                    |
-| `npm run server:dev`       | Socket.io server (watch mode)    |
-| `npm run verify`           | typecheck + lint + build + web smoke |
-| `npm run smoke:socket`     | handshake + rooms (server must run) |
+| Command                   | Purpose                                       |
+| ------------------------- | --------------------------------------------- |
+| `npm run dev`             | Next.js dev server                            |
+| `npm run server:dev`      | Socket.io server, watch mode                  |
+| `npm run build`           | Production build                              |
+| `npm run typecheck`       | TypeScript, no emit                           |
+| `npm run lint`            | ESLint                                        |
+| `npm test`                | Backend integration tests (needs Redis)       |
+| `npm run smoke:web`       | HTTP smoke against a running Next.js          |
+| `npm run smoke:socket`    | Full socket smoke (both processes must run)   |
+| `npm run verify`          | typecheck + lint + build + tests + web smoke  |
+| `npm run db:migrate`      | Create and apply a migration                  |
+| `npm run db:studio`       | Prisma Studio                                 |
+
+## Repo map
+
+```
+app/            Next.js App Router — pages and client components
+lib/            Frontend logic: session, geo, socket contract, WebRTC, hooks
+server/         Socket.io backend, its own package
+  src/games/    Game rules. Add a definition, register it, done
+  tests/        Integration tests against real Redis
+  scripts/      Socket smoke scripts
+prisma/         Schema and migrations
+design/         Design references and notes
+docs/           Specs
+proxy.ts        Request gate — region lock and session issue
+```
