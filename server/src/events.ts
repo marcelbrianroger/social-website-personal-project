@@ -169,6 +169,19 @@ export type {
   TicTacToeState,
 } from './games/tic-tac-toe.js'
 
+/**
+ * 36 Questions' slice of the wire.
+ *
+ * `ThirtySixQuestionsProjection` — not the state — is what actually crosses:
+ * `viewFor` resolves the question index into its text so the 36 questions stay
+ * on the server rather than being mirrored into the browser bundle.
+ */
+export type {
+  ActiveDare,
+  QuestionMove,
+  ThirtySixQuestionsProjection,
+} from './games/thirty-six-questions.js'
+
 export interface MoveResult {
   ok: boolean
   /**

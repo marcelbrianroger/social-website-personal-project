@@ -1,4 +1,8 @@
 @AGENTS.md
+
+# Development Guidelines
+- **CRITICAL: SKIP TESTS.** Do NOT write, generate, update, or run any test files (`.test.ts`, `.spec.ts`, etc.) unless explicitly asked. Focus strictly on backend core logic, state management, and frontend UI components. This is to conserve token usage.
+
 # Project Overview
 A web-based multiplayer gaming and real-time communication platform. Features include P2P video calls (WebRTC), automated matchmaking, a 24-hour ephemeral public message board (DUDU Wall), and bot-driven board games. 
 

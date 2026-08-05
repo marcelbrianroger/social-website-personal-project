@@ -9,6 +9,10 @@ import {
   startGame,
   submitMove,
 } from '../src/game-engine.js'
+import {
+  thirtySixQuestions,
+  type ThirtySixQuestionsState,
+} from '../src/games/thirty-six-questions.js'
 import { ticTacToe, type TicTacToeState } from '../src/games/tic-tac-toe.js'
 import type {
   AnyGameDefinition,
@@ -571,6 +575,102 @@ describe('forfeiting', () => {
       'both players closing the tab at once still produces one outcome',
     )
     assert.equal((await loadGame(roomId))?.version, 2)
+  })
+})
+
+describe('a game that only becomes timed part-way through', () => {
+  /**
+   * 36 Questions is the first game here that starts UNTIMED and grows a
+   * deadline mid-game: a veto opens a dare the partner has to confirm, and that
+   * dare is the only thing on a clock.
+   *
+   * Both existing games are one or the other for their whole life — Tic-Tac-Toe
+   * never has a deadline, Mr. White always does — so nothing until now proved
+   * the sweeper's index is maintained on ordinary moves rather than just at
+   * start. If it were not, an abandoned dare would sit there forever and the
+   * room would be stuck with no way out.
+   */
+  async function startQuestions(roomId: string): Promise<void> {
+    const started = await startGame(roomId, 'thirty-six-questions', [alice, bob])
+    assert.equal(started.ok, true, 'test setup: game should start')
+  }
+
+  function stateOf(stored: StoredGame): ThirtySixQuestionsState {
+    return stored.state as ThirtySixQuestionsState
+  }
+
+  it('stays out of the deadline index while it is untimed', async () => {
+    const roomId = uniqueRoomId()
+    await startQuestions(roomId)
+
+    assert.equal(
+      await redis.zscore(keys.gameDeadlines, roomId),
+      null,
+      'a conversation with no dare owed must not wake the sweeper at all',
+    )
+  })
+
+  it('enters the index the moment a veto opens a dare', async () => {
+    const roomId = uniqueRoomId()
+    await startQuestions(roomId)
+
+    const vetoed = await submitMove(roomId, alice.sessionId, { type: 'veto' })
+    assert.equal(vetoed.ok, true)
+
+    const stored = (vetoed as { ok: true; stored: StoredGame }).stored
+    const endsAt = stateOf(stored).activeDare?.endsAt
+
+    assert.equal(
+      await redis.zscore(keys.gameDeadlines, roomId),
+      String(endsAt),
+      'the dare has to be sweepable, or an absent partner freezes the room',
+    )
+  })
+
+  it('leaves the index again once the partner confirms', async () => {
+    const roomId = uniqueRoomId()
+    await startQuestions(roomId)
+    await submitMove(roomId, alice.sessionId, { type: 'veto' })
+
+    await submitMove(roomId, bob.sessionId, { type: 'dare-resolved' })
+
+    assert.equal(
+      await redis.zscore(keys.gameDeadlines, roomId),
+      null,
+      'a resolved dare must not leave a stale score behind',
+    )
+  })
+
+  it('publishes the dare deadline as the phase clock', async () => {
+    const roomId = uniqueRoomId()
+    await startQuestions(roomId)
+    const vetoed = await submitMove(roomId, alice.sessionId, { type: 'veto' })
+
+    const stored = (vetoed as { ok: true; stored: StoredGame }).stored
+    const view = buildView(
+      stored,
+      thirtySixQuestions as AnyGameDefinition,
+      bob.sessionId,
+    )
+
+    assert.equal(view.phaseEndsAt, stateOf(stored).activeDare?.endsAt)
+    assert.deepEqual(
+      view.actors,
+      [bob.sessionId],
+      'only the partner may end it, and the view has to say so',
+    )
+  })
+
+  it('hands the penalised player nothing to press', async () => {
+    const roomId = uniqueRoomId()
+    await startQuestions(roomId)
+    await submitMove(roomId, alice.sessionId, { type: 'veto' })
+
+    assert.deepEqual(
+      await submitMove(roomId, alice.sessionId, { type: 'dare-resolved' }),
+      { ok: false, reason: 'not-your-dare' },
+      'closing your own penalty would make it not a penalty',
+    )
   })
 })
 

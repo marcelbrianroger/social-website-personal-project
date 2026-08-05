@@ -49,6 +49,65 @@ function outcomeGlyph(outcome: BoardOutcome): string {
   return outcome ?? ''
 }
 
+/**
+ * The stroke drawn through a winning line.
+ *
+ * ONE COMPONENT FOR BOTH SCALES, because both are 3×3: `line` is cell indices
+ * inside a local board, or local-board indices across the global one, and the
+ * arithmetic does not care which. The viewBox is three units square so the
+ * geometry is written in grid squares rather than pixels, and
+ * `non-scaling-stroke` keeps the ink a constant weight however large the grid
+ * is rendered.
+ *
+ * It animates on MOUNT and only on mount — which is exactly the moment the line
+ * was completed, since the server only publishes a winning line once there is
+ * one. No effect, no timer, nothing to keep in sync with the game state.
+ */
+function WinStroke({
+  line,
+  width,
+  ink = 'var(--color-ink)',
+  delayMs = 0,
+}: {
+  line: number[]
+  width: number
+  ink?: string
+  delayMs?: number
+}) {
+  const from = line[0] ?? 0
+  const to = line[line.length - 1] ?? 0
+
+  const start = { x: (from % 3) + 0.5, y: Math.floor(from / 3) + 0.5 }
+  const end = { x: (to % 3) + 0.5, y: Math.floor(to / 3) + 0.5 }
+
+  // Run past the outer two marks rather than stopping dead on their centres —
+  // a struck-through line that stops short reads as an underline.
+  const overshootX = (end.x - start.x) * 0.14
+  const overshootY = (end.y - start.y) * 0.14
+
+  return (
+    <svg
+      viewBox="0 0 3 3"
+      aria-hidden
+      className="pointer-events-none absolute inset-0 h-full w-full"
+    >
+      <line
+        x1={start.x - overshootX}
+        y1={start.y - overshootY}
+        x2={end.x + overshootX}
+        y2={end.y + overshootY}
+        pathLength={1}
+        stroke={ink}
+        strokeWidth={width}
+        strokeLinecap="round"
+        vectorEffect="non-scaling-stroke"
+        className="animate-strike"
+        style={delayMs ? { animationDelay: `${delayMs}ms` } : undefined}
+      />
+    </svg>
+  )
+}
+
 export function GameBoard({
   socket,
   roomId,
@@ -67,15 +126,22 @@ export function GameBoard({
 
   if (!roomId) return null
 
-  const state = asTicTacToe(view)
+  // The room hosts more than one game now, and `useGame` reports whichever is
+  // running. Everything this panel DISPLAYS has to come from `mine`, or a
+  // 36 Questions game would show its label and its result in the Tic-Tac-Toe
+  // header. Raw `view` survives for one job only: knowing the room is busy.
+  const mine = view?.gameId === 'tic-tac-toe' ? view : null
+  const busyElsewhere = Boolean(view && !view.finished && !mine)
+
+  const state = asTicTacToe(mine)
   // `actors` is the generalised turn: a simultaneous game returns every player
   // who may act, but Tic-Tac-Toe is strictly sequential, so it is always empty
   // or a single id. `sessionId` may be null, and an empty list yields undefined
   // — which never equals null, so a spectator is correctly never "on turn".
-  const myTurn = Boolean(view && !view.finished && view.actors[0] === sessionId)
+  const myTurn = Boolean(mine && !mine.finished && mine.actors[0] === sessionId)
   const myMark: Mark | null =
     state && sessionId ? (state.order[0] === sessionId ? 'X' : 'O') : null
-  const finished = Boolean(view?.finished)
+  const finished = Boolean(mine?.finished)
   /** Free choice: the board the last cell pointed at was already settled. */
   const anywhere = Boolean(state && !finished && state.activeBoardIndex === null)
 
@@ -119,14 +185,15 @@ export function GameBoard({
             className="font-display text-xl leading-tight"
             style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
           >
-            {view?.label ?? 'Ultimate Tic-Tac-Toe'}
+            {mine?.label ?? 'Ultimate Tic-Tac-Toe'}
           </h2>
           <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink">
-            {!view && peerCount === 0 && 'Butuh satu orang lagi di ruang ini.'}
-            {!view && peerCount > 0 && 'Siap kapan aja.'}
-            {view && view.finished && outcomeText(view)}
-            {view && !view.finished && state && turnText(state)}
-            {view && !view.finished && myMark && (
+            {!mine && peerCount === 0 && 'Butuh satu orang lagi di ruang ini.'}
+            {!mine && peerCount > 0 && !busyElsewhere && 'Siap kapan aja.'}
+            {!mine && busyElsewhere && 'Ada game lain yang lagi jalan.'}
+            {mine && mine.finished && outcomeText(mine)}
+            {mine && !mine.finished && state && turnText(state)}
+            {mine && !mine.finished && myMark && (
               <span className="ml-2 bg-yellow px-1.5 font-mono text-[0.6875rem]">
                 kamu {myMark}
               </span>
@@ -137,20 +204,25 @@ export function GameBoard({
         <button
           type="button"
           onClick={() => start('tic-tac-toe')}
-          disabled={starting || (Boolean(view) && !view?.finished)}
+          disabled={starting || busyElsewhere || Boolean(mine && !mine.finished)}
           className="border-2 border-ink px-5 py-2.5 font-mono text-sm text-ink transition-colors hover:bg-yellow disabled:opacity-40 disabled:hover:bg-transparent"
         >
-          {view?.finished ? 'Main lagi' : starting ? 'Mulai…' : 'Mulai game'}
+          {mine?.finished ? 'Main lagi' : starting ? 'Mulai…' : 'Mulai game'}
         </button>
       </div>
 
       {state && (
         <div
-          // Remounting on each rejection replays the shake animation, even when
-          // the same rejection repeats.
-          key={rejectionNonce}
-          className={`mt-6 grid w-full max-w-[26rem] grid-cols-3 gap-0.5 border-2 border-ink bg-ink ${
-            rejection ? 'animate-reject' : ''
+          // Alternating class rather than a changing key: the shake has to
+          // replay even when the same rejection repeats, but remounting would
+          // re-draw every win stroke on the grid along with it. The nonce only
+          // ever increments, so consecutive rejections always flip the parity.
+          className={`relative mt-6 grid w-full max-w-[26rem] grid-cols-3 gap-0.5 border-2 border-ink bg-ink ${
+            rejection
+              ? rejectionNonce % 2 === 0
+                ? 'animate-reject'
+                : 'animate-reject-alt'
+              : ''
           }`}
         >
           {CELLS.map((board) => {
@@ -161,27 +233,27 @@ export function GameBoard({
             const localLine = state.localWinningLines[board]
 
             // Yellow is this system's only fill, so it has to do both jobs: the
-            // board you must play in, and the three that won the game. They
-            // never appear at once — a finished game pins nobody.
-            const frame = winningBoard
-              ? 'bg-yellow'
-              : live && myTurn
-                ? 'bg-yellow'
-                : outcome
-                  ? 'bg-rule'
-                  : 'bg-stock'
+            // board in play, and the three that won the game. They never appear
+            // at once — a finished game pins nobody.
+            //
+            // Lit on the opponent's turn too, not just yours. Watching them be
+            // forced somewhere is half of what makes the constraint legible,
+            // and gating it on `myTurn` left half of every game with nothing
+            // highlighted at all.
+            const frame = winningBoard || live ? 'bg-yellow' : outcome ? 'bg-rule' : 'bg-stock'
+
+            // KNOCKED BACK WITH INK, NOT OPACITY. These boards sit on an
+            // ink-coloured grid, so fading them composites toward the dark
+            // backing and turns the paper slate-grey — the board reads broken
+            // rather than out of play. Switching to the second stock is how a
+            // riso actually de-emphasises something: another flat colour.
+            const cellTone = live || finished ? 'bg-paper' : 'bg-stock'
 
             return (
-              <div
-                key={board}
-                className={`relative p-1 transition-opacity ${frame} ${
-                  live || finished ? '' : 'opacity-45'
-                }`}
-              >
-                <div className="grid grid-cols-3 gap-px bg-rule">
+              <div key={board} className={`relative p-1 ${frame}`}>
+                <div className="relative grid grid-cols-3 gap-px bg-rule">
                   {CELLS.map((cell) => {
                     const mark = cells[cell] ?? null
-                    const winningCell = localLine?.includes(cell) ?? false
                     // A hint only — the click is sent regardless.
                     const playable = myTurn && live && mark === null
 
@@ -194,11 +266,9 @@ export function GameBoard({
                         aria-label={`Papan ${board + 1}, kotak ${cell + 1}${
                           mark ? `, ${mark}` : ', kosong'
                         }`}
-                        className={`grid aspect-square place-items-center font-display text-lg text-ink ${
-                          winningCell ? 'bg-yellow' : 'bg-paper'
-                        } ${
+                        className={`grid aspect-square place-items-center font-display text-lg text-ink ${cellTone} ${
                           playable
-                            ? 'cursor-pointer hover:bg-stock'
+                            ? 'cursor-pointer hover:bg-yellow'
                             : 'cursor-not-allowed'
                         }`}
                         style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
@@ -207,6 +277,9 @@ export function GameBoard({
                       </button>
                     )
                   })}
+
+                  {/* The three cells that took this board, struck through. */}
+                  {localLine && <WinStroke line={localLine} width={3} />}
                 </div>
 
                 {outcome && (
@@ -215,7 +288,7 @@ export function GameBoard({
                   // underneath. Decorative — the status line carries the fact.
                   <span
                     aria-hidden
-                    className="slip pointer-events-none absolute inset-0 grid place-items-center font-display text-5xl leading-none text-pink"
+                    className="slip animate-stamp pointer-events-none absolute inset-0 grid place-items-center font-display text-5xl leading-none text-pink"
                     style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
                   >
                     {outcomeGlyph(outcome)}
@@ -224,6 +297,30 @@ export function GameBoard({
               </div>
             )
           })}
+
+          {/*
+           * The game-winning line, drawn across whole boards.
+           *
+           * PINK, AND THAT IS NOT DECORATION. A global line and the local lines
+           * that built it are frequently collinear — win three boards along
+           * their middle rows and both strokes lie on the same axis — so an ink
+           * stroke over ink strokes merges into one thick smear. A second
+           * colour separates the two scales, and pink is what this system keeps
+           * for its loudest rules.
+           *
+           * Held back a beat so it lands AFTER the stamp on the board that just
+           * fell. The last local win and the game ending arrive in the same
+           * state push, and playing them together reads as one muddled flicker
+           * instead of a conclusion.
+           */}
+          {state.winningLine && (
+            <WinStroke
+              line={state.winningLine}
+              width={9}
+              ink="var(--color-pink)"
+              delayMs={260}
+            />
+          )}
         </div>
       )}
 
@@ -241,10 +338,10 @@ export function GameBoard({
         </SystemNote>
       )}
 
-      {view && (
+      {mine && (
         <p className="mt-5 font-mono text-[0.6875rem] text-ink-soft">
-          v{view.version} ·{' '}
-          {view.players.map((player) => player.nickname).join(' vs ')}
+          v{mine.version} ·{' '}
+          {mine.players.map((player) => player.nickname).join(' vs ')}
         </p>
       )}
     </section>

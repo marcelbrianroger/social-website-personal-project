@@ -136,11 +136,27 @@ body {
 /*
  * Rejected-move feedback for the game board.
  *
- * Applied via a changing React key so the element remounts and the animation
- * replays — including when the same rejection happens twice in a row, which a
- * class toggle alone would not re-trigger.
+ * TWO IDENTICAL KEYFRAMES, alternated by the caller on each rejection. The
+ * obvious way to replay an animation is a changing React key, but the board
+ * cannot afford to remount: the win strokes below animate on mount, so a
+ * remount would re-draw every line on the grid every time someone mis-clicks.
+ * Swapping the animation-name restarts the shake in place instead, leaving the
+ * boards mounted and their strokes alone.
  */
 @keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes shake-alt {
   0%,
   100% {
     transform: translateX(0);
@@ -157,15 +173,74 @@ body {
   animation: shake 0.32s ease-in-out;
 }
 
+.animate-reject-alt {
+  animation: shake-alt 0.32s ease-in-out;
+}
+
+/*
+ * Winning a line.
+ *
+ * A riso has no way to fade or glow, so a win cannot be rendered as light — it
+ * has to be rendered as INK ARRIVING. Two marks, both of which a person could
+ * physically make on the paper:
+ *
+ *   strike  a stroke drawn through the three winning cells, left to right, the
+ *           way you cross out a line on a printed sheet. Normalised with
+ *           pathLength="1" so one keyframe works for every line on the grid,
+ *           from a three-cell row to a three-board diagonal.
+ *   stamp   the owner's mark hitting the board — overshoot, tiny rebound,
+ *           slight rotation. A rubber stamp, not a fade-in.
+ */
+@keyframes strike {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-strike {
+  stroke-dasharray: 1;
+  animation: strike 420ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+@keyframes stamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.9) rotate(-9deg);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(0.94) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.animate-stamp {
+  animation: stamp 340ms cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-reject,
+  .animate-reject-alt,
   .animate-unpin,
-  .animate-pin-up {
+  .animate-pin-up,
+  .animate-strike,
+  .animate-stamp {
     animation: none;
   }
 
   /* Expiry still has to resolve without motion. */
   .animate-unpin {
     opacity: 0;
+  }
+
+  /* The stroke is the result, not the flourish — it still has to be there. */
+  .animate-strike {
+    stroke-dasharray: none;
   }
 }

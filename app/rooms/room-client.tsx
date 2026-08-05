@@ -7,6 +7,7 @@ import { hasTurnConfigured } from '@/lib/webrtc/ice-config'
 import { useP2PRoom } from '@/lib/webrtc/use-p2p-room'
 
 import { GameBoard } from './game-board'
+import { QuestionsBoard } from './questions-board'
 import { VideoTile } from './video-tile'
 
 const PHASE_LABEL: Record<string, string> = {
@@ -186,13 +187,27 @@ export function RoomClient() {
         )}
       </div>
 
+      {/*
+       * One room, two things to do in it. Each panel owns its own view of the
+       * running game and shuts its own Start button when the other one is
+       * playing — the engine already refuses a second game per room, so this is
+       * only about not offering a button that cannot work.
+       */}
       {inRoom && (
-        <GameBoard
-          socket={socket}
-          roomId={roomId}
-          sessionId={session?.sessionId ?? null}
-          peerCount={peers.length}
-        />
+        <>
+          <GameBoard
+            socket={socket}
+            roomId={roomId}
+            sessionId={session?.sessionId ?? null}
+            peerCount={peers.length}
+          />
+          <QuestionsBoard
+            socket={socket}
+            roomId={roomId}
+            sessionId={session?.sessionId ?? null}
+            peerCount={peers.length}
+          />
+        </>
       )}
 
       <div className="mt-12 max-w-2xl space-y-3 border-t-2 border-ink pt-5 text-sm leading-relaxed text-ink-soft">

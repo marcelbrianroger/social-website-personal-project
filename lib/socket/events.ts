@@ -248,6 +248,75 @@ export interface CellMove {
   cell: number
 }
 
+// --- 36 Questions ----------------------------------------------------------
+
+/**
+ * MIRRORS `server/src/games/thirty-six-questions.ts`.
+ *
+ * Note what is NOT here: the 36 questions themselves. The server resolves the
+ * index into text inside `viewFor`, so there is exactly one copy of the wording
+ * and no second list in the browser bundle to drift out of step with it.
+ */
+export interface ActiveDare {
+  /** Index into the server's dare bank. */
+  id: number
+  text: string
+  /** Who owes it. Everyone sees this — the point is that the partner watches. */
+  sessionId: string
+  /** The question that was refused. */
+  questionIndex: number
+  /**
+   * Epoch ms at which the clock gives up waiting for the partner to confirm.
+   *
+   * Compare against `GameView.serverNow`, never a raw `Date.now()`: a browser
+   * clock minutes out of step would show a dare as expired while the server is
+   * still happily accepting the confirmation.
+   */
+  endsAt: number
+}
+
+/**
+ * What `GameView.state` narrows to for `gameId: 'thirty-six-questions'`.
+ *
+ * REDACTED PER VIEWER. The listener's payload does not contain the question at
+ * all — the server strips it, so there is nothing to read ahead to in devtools.
+ * Do not add a client-side copy of the question bank to "fix" that.
+ */
+export interface ThirtySixQuestionsProjection {
+  questionIndex: number
+  /** Length of THIS session's deck — nine, not the 36 in the bank. */
+  totalQuestions: number
+  /**
+   * The current question, and only if it is your turn to read it.
+   *
+   * Null in three cases the UI must tell apart using `activeTurn` and
+   * `finished`: not your turn, deck finished, or you are an observer.
+   */
+  question: string | null
+  /** Which of the three escalating sets this question came from. */
+  set: 1 | 2 | 3 | null
+  /** sessionId of whoever holds the card. Visibility only — both may act. */
+  activeTurn: string | null
+  /** sessionId -> refusals still available. */
+  vetosRemaining: Record<string, number>
+  /** The penalty being served right now, or null. */
+  activeDare: ActiveDare | null
+  abandonedBy: string | null
+}
+
+/**
+ * Move intent for 36 Questions.
+ *
+ * These are moves rather than bespoke `question:*` socket events on purpose:
+ * everything a game needs — compare-and-set, versioning, per-viewer projection,
+ * forfeit and disconnect handling — already hangs off `game:move`, and a
+ * private event per game would mean re-implementing all of it.
+ */
+export type QuestionMove =
+  | { type: 'next' }
+  | { type: 'veto' }
+  | { type: 'dare-resolved' }
+
 export interface MoveResult {
   ok: boolean
   reason?: string
@@ -284,6 +353,16 @@ export const MOVE_ERROR_TEXT: Record<string, string> = {
   'not-mr-white': 'Only Mr. White may guess the word.',
   'not-one-word': 'One word only — no spaces.',
   'clue-too-long': 'That is too long for one word.',
+
+  // 36 Questions. `not-your-dare` is the one that needs explaining: the partner
+  // confirms a dare, never the person performing it.
+  'dare-in-progress': 'Finish the dare first.',
+  'no-vetos-left': 'You have already used your veto.',
+  'no-active-dare': 'There is no dare to finish.',
+  'not-your-dare': 'Only your partner can say you did it.',
+  // Deliberately not the existing 'not-your-turn': it IS your turn to answer,
+  // just not your turn to hold the card and move the deck on.
+  'not-your-card': 'Only whoever is reading the question can move on.',
 }
 
 /** Why joining a lobby failed. */

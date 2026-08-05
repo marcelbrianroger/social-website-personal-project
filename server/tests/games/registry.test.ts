@@ -65,10 +65,10 @@ describe('listing games', () => {
     }
   })
 
-  it('offers Tic-Tac-Toe and Mr. White', () => {
+  it('offers Tic-Tac-Toe, Mr. White and 36 Questions', () => {
     assert.deepEqual(
       listGames().map((entry) => entry.id),
-      ['tic-tac-toe', 'mr-white'],
+      ['tic-tac-toe', 'mr-white', 'thirty-six-questions'],
       'Werewolf is still out of scope pending its own spec',
     )
   })
