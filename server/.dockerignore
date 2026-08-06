@@ -1,0 +1,18 @@
+# Keeping these out of the build context matters for correctness, not just
+# speed: a node_modules built on the host would carry the host's platform
+# binaries into a linux/arm64 image, and a stale dist/ could ship instead of a
+# freshly compiled one.
+node_modules
+dist
+
+# Never runs in production. The test config also references paths the runtime
+# image does not contain.
+tests
+tsconfig.test.json
+
+# Smoke scripts are driven from a developer machine against a deployed server,
+# so they have no reason to be inside it.
+scripts
+
+.env
+.env.*
