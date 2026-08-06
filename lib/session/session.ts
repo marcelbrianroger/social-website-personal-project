@@ -90,6 +90,48 @@ export async function signSession(session: AnonymousSession): Promise<string> {
 }
 
 /**
+ * How long a socket ticket stays valid.
+ *
+ * Long enough to survive a slow handshake, short enough that a stolen one is
+ * worthless by the time it is used. This is the whole point of the ticket: it
+ * carries the same authority as the session cookie, so it must not last as long
+ * as one.
+ */
+export const SOCKET_TICKET_MAX_AGE_SECONDS = 60
+
+/**
+ * Mint a short-lived token for the Socket.io handshake.
+ *
+ * WHY THIS EXISTS: the session cookie is HttpOnly + SameSite=Lax, so the
+ * browser withholds it from a handshake aimed at a different registrable domain
+ * — which is exactly the production topology (Next.js on Vercel, socket server
+ * on Railway). Page JS cannot read the cookie to forward it either. So the
+ * server hands the client a separate, deliberately brief token to pass in the
+ * Socket.io `auth` payload.
+ *
+ * Same issuer, audience, algorithm and claims as `signSession`, so the socket
+ * server's `verifySession` accepts it with no change there. Only the lifetime
+ * differs. Note that this means a ticket is also accepted as a session cookie
+ * and vice versa — acceptable because both prove the same thing (the holder
+ * passed the region lock), and the ticket expires in a minute either way.
+ *
+ * Deliberately NOT solved by setting `sameSite: 'none'`, which would expose the
+ * real session cookie to every cross-site request.
+ */
+export async function signSocketTicket(
+  session: AnonymousSession,
+): Promise<string> {
+  return new SignJWT({ nickname: session.nickname })
+    .setProtectedHeader({ alg: JWT_ALGORITHM })
+    .setSubject(session.sessionId)
+    .setIssuedAt()
+    .setIssuer(JWT_ISSUER)
+    .setAudience(JWT_AUDIENCE)
+    .setExpirationTime(`${SOCKET_TICKET_MAX_AGE_SECONDS}s`)
+    .sign(getSecret())
+}
+
+/**
  * Verify a session token.
  *
  * Returns `null` for anything untrustworthy — bad signature, wrong issuer or

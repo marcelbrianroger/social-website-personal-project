@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
 
+import { fetchSocketTicket, socketOptions } from '@/lib/socket/connect'
 import type { LobbySummary } from '@/lib/socket/events'
 import { SOCKET_URL } from '@/lib/webrtc/ice-config'
 import type { AppSocket } from '@/lib/webrtc/use-p2p-room'
@@ -27,33 +28,41 @@ export function useOpenLobbies() {
   const [phase, setPhase] = useState<BrowsePhase>('connecting')
 
   useEffect(() => {
-    const connection: AppSocket = io(SOCKET_URL, {
-      withCredentials: true,
-      transports: ['websocket'],
-      autoConnect: true,
-    })
+    let cancelled = false
+    let socket: AppSocket | null = null
 
-    // `session:ready` is the handshake completing; watching before it would
-    // race the auth middleware.
-    connection.on('session:ready', () => {
-      connection.emit('lobby:watch')
-    })
+    void (async () => {
+      const ticket = await fetchSocketTicket()
+      if (cancelled) return
 
-    connection.on('lobby:open-tables', (open) => {
-      setLobbies(open)
-      setPhase('ready')
-    })
+      const connection: AppSocket = io(SOCKET_URL, socketOptions(ticket))
+      socket = connection
 
-    // The list is not worth an error screen — an empty browse view plus the
-    // join-by-ID field below it is still a usable page.
-    connection.on('connect_error', () => {
-      setPhase('error')
-    })
+      // `session:ready` is the handshake completing; watching before it would
+      // race the auth middleware.
+      connection.on('session:ready', () => {
+        connection.emit('lobby:watch')
+      })
+
+      connection.on('lobby:open-tables', (open) => {
+        setLobbies(open)
+        setPhase('ready')
+      })
+
+      // The list is not worth an error screen — an empty browse view plus the
+      // join-by-ID field below it is still a usable page.
+      connection.on('connect_error', () => {
+        setPhase('error')
+      })
+    })()
 
     return () => {
-      connection.emit('lobby:unwatch')
-      connection.removeAllListeners()
-      connection.disconnect()
+      // Guards the in-flight ticket fetch: without it a fast unmount leaves a
+      // socket nothing disconnects.
+      cancelled = true
+      socket?.emit('lobby:unwatch')
+      socket?.removeAllListeners()
+      socket?.disconnect()
     }
   }, [])
 

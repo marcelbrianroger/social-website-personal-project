@@ -3,7 +3,6 @@
 import { useState } from 'react'
 
 import { ConnectionStatus, SHELL, SystemNote } from '@/app/chrome'
-import { hasTurnConfigured } from '@/lib/webrtc/ice-config'
 import { useP2PRoom } from '@/lib/webrtc/use-p2p-room'
 
 import { GameBoard } from './game-board'
@@ -39,6 +38,7 @@ export function RoomClient() {
     micEnabled,
     cameraEnabled,
     queuePosition,
+    turnAvailable,
     join,
     findMatch,
     cancelMatch,
@@ -215,7 +215,7 @@ export function RoomClient() {
           Buka halaman ini di jendela kedua terus masuk pakai ID ruang yang sama.
           Satu ruang cuma muat dua orang.
         </p>
-        {!hasTurnConfigured() && (
+        {!turnAvailable && (
           <p>
             Belum ada server TURN, jadi cuma STUN yang jalan. Dua orang di
             jaringan yang sama bisa nyambung; kalau di balik symmetric NAT bisa

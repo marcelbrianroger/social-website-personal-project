@@ -10,6 +10,7 @@ import {
   type DuduBroadcast,
   type ServerToClientEvents,
 } from '@/lib/socket/events'
+import { fetchSocketTicket, socketOptions } from '@/lib/socket/connect'
 import { SOCKET_URL } from '@/lib/webrtc/ice-config'
 
 /**
@@ -49,40 +50,52 @@ export function useDuduWall() {
   }, [])
 
   useEffect(() => {
-    const socket: AppSocket = io(SOCKET_URL, {
-      withCredentials: true,
-      transports: ['websocket'],
-    })
+    let cancelled = false
+    let socket: AppSocket | null = null
 
-    socketRef.current = socket
+    void (async () => {
+      // Ticket before connecting. A handshake cannot be re-authenticated in
+      // place — a rejected one has to be torn down and rebuilt — so waiting is
+      // cheaper than connecting and hoping the cookie made it.
+      const ticket = await fetchSocketTicket()
+      if (cancelled) return
 
-    socket.on('session:ready', (incoming) => {
-      setSession(incoming)
-      setConnected(true)
-      setError(null)
+      const connection: AppSocket = io(SOCKET_URL, socketOptions(ticket))
+      socket = connection
+      socketRef.current = connection
 
-      socket.emit('dudu:subscribe')
-      socket.emit('dudu:history', ({ messages: history }) => {
-        setMessages(history.filter(stillAlive))
+      connection.on('session:ready', (incoming) => {
+        setSession(incoming)
+        setConnected(true)
+        setError(null)
+
+        connection.emit('dudu:subscribe')
+        connection.emit('dudu:history', ({ messages: history }) => {
+          setMessages(history.filter(stillAlive))
+        })
       })
-    })
 
-    socket.on('dudu:message', addMessage)
+      connection.on('dudu:message', addMessage)
 
-    socket.on('disconnect', () => setConnected(false))
+      connection.on('disconnect', () => setConnected(false))
 
-    socket.on('connect_error', (cause) => {
-      setConnected(false)
-      setError(
-        cause.message === 'unauthorized'
-          ? 'The server rejected your session. Reload the page to get a fresh one.'
-          : `Could not reach the realtime server at ${SOCKET_URL}. Is it running?`,
-      )
-    })
+      connection.on('connect_error', (cause) => {
+        setConnected(false)
+        setError(
+          cause.message === 'unauthorized'
+            ? 'The server rejected your session. Reload the page to get a fresh one.'
+            : `Could not reach the realtime server at ${SOCKET_URL}. Is it running?`,
+        )
+      })
+    })()
 
     return () => {
-      socket.removeAllListeners()
-      socket.disconnect()
+      // Set before the socket may even exist: the ticket fetch can still be in
+      // flight, and without this a fast unmount would leave an orphan socket
+      // that nothing ever disconnects.
+      cancelled = true
+      socket?.removeAllListeners()
+      socket?.disconnect()
       socketRef.current = null
     }
   }, [addMessage])

@@ -8,6 +8,7 @@ import {
   type AnonymousSession,
   type LobbyMember,
 } from '@/lib/socket/events'
+import { fetchSocketTicket, socketOptions } from '@/lib/socket/connect'
 import { SOCKET_URL } from '@/lib/webrtc/ice-config'
 import type { AppSocket } from '@/lib/webrtc/use-p2p-room'
 
@@ -58,89 +59,98 @@ export function useLobby(lobbyId: string): LobbyState {
   const socketRef = useRef<AppSocket | null>(null)
 
   useEffect(() => {
-    const connection: AppSocket = io(SOCKET_URL, {
-      // Sends the HttpOnly session cookie with the handshake. Without this the
-      // server rejects the connection as unauthorized.
-      withCredentials: true,
-      transports: ['websocket'],
-      autoConnect: true,
-    })
+    let cancelled = false
+    let socket: AppSocket | null = null
 
-    socketRef.current = connection
+    void (async () => {
+      // Authenticates the handshake. The session cookie alone is not enough
+      // once the socket server is on another registrable domain — see
+      // fetchSocketTicket.
+      const ticket = await fetchSocketTicket()
+      if (cancelled) return
 
-    /**
-     * Join only once the handshake has completed.
-     *
-     * `session:ready` is the server confirming which identity it accepted, and
-     * it is also the first moment the socket is usable. Emitting `lobby:join`
-     * before it would race the auth middleware.
-     *
-     * This fires again after a reconnect, which is exactly what re-seats a
-     * player whose connection dropped — their old socket id is already gone
-     * from the members hash by then.
-     */
-    connection.on('session:ready', (incoming) => {
-      setSession(incoming)
-      setSocket(connection)
-      setPhase('joining')
+      const connection: AppSocket = io(SOCKET_URL, socketOptions(ticket))
+      socket = connection
+      socketRef.current = connection
 
-      connection.emit('lobby:join', lobbyId, (result) => {
-        if (!result.ok) {
-          setError(
-            LOBBY_JOIN_ERROR_TEXT[result.error ?? ''] ??
-              `Could not join this lobby (${result.error ?? 'unknown reason'}).`,
+      /**
+       * Join only once the handshake has completed.
+       *
+       * `session:ready` is the server confirming which identity it accepted,
+       * and it is also the first moment the socket is usable. Emitting
+       * `lobby:join` before it would race the auth middleware.
+       *
+       * This fires again after a reconnect, which is exactly what re-seats a
+       * player whose connection dropped — their old socket id is already gone
+       * from the members hash by then.
+       */
+      connection.on('session:ready', (incoming) => {
+        setSession(incoming)
+        setSocket(connection)
+        setPhase('joining')
+
+        connection.emit('lobby:join', lobbyId, (result) => {
+          if (!result.ok) {
+            setError(
+              LOBBY_JOIN_ERROR_TEXT[result.error ?? ''] ??
+                `Could not join this lobby (${result.error ?? 'unknown reason'}).`,
+            )
+            setPhase('error')
+            return
+          }
+
+          setCapacity(result.capacity)
+
+          // The ack carries who was already seated plus our own record; we are
+          // not in `members`, so we add ourselves rather than waiting for an
+          // echo that never comes. `result.you` is the server's copy —
+          // inventing a local `joinedAt` here would sort the roster against a
+          // browser clock and could name the wrong person host.
+          setMembers(
+            [...result.members, ...(result.you ? [result.you] : [])].sort(
+              (a, b) => a.joinedAt - b.joinedAt,
+            ),
           )
-          setPhase('error')
-          return
-        }
-
-        setCapacity(result.capacity)
-
-        // The ack carries who was already seated plus our own record; we are
-        // not in `members`, so we add ourselves rather than waiting for an echo
-        // that never comes. `result.you` is the server's copy — inventing a
-        // local `joinedAt` here would sort the roster against a browser clock
-        // and could name the wrong person host.
-        setMembers(
-          [...result.members, ...(result.you ? [result.you] : [])].sort(
-            (a, b) => a.joinedAt - b.joinedAt,
-          ),
-        )
-        setPhase('seated')
-        setError(null)
+          setPhase('seated')
+          setError(null)
+        })
       })
-    })
 
-    connection.on('connect_error', (cause) => {
-      setError(
-        cause.message === 'unauthorized'
-          ? 'The socket server rejected your session. Reload the page to get a fresh one.'
-          : `Could not reach the realtime server at ${SOCKET_URL}. Is it running?`,
-      )
-      setPhase('error')
-    })
+      connection.on('connect_error', (cause) => {
+        setError(
+          cause.message === 'unauthorized'
+            ? 'The socket server rejected your session. Reload the page to get a fresh one.'
+            : `Could not reach the realtime server at ${SOCKET_URL}. Is it running?`,
+        )
+        setPhase('error')
+      })
 
-    connection.on('lobby:member-joined', (member) => {
-      setMembers((current) =>
-        current.some((seated) => seated.socketId === member.socketId)
-          ? current
-          : [...current, member].sort((a, b) => a.joinedAt - b.joinedAt),
-      )
-    })
+      connection.on('lobby:member-joined', (member) => {
+        setMembers((current) =>
+          current.some((seated) => seated.socketId === member.socketId)
+            ? current
+            : [...current, member].sort((a, b) => a.joinedAt - b.joinedAt),
+        )
+      })
 
-    connection.on('lobby:member-left', ({ socketId }) => {
-      setMembers((current) =>
-        current.filter((seated) => seated.socketId !== socketId),
-      )
-    })
+      connection.on('lobby:member-left', ({ socketId }) => {
+        setMembers((current) =>
+          current.filter((seated) => seated.socketId !== socketId),
+        )
+      })
+    })()
 
     return () => {
+      // Guards the in-flight ticket fetch: without it a fast unmount leaves a
+      // socket nothing disconnects.
+      cancelled = true
+
       // Leaving explicitly rather than relying on the disconnect handler: it
       // frees the seat immediately instead of after the server notices the
       // socket died, which matters when the lobby is at capacity.
-      connection.emit('lobby:leave')
-      connection.removeAllListeners()
-      connection.disconnect()
+      socket?.emit('lobby:leave')
+      socket?.removeAllListeners()
+      socket?.disconnect()
       socketRef.current = null
     }
   }, [lobbyId])

@@ -9,7 +9,8 @@ import {
   type ClientToServerEvents,
   type ServerToClientEvents,
 } from '@/lib/socket/events'
-import { SOCKET_URL, getIceServers } from '@/lib/webrtc/ice-config'
+import { fetchSocketTicket, socketOptions } from '@/lib/socket/connect'
+import { SOCKET_URL, STUN_ONLY, fetchIceConfig } from '@/lib/webrtc/ice-config'
 
 /**
  * P2P room membership plus a full-mesh WebRTC connection to every other
@@ -62,9 +63,26 @@ export function useP2PRoom() {
    */
   const [socket, setSocket] = useState<AppSocket | null>(null)
 
+  /**
+   * Whether a TURN relay is in play, for the UI to warn about.
+   *
+   * Comes from the ICE response rather than an env var: TURN settings are
+   * server-side now, so the browser genuinely cannot know without asking.
+   */
+  const [turnAvailable, setTurnAvailable] = useState(false)
+
   const socketRef = useRef<AppSocket | null>(null)
   const localStreamRef = useRef<MediaStream | null>(null)
   const peerConnectionsRef = useRef(new Map<string, RTCPeerConnection>())
+  /**
+   * ICE servers, fetched once per mount.
+   *
+   * A ref rather than state because `createPeerConnection` is synchronous and
+   * must read the current value without re-subscribing. The socket effect fills
+   * this in before connecting, so by the time any peer event can arrive the
+   * credentials are already here.
+   */
+  const iceServersRef = useRef<RTCIceServer[]>(STUN_ONLY)
   /**
    * ICE candidates that arrived before the matching remote description was
    * applied. addIceCandidate() throws in that window, so they are parked here
@@ -105,7 +123,9 @@ export function useP2PRoom() {
       const existing = peerConnectionsRef.current.get(socketId)
       if (existing) return existing
 
-      const connection = new RTCPeerConnection({ iceServers: getIceServers() })
+      const connection = new RTCPeerConnection({
+        iceServers: iceServersRef.current,
+      })
 
       // Local tracks must be attached before creating an offer or answer, or
       // the SDP carries no media and the call connects silently with no video.
@@ -219,138 +239,170 @@ export function useP2PRoom() {
   // --- Socket lifecycle ----------------------------------------------------
 
   useEffect(() => {
-    const socket: AppSocket = io(SOCKET_URL, {
-      // Sends the HttpOnly session cookie with the handshake. Without this the
-      // server rejects the connection as unauthorized.
-      withCredentials: true,
-      transports: ['websocket'],
-      autoConnect: true,
-    })
+    let cancelled = false
+    let socket: AppSocket | null = null
 
-    socketRef.current = socket
+    void (async () => {
+      /**
+       * Both fetches must land before the socket opens.
+       *
+       * The ticket authenticates the handshake. The ICE servers must be in the
+       * ref before any peer event can arrive, because `createPeerConnection` is
+       * synchronous — connecting first would let the very first peer be built
+       * with STUN only, which is precisely the case TURN exists to rescue, and
+       * it would fail intermittently depending on how fast the peer showed up.
+       *
+       * In parallel: they are independent, and serialising them would add a
+       * round trip to every room open.
+       */
+      const [ticket, ice] = await Promise.all([
+        fetchSocketTicket(),
+        fetchIceConfig(),
+      ])
+      if (cancelled) return
 
-    // Published from the callback rather than the effect body: setState in an
-    // effect body cascades renders. It also means consumers only ever see a
-    // socket that has completed the handshake, which is the only point at which
-    // it is actually usable.
-    socket.on('session:ready', (incoming) => {
-      setSession(incoming)
-      setSocket(socket)
-    })
+      iceServersRef.current = ice.iceServers
+      setTurnAvailable(ice.turnAvailable)
 
-    socket.on('connect_error', (cause) => {
-      setError(
-        cause.message === 'unauthorized'
-          ? 'The socket server rejected your session. Reload the page to get a fresh one.'
-          : `Could not reach the realtime server at ${SOCKET_URL}. Is it running?`,
+      // Named `activeSocket`, not `connection`: the handlers below declare
+      // their own `connection` for the RTCPeerConnection, and shadowing it
+      // would silently send `emit` to the peer connection instead of the
+      // socket.
+      const activeSocket: AppSocket = io(SOCKET_URL, socketOptions(ticket))
+      socket = activeSocket
+      socketRef.current = activeSocket
+
+      // Published from the callback rather than the effect body: setState in an
+      // effect body cascades renders. It also means consumers only ever see a
+      // socket that has completed the handshake, which is the only point at
+      // which it is actually usable.
+      activeSocket.on('session:ready', (incoming) => {
+        setSession(incoming)
+        setSocket(activeSocket)
+      })
+
+      activeSocket.on('connect_error', (cause) => {
+        setError(
+          cause.message === 'unauthorized'
+            ? 'The socket server rejected your session. Reload the page to get a fresh one.'
+            : `Could not reach the realtime server at ${SOCKET_URL}. Is it running?`,
+        )
+        setPhase('error')
+      })
+
+      activeSocket.on('room:peer-joined', (peer) => {
+        // A newcomer offers to us, so no connection is created here — just show
+        // them. The offer handler builds the connection when it arrives.
+        setPeers((current) =>
+          current.some((existing) => existing.socketId === peer.socketId)
+            ? current
+            : [...current, { ...peer, connectionState: 'new', stream: null }],
+        )
+      })
+
+      activeSocket.on('room:peer-left', ({ socketId }) => {
+        closePeer(socketId)
+      })
+
+      activeSocket.on('match:waiting', ({ position }) => {
+        setQueuePosition(position)
+        setPhase('searching')
+      })
+
+      activeSocket.on('match:cancelled', () => {
+        setQueuePosition(null)
+        setPhase('idle')
+      })
+
+      activeSocket.on(
+        'match:found',
+        ({ roomId: matchedRoom, peer, shouldOffer }) => {
+          setQueuePosition(null)
+          setRoomId(matchedRoom)
+          setPhase('in-room')
+          setPeers([{ ...peer, connectionState: 'new', stream: null }])
+
+          // Unlike a manual join there is no "newcomer" to break the tie, so
+          // the server designates exactly one side to offer. Obey it — if both
+          // offered the negotiation would deadlock.
+          if (!shouldOffer) return
+
+          const connection = createPeerConnection(peer.socketId)
+
+          void (async () => {
+            try {
+              const offer = await connection.createOffer()
+              await connection.setLocalDescription(offer)
+
+              activeSocket.emit('webrtc:offer', {
+                target: peer.socketId,
+                description: { type: 'offer', sdp: offer.sdp ?? '' },
+              })
+            } catch (cause) {
+              setError(
+                `Failed to start the matched call: ${(cause as Error).message}`,
+              )
+            }
+          })()
+        },
       )
-      setPhase('error')
-    })
 
-    socket.on('room:peer-joined', (peer) => {
-      // A newcomer offers to us, so no connection is created here — just show
-      // them. The offer handler builds the connection when it arrives.
-      setPeers((current) =>
-        current.some((existing) => existing.socketId === peer.socketId)
-          ? current
-          : [...current, { ...peer, connectionState: 'new', stream: null }],
-      )
-    })
+      activeSocket.on('webrtc:offer', async ({ from, description }) => {
+        const connection = createPeerConnection(from)
 
-    socket.on('room:peer-left', ({ socketId }) => {
-      closePeer(socketId)
-    })
-
-    socket.on('match:waiting', ({ position }) => {
-      setQueuePosition(position)
-      setPhase('searching')
-    })
-
-    socket.on('match:cancelled', () => {
-      setQueuePosition(null)
-      setPhase('idle')
-    })
-
-    socket.on('match:found', ({ roomId: matchedRoom, peer, shouldOffer }) => {
-      setQueuePosition(null)
-      setRoomId(matchedRoom)
-      setPhase('in-room')
-      setPeers([{ ...peer, connectionState: 'new', stream: null }])
-
-      // Unlike a manual join there is no "newcomer" to break the tie, so the
-      // server designates exactly one side to offer. Obey it — if both offered
-      // the negotiation would deadlock.
-      if (!shouldOffer) return
-
-      const connection = createPeerConnection(peer.socketId)
-
-      void (async () => {
         try {
-          const offer = await connection.createOffer()
-          await connection.setLocalDescription(offer)
+          await connection.setRemoteDescription(description)
+          await flushPendingIce(from, connection)
 
-          socket.emit('webrtc:offer', {
-            target: peer.socketId,
-            description: { type: 'offer', sdp: offer.sdp ?? '' },
+          const answer = await connection.createAnswer()
+          await connection.setLocalDescription(answer)
+
+          activeSocket.emit('webrtc:answer', {
+            target: from,
+            description: { type: 'answer', sdp: answer.sdp ?? '' },
           })
         } catch (cause) {
-          setError(`Failed to start the matched call: ${(cause as Error).message}`)
+          setError(`Failed to answer a call: ${(cause as Error).message}`)
         }
-      })()
-    })
+      })
 
-    socket.on('webrtc:offer', async ({ from, description }) => {
-      const connection = createPeerConnection(from)
+      activeSocket.on('webrtc:answer', async ({ from, description }) => {
+        const connection = peerConnectionsRef.current.get(from)
+        if (!connection) return
 
-      try {
-        await connection.setRemoteDescription(description)
-        await flushPendingIce(from, connection)
+        try {
+          await connection.setRemoteDescription(description)
+          await flushPendingIce(from, connection)
+        } catch (cause) {
+          setError(`Failed to complete a call: ${(cause as Error).message}`)
+        }
+      })
 
-        const answer = await connection.createAnswer()
-        await connection.setLocalDescription(answer)
+      activeSocket.on('webrtc:ice-candidate', async ({ from, candidate }) => {
+        const connection = peerConnectionsRef.current.get(from)
 
-        socket.emit('webrtc:answer', {
-          target: from,
-          description: { type: 'answer', sdp: answer.sdp ?? '' },
-        })
-      } catch (cause) {
-        setError(`Failed to answer a call: ${(cause as Error).message}`)
-      }
-    })
+        // Buffer until the remote description exists — see pendingIceRef.
+        if (!connection?.remoteDescription) {
+          const queued = pendingIceRef.current.get(from) ?? []
+          queued.push(candidate)
+          pendingIceRef.current.set(from, queued)
+          return
+        }
 
-    socket.on('webrtc:answer', async ({ from, description }) => {
-      const connection = peerConnectionsRef.current.get(from)
-      if (!connection) return
-
-      try {
-        await connection.setRemoteDescription(description)
-        await flushPendingIce(from, connection)
-      } catch (cause) {
-        setError(`Failed to complete a call: ${(cause as Error).message}`)
-      }
-    })
-
-    socket.on('webrtc:ice-candidate', async ({ from, candidate }) => {
-      const connection = peerConnectionsRef.current.get(from)
-
-      // Buffer until the remote description exists — see pendingIceRef.
-      if (!connection?.remoteDescription) {
-        const queued = pendingIceRef.current.get(from) ?? []
-        queued.push(candidate)
-        pendingIceRef.current.set(from, queued)
-        return
-      }
-
-      try {
-        await connection.addIceCandidate(candidate)
-      } catch {
-        // Ignore — ICE is tolerant of individual candidate failures.
-      }
-    })
+        try {
+          await connection.addIceCandidate(candidate)
+        } catch {
+          // Ignore — ICE is tolerant of individual candidate failures.
+        }
+      })
+    })()
 
     return () => {
-      socket.removeAllListeners()
-      socket.disconnect()
+      // Guards the in-flight fetches: without it a fast unmount leaves a socket
+      // nothing disconnects.
+      cancelled = true
+      socket?.removeAllListeners()
+      socket?.disconnect()
       socketRef.current = null
       setSocket(null)
     }
@@ -498,6 +550,7 @@ export function useP2PRoom() {
     micEnabled,
     cameraEnabled,
     queuePosition,
+    turnAvailable,
     join,
     findMatch,
     cancelMatch,

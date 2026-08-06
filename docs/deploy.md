@@ -34,6 +34,26 @@ server treats a valid signature as proof the holder already passed the region
 lock (`server/src/index.ts:67-74`), so a mismatch rejects every handshake and a
 leak bypasses the region lock entirely.
 
+### Why the handshake uses a ticket, not the cookie
+
+Worth understanding before you change anything about auth.
+
+The session cookie is `httpOnly` + `sameSite: 'lax'`. Vercel and Railway are
+**different registrable domains**, which makes the Socket.io handshake a
+cross-site request — and Lax means the browser withholds the cookie from it.
+`withCredentials: true` does not override that; SameSite is enforced regardless.
+Left alone, every connection is rejected as `unauthorized`.
+
+So the client first calls `/api/socket-ticket` (same-origin, cookie *is* sent)
+and passes the returned token in the Socket.io `auth` payload. The server checks
+`auth.token` before falling back to the cookie, so both paths work and local
+development is unchanged.
+
+The ticket lives 60 seconds. Do **not** "simplify" this by setting
+`sameSite: 'none'` — that exposes the real 30-day session cookie to every
+cross-site request on the internet. `lib/session/session.ts` documents the same
+reasoning at the cookie definition.
+
 ---
 
 ## The ordering problem
@@ -116,6 +136,18 @@ GEO_FALLBACK                allow
 GEO_BYPASS_LOCALHOST        false
 ```
 
+Optionally, to enable the TURN relay (see Known gaps if you skip it):
+
+```
+TURN_URL                    turn:relay.example.com:3478?transport=udp,turns:relay.example.com:5349
+TURN_STATIC_AUTH_SECRET     <the provider's static-auth-secret>
+TURN_TTL_SECONDS            43200
+```
+
+These are server-side only — no `NEXT_PUBLIC_` prefix, deliberately.
+`app/api/ice/route.ts` mints per-visitor credentials from the secret, so the
+browser never receives anything reusable.
+
 `NEXT_PUBLIC_SOCKET_URL` is inlined at **build** time. Editing it later in the
 dashboard changes nothing until you redeploy. Use `https://` — socket.io
 upgrades to `wss://` by itself.
@@ -162,10 +194,11 @@ WebRTC — they will connect via host candidates even when nothing else would.
 
 ## Known gaps
 
-- **No TURN relay.** Video is P2P; pairs behind symmetric NAT will sit at
-  `checking` forever. Roughly 10–20% of real pairs. Games, lobby, chat and the
-  wall are unaffected — this is video/audio only. Phase 2 adds minted
-  credentials; see `docs/superpowers/specs/2026-08-06-vercel-railway-deploy-design.md`.
+- **TURN is supported but optional.** Leave `TURN_URL` and
+  `TURN_STATIC_AUTH_SECRET` unset and the app runs on STUN alone — pairs behind
+  symmetric NAT (roughly 10–20% of real pairs) will sit at `checking` forever.
+  Games, lobby, chat and the wall are unaffected; this is video/audio only. The
+  `/rooms` page shows a notice while no relay is configured.
 - **Single socket instance.** The Redis adapter supports scaling, but games hold
   in-memory state, so a restart or redeploy drops every live game.
 - **Vercel Hobby is non-commercial.** Fine for a student project.
@@ -175,6 +208,8 @@ WebRTC — they will connect via host candidates even when nothing else would.
 | Symptom                                     | Cause                                                             |
 | ------------------------------------------- | ----------------------------------------------------------------- |
 | Every handshake rejected                    | `SESSION_JWT_SECRET` differs between hosts                        |
+| Handshake rejected, secrets match           | `/api/socket-ticket` returning 401 — check proxy.ts still matches API routes |
+| Video stuck at `checking`, everything else fine | No TURN relay configured. Expected; see Known gaps             |
 | Browser console shows a CORS error          | Vercel domain missing from `SOCKET_CORS_ORIGIN`, or a trailing `/` |
 | Client still dials `localhost:4000`         | `NEXT_PUBLIC_SOCKET_URL` set but not redeployed — it is build-time |
 | Railway deploy green, connections time out  | Something is overriding `PORT`; unset it and let Railway inject    |

@@ -1,7 +1,7 @@
 # Deploying DUDU: Vercel + Railway
 
 **Date:** 2026-08-06
-**Status:** Phase 1 implemented; Phase 2 deferred
+**Status:** Phase 1 and Phase 2 both implemented
 
 ## Problem
 
@@ -84,10 +84,36 @@ GeoLite2 `.mmdb` is not needed.
 
 Runbook: `docs/deploy.md`.
 
-## Phase 2 — minted TURN credentials (deferred)
+## Phase 1a — socket ticket (found during Phase 2, blocking)
 
-Ships after the production WebSocket handshake is confirmed. Video is P2P; the
-gap affects only video/audio, not games, lobby, chat, or the wall.
+Phase 1 as originally designed **could not have worked**. `lib/session/session.ts`
+sets the session cookie `httpOnly` + `sameSite: 'lax'`, and the comment at its
+definition already warned that hosting the socket server on a different
+registrable domain means the cookie is never sent. Vercel and Railway are
+exactly that. `withCredentials: true` does not override SameSite.
+
+The failure path: browser withholds the cookie → no `auth.token` either, since
+no hook passed one → `verifySession(undefined)` → `null` → every handshake
+rejected as `unauthorized`. It never surfaced locally because
+`localhost:3000 → localhost:4000` is same-site.
+
+Fixed the way the codebase itself prescribes, not with `sameSite: 'none'`:
+
+- `signSocketTicket()` in `lib/session/session.ts` — same issuer, audience,
+  algorithm and claims as `signSession`, 60-second expiry. The socket server's
+  `verifySession` accepts it with **no change on that side**, because the gate
+  already read `socket.handshake.auth.token` before falling back to the cookie.
+- `app/api/socket-ticket/route.ts` — same-origin, so the cookie *is* sent here.
+- `lib/socket/connect.ts` — `fetchSocketTicket()` + `socketOptions()`, shared by
+  all four hooks so the ticket logic exists once rather than four times.
+
+`withCredentials` is kept alongside the ticket: same-site deployments still
+authenticate by cookie, and letting both paths work costs nothing.
+
+## Phase 2 — minted TURN credentials
+
+Video is P2P; this gap affects only video/audio, not games, lobby, chat, or the
+wall.
 
 **Why it is needed.** STUN alone fails behind symmetric NAT — roughly 10–20% of
 real pairs, who sit at `checking` forever. On one LAN this never showed up.
@@ -96,30 +122,42 @@ real pairs, who sit at `checking` forever. On one LAN this never showed up.
 browser, so anyone can read and reuse the relay quota — the warning already at
 `lib/webrtc/ice-config.ts:12-16`.
 
-**Design.**
+**As built.**
 
-- New `app/api/ice/route.ts`, `dynamic = 'force-dynamic'` (credentials are
-  per-user and time-bound; caching defeats them). Reads the session identity
-  `proxy.ts` forwards as request headers; rejects if absent. Mints coturn REST
-  credentials: `username = <expiry-unix>:<sessionId>`,
+- `app/api/ice/route.ts`, `dynamic = 'force-dynamic'` plus `cache-control:
+  no-store` (credentials are per-user and time-bound; caching defeats them, and
+  the route config alone does not bind CDNs or the browser cache). Mints coturn
+  REST credentials: `username = <expiry-unix>:<sessionId>`,
   `credential = base64(HMAC-SHA1(username, TURN_STATIC_AUTH_SECRET))`.
-  Returns STUN-only when TURN vars are absent, so local dev is unaffected.
-- Env vars lose `NEXT_PUBLIC_`: `TURN_URL`, `TURN_STATIC_AUTH_SECRET`,
-  `TURN_TTL_SECONDS`, on Vercel only.
-- `lib/webrtc/ice-config.ts`: `getIceServers()` → `fetchIceServers(): Promise<…>`
-  plus an exported `STUN_ONLY`.
-- `lib/webrtc/use-p2p-room.ts`: `getIceServers()` is called synchronously at
-  line 108 inside `createPeerConnection` and cannot become async there. Fetch
-  once on mount into a ref; `createPeerConnection` reads the ref synchronously.
-  **Gate the socket connection on that fetch resolving** — otherwise the first
-  peer connection gets STUN-only, exactly the case TURN exists to rescue.
-- `app/rooms/room-client.tsx:218`: `hasTurnConfigured()` becomes a boolean
-  returned from the hook, since env vars are no longer browser-visible.
+  Returns STUN-only when TURN vars are absent, so local dev and the pre-TURN
+  deploy are unaffected.
+- Env vars lost `NEXT_PUBLIC_`: `TURN_URL` (comma-separated — providers give
+  several transports sharing one secret), `TURN_STATIC_AUTH_SECRET`,
+  `TURN_TTL_SECONDS`. Vercel only.
+- `lib/webrtc/ice-config.ts`: `getIceServers()` → `fetchIceConfig()` returning
+  `{ iceServers, turnAvailable }`, plus exported `STUN_ONLY` and `PUBLIC_STUN`.
+  `turnAvailable` is derived from the response because the browser can no longer
+  see the env vars.
+- `lib/webrtc/use-p2p-room.ts`: `getIceServers()` was synchronous inside
+  `createPeerConnection` and could not become async there. The servers now live
+  in `iceServersRef`, filled before the socket opens; `createPeerConnection`
+  reads the ref synchronously. The ticket and ICE fetches run in parallel and
+  **gate the connection** — connecting first would let the very first peer be
+  built with STUN only, exactly the case TURN exists to rescue, failing
+  intermittently depending on how fast the peer arrived.
+- `app/rooms/room-client.tsx`: `hasTurnConfigured()` → the hook's
+  `turnAvailable`.
 
 The client contract is just `GET /api/ice → { iceServers }`. That seam keeps
 provider choice out of the client: the coturn HMAC scheme works with
 self-hosted coturn and Metered; Cloudflare Realtime TURN uses a different
 credential API and would change only the route body.
+
+**Verified end to end** against a production build: the ticket carries
+`iss: dudu:web` / `aud: dudu:client` with `exp - iat = 60`, matching what
+`server/src/session.ts` checks; `/api/ice` returns STUN-only unconfigured and a
+correct relay entry when configured, with the HMAC recomputed independently and
+matching byte for byte.
 
 ## Rejected alternatives
 
@@ -136,8 +174,12 @@ credential API and would change only the route body.
 
 ## Known gaps
 
-- No TURN until Phase 2.
+- TURN is optional: unset `TURN_URL`/`TURN_STATIC_AUTH_SECRET` and the app runs
+  on STUN alone, with the symmetric-NAT gap intact and a notice on `/rooms`.
 - Single socket instance: the adapter supports scaling, but games hold
   in-memory state, so a restart drops live games. Durable game state would be
   the prerequisite for running two.
 - Vercel Hobby is non-commercial.
+- Nothing here has been exercised against a real deployment yet — only against
+  a local production build. The cross-site cookie failure is precisely the class
+  of bug that only appears once the two hosts are actually on different domains.
