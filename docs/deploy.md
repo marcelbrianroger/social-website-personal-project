@@ -1,0 +1,182 @@
+# Deploying DUDU
+
+Production runs on two hosts, because the app is two processes with different
+needs:
+
+| Piece            | Host    | Why                                                     |
+| ---------------- | ------- | ------------------------------------------------------- |
+| Next.js app      | Vercel  | Stateless. Renders UI, region-locks, issues session JWTs |
+| Socket.io server | Railway | Long-lived process holding live game state               |
+| Redis            | Railway | Backs the adapter, DUDU wall TTL, queues, sweepers       |
+
+Vercel cannot host the socket server. Serverless functions start per request
+and exit; a WebSocket server has to stay resident, and `server/src/index.ts`
+holds every in-flight game in memory.
+
+**Postgres is not deployed.** Nothing imports `lib/db/prisma.ts` or
+`lib/redis.ts` — both are scaffolded ahead of the moderation/stats work. The
+Next.js app talks to no datastore at all, which is why Railway's Redis can stay
+on the private network and never be exposed publicly.
+
+---
+
+## Before you start
+
+Generate a fresh session secret. Do not reuse the local one — it lives in a
+`.env` next to a `password123` Postgres URL.
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+```
+
+Hold onto that value. It goes into **both** hosts, byte-identical. The socket
+server treats a valid signature as proof the holder already passed the region
+lock (`server/src/index.ts:67-74`), so a mismatch rejects every handshake and a
+leak bypasses the region lock entirely.
+
+---
+
+## The ordering problem
+
+Vercel needs Railway's URL (`NEXT_PUBLIC_SOCKET_URL`). Railway needs Vercel's
+URL (`SOCKET_CORS_ORIGIN`). Neither exists yet.
+
+Break the cycle by deploying Railway first with CORS left at its default, then
+coming back in step 4. Railway's URL is knowable before its first successful
+deploy; Vercel's is not.
+
+---
+
+## 1. Redis on Railway
+
+New project → **Add Service** → **Database** → **Redis**. Nothing to configure.
+Leave it on the private network; do not enable a public TCP proxy.
+
+It must be a real Redis speaking the TCP protocol. The socket server holds two
+long-lived `SUBSCRIBE` connections for `@socket.io/redis-adapter` plus the
+`dudu:broadcast` channel, so a REST-only Redis will not work.
+
+## 2. Socket server on Railway
+
+**Add Service** → **GitHub Repo** → this repo.
+
+Settings:
+
+| Setting       | Value                |
+| ------------- | -------------------- |
+| Root Director | `server`             |
+| Build Command | `npm run build`      |
+| Start Command | `npm start`          |
+| Healthcheck   | `/health`            |
+
+Variables:
+
+```
+SESSION_JWT_SECRET   <the secret from above>
+REDIS_URL            ${{Redis.REDIS_URL}}
+DISCONNECT_GRACE_MS  30000
+NODE_ENV             production
+SOCKET_CORS_ORIGIN   http://localhost:3000
+```
+
+`REDIS_URL` uses Railway's reference syntax so the value resolves over private
+networking — type it literally, braces included.
+
+Do **not** set `PORT`. Railway injects it, and `server/src/env.ts` reads it
+ahead of `SOCKET_PORT` precisely so the process binds where Railway's router
+forwards.
+
+Deploy, then **Settings → Networking → Generate Domain**. Note the URL, e.g.
+`https://dudu-server-production.up.railway.app`.
+
+Confirm it is alive:
+
+```bash
+curl https://<your-railway-domain>/health
+# {"status":"ok","redis":"ok","uptime":12.3,"queued":0,"wall":0}
+```
+
+If `redis` reads `unreachable`, the service is up but `REDIS_URL` did not
+resolve — check the reference syntax before continuing. The endpoint reports
+Redis rather than failing on it, so a blip cannot roll back a good deploy.
+
+## 3. Next.js on Vercel
+
+Import the repo. Framework preset Next.js; leave build settings alone.
+
+Variables:
+
+```
+SESSION_JWT_SECRET          <the same secret, byte-identical>
+NEXT_PUBLIC_SOCKET_URL      https://<your-railway-domain>
+GEO_ALLOWED_COUNTRIES       DE
+GEO_TRUST_PROXY_HEADERS     true
+GEO_TRUSTED_COUNTRY_HEADER  x-vercel-ip-country
+GEO_FALLBACK                allow
+GEO_BYPASS_LOCALHOST        false
+```
+
+`NEXT_PUBLIC_SOCKET_URL` is inlined at **build** time. Editing it later in the
+dashboard changes nothing until you redeploy. Use `https://` — socket.io
+upgrades to `wss://` by itself.
+
+Header trust is safe here specifically because Vercel's edge overwrites
+`x-vercel-ip-country` on every request. That is the condition `.env.example`
+warns about; a proxy that merely *adds* the header when absent would let any
+client forge it. This is also how the region lock works without the GeoLite2
+`.mmdb`, which is gitignored and never reaches the deployment.
+
+Start with `GEO_FALLBACK=allow`. Confirm you can reach the site, *then* flip to
+`deny`. Flipping first risks locking yourself out with no way to see why.
+
+Deploy. Note the production domain.
+
+## 4. Close the loop
+
+Back in Railway, set `SOCKET_CORS_ORIGIN` to the Vercel domain and redeploy:
+
+```
+SOCKET_CORS_ORIGIN   https://your-app.vercel.app
+```
+
+Comma-separate to allow preview deploys, which each get a unique URL and would
+otherwise fail their handshake:
+
+```
+SOCKET_CORS_ORIGIN   https://your-app.vercel.app,https://your-app-git-dev-you.vercel.app
+```
+
+CORS is not the security boundary — the handshake still demands a valid session
+JWT. It only decides whose browser may attempt one.
+
+---
+
+## Verifying
+
+1. Open the Vercel URL. You should get a nickname, not a 403.
+2. Open `/wall` and post. It should appear without a refresh.
+3. Open `/rooms` in two browsers on **different networks** and match.
+
+Step 3 is the real test. Two tabs on one machine prove almost nothing about
+WebRTC — they will connect via host candidates even when nothing else would.
+
+## Known gaps
+
+- **No TURN relay.** Video is P2P; pairs behind symmetric NAT will sit at
+  `checking` forever. Roughly 10–20% of real pairs. Games, lobby, chat and the
+  wall are unaffected — this is video/audio only. Phase 2 adds minted
+  credentials; see `docs/superpowers/specs/2026-08-06-vercel-railway-deploy-design.md`.
+- **Single socket instance.** The Redis adapter supports scaling, but games hold
+  in-memory state, so a restart or redeploy drops every live game.
+- **Vercel Hobby is non-commercial.** Fine for a student project.
+
+## Troubleshooting
+
+| Symptom                                     | Cause                                                             |
+| ------------------------------------------- | ----------------------------------------------------------------- |
+| Every handshake rejected                    | `SESSION_JWT_SECRET` differs between hosts                        |
+| Browser console shows a CORS error          | Vercel domain missing from `SOCKET_CORS_ORIGIN`, or a trailing `/` |
+| Client still dials `localhost:4000`         | `NEXT_PUBLIC_SOCKET_URL` set but not redeployed — it is build-time |
+| Railway deploy green, connections time out  | Something is overriding `PORT`; unset it and let Railway inject    |
+| 403 before the page renders                 | Region lock. You are outside DE, or on a VPN                       |
+| `/health` reports `redis: unreachable`      | `REDIS_URL` reference did not resolve                             |

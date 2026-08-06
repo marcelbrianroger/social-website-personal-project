@@ -1,0 +1,14 @@
+# The Socket.io server deploys to Railway, not here. Vercel only builds the
+# Next.js app, and nothing under app/ or lib/ imports from server/ — the two
+# share a contract by duplication (lib/socket/events.ts), not by import.
+#
+# Excluding it keeps the upload small and makes it obvious that a change to
+# server/ alone does not need a Vercel redeploy.
+server/
+
+# Local-only infrastructure.
+docker-compose.yml
+
+# Licensed GeoIP database — gitignored anyway, and unused in production because
+# the region lock reads Vercel's x-vercel-ip-country header instead.
+data/*.mmdb

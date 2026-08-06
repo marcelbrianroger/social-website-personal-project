@@ -98,11 +98,28 @@ type AppSocket = Socket<
 const httpServer = createServer((req, res) => {
   if (req.url === '/health') {
     void (async () => {
-      const [queued, wall] = await Promise.all([queueLength(), wallSize()])
+      // Redis is reported on, not required. A platform healthcheck that fails
+      // while Redis is briefly unreachable would roll back a deploy that is
+      // otherwise fine, and an uncaught rejection here would leave the request
+      // hanging until the checker times out — turning a blip into an outage.
+      let redis: 'ok' | 'unreachable' = 'ok'
+      let queued: number | null = null
+      let wall: number | null = null
+
+      try {
+        ;[queued, wall] = await Promise.all([queueLength(), wallSize()])
+      } catch (error) {
+        redis = 'unreachable'
+        console.error(
+          `[health] redis unreachable: ${error instanceof Error ? error.message : String(error)}`,
+        )
+      }
+
       res.writeHead(200, { 'content-type': 'application/json' })
       res.end(
         JSON.stringify({
           status: 'ok',
+          redis,
           uptime: process.uptime(),
           queued,
           wall,
@@ -1040,10 +1057,25 @@ const sweeper = setInterval(() => {
   })
 }, SWEEP_INTERVAL_MS)
 
+/** Managed Redis URLs carry a password; deploy logs are not a secret store. */
+function redactCredentials(url: string): string {
+  try {
+    const parsed = new URL(url)
+    if (parsed.password) parsed.password = '***'
+    return parsed.toString()
+  } catch {
+    return '<unparseable REDIS_URL>'
+  }
+}
+
 httpServer.listen(env.port, () => {
-  console.log(`[server] Socket.io listening on http://localhost:${env.port}`)
-  console.log(`[server] accepting browser origin ${env.corsOrigin}`)
-  console.log(`[server] Redis adapter attached at ${env.redisUrl}`)
+  console.log(`[server] Socket.io listening on port ${env.port}`)
+  console.log(
+    `[server] accepting browser origins: ${env.corsOrigin.join(', ')}`,
+  )
+  console.log(
+    `[server] Redis adapter attached at ${redactCredentials(env.redisUrl)}`,
+  )
 })
 
 async function shutdown(signal: string): Promise<void> {
