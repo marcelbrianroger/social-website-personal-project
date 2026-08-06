@@ -1,6 +1,7 @@
 import { mrWhite } from './mr-white.js'
 import { thirtySixQuestions } from './thirty-six-questions.js'
 import { ticTacToe } from './tic-tac-toe.js'
+import { werewolf } from './werewolf.js'
 import type { AnyGameDefinition } from './types.js'
 
 /**
@@ -12,12 +13,15 @@ import type { AnyGameDefinition } from './types.js'
  * on the contract rather than as special cases in the engine. 36 Questions
  * proved it again from the opposite direction: no turn order at all, and a
  * penalty phase where the only legal move belongs to the player who did NOT
- * trigger it.
+ * trigger it. Werewolf is the third: four different roles reading four
+ * different projections of one state, and two tallies that resolve ties by
+ * opposite rules — all of it inside `viewFor` and `applyMove`.
  */
 const DEFINITIONS: AnyGameDefinition[] = [
   ticTacToe as AnyGameDefinition,
   mrWhite as AnyGameDefinition,
   thirtySixQuestions as AnyGameDefinition,
+  werewolf as AnyGameDefinition,
 ]
 
 const byId = new Map<string, AnyGameDefinition>(

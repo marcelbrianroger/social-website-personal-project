@@ -363,6 +363,17 @@ export const MOVE_ERROR_TEXT: Record<string, string> = {
   // Deliberately not the existing 'not-your-turn': it IS your turn to answer,
   // just not your turn to hold the card and move the deck on.
   'not-your-card': 'Only whoever is reading the question can move on.',
+
+  // Werewolf. The three `not-the-*` reasons should be unreachable from the real
+  // UI — it only ever draws the control for the role you hold — so seeing one
+  // means a hand-crafted packet, and the wording does not need to be gentle.
+  'not-a-werewolf': 'Only the pack hunts at night.',
+  'not-the-seer': 'Only the Seer may look.',
+  'not-the-guard': 'Only the Guard may cover someone.',
+  'target-is-pack': 'The pack does not eat its own.',
+  'cannot-inspect-self': 'You already know what you are.',
+  'already-inspected': 'You have read them before — spend the night on someone new.',
+  'repeat-protection': 'You covered them last night. Someone else tonight.',
 }
 
 /** Why joining a lobby failed. */

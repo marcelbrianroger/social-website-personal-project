@@ -11,6 +11,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
+    "postinstall": "prisma generate",
     "server:dev": "npm --prefix server run dev",
     "server:build": "npm --prefix server run build",
     "test": "npm --prefix server run test",

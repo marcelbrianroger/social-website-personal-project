@@ -182,6 +182,21 @@ export type {
   ThirtySixQuestionsProjection,
 } from './games/thirty-six-questions.js'
 
+/**
+ * Werewolf's slice of the wire.
+ *
+ * The STATE is not exported, and deliberately: it holds `order` and the full
+ * `roles` map, neither of which ever crosses. What a client narrows to is the
+ * per-viewer projection `viewFor` builds, which is a different shape for a wolf,
+ * the Seer, the Guard and a villager.
+ */
+export type {
+  Alignment,
+  WerewolfMove,
+  WerewolfPhase,
+  WerewolfRole,
+} from './games/werewolf.js'
+
 export interface MoveResult {
   ok: boolean
   /**
