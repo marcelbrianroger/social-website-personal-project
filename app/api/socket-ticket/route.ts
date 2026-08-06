@@ -22,6 +22,29 @@ import { SOCKET_TICKET_MAX_AGE_SECONDS, signSocketTicket } from '@/lib/session/s
  */
 export const dynamic = 'force-dynamic'
 
+/**
+ * Where the browser should dial the socket server.
+ *
+ * Read per request, which is the point. `NEXT_PUBLIC_SOCKET_URL` is substituted
+ * into the bundle during `next build`, so changing it in the host's dashboard
+ * does nothing until something triggers a rebuild — and a deployment built
+ * before it was ever set ships no address at all. Serving it from here, off a
+ * plain variable, makes it take effect on save.
+ *
+ * `NEXT_PUBLIC_SOCKET_URL` stays as a fallback so existing setups and local
+ * `.env` files keep working unchanged.
+ */
+function resolveSocketUrl(): string | null {
+  const configured =
+    process.env.SOCKET_URL ?? process.env.NEXT_PUBLIC_SOCKET_URL ?? ''
+
+  // The trailing slash would survive into the Origin header the socket server
+  // matches against SOCKET_CORS_ORIGIN, where it fails to compare equal.
+  const trimmed = configured.trim().replace(/\/+$/, '')
+
+  return trimmed.length > 0 ? trimmed : null
+}
+
 export async function GET(): Promise<Response> {
   const session = await getCurrentSession()
 
@@ -36,6 +59,7 @@ export async function GET(): Promise<Response> {
     {
       ticket: await signSocketTicket(session),
       expiresIn: SOCKET_TICKET_MAX_AGE_SECONDS,
+      socketUrl: resolveSocketUrl(),
     },
     {
       status: 200,

@@ -9,8 +9,12 @@ import {
   type ClientToServerEvents,
   type ServerToClientEvents,
 } from '@/lib/socket/events'
-import { fetchSocketTicket, socketOptions } from '@/lib/socket/connect'
-import { SOCKET_URL, STUN_ONLY, fetchIceConfig } from '@/lib/webrtc/ice-config'
+import {
+  SOCKET_UNCONFIGURED_MESSAGE,
+  resolveSocketConnection,
+  socketOptions,
+} from '@/lib/socket/connect'
+import { STUN_ONLY, fetchIceConfig } from '@/lib/webrtc/ice-config'
 
 /**
  * P2P room membership plus a full-mesh WebRTC connection to every other
@@ -255,8 +259,8 @@ export function useP2PRoom() {
        * In parallel: they are independent, and serialising them would add a
        * round trip to every room open.
        */
-      const [ticket, ice] = await Promise.all([
-        fetchSocketTicket(),
+      const [{ url, ticket }, ice] = await Promise.all([
+        resolveSocketConnection(),
         fetchIceConfig(),
       ])
       if (cancelled) return
@@ -264,11 +268,19 @@ export function useP2PRoom() {
       iceServersRef.current = ice.iceServers
       setTurnAvailable(ice.turnAvailable)
 
+      // No signalling server means no way to exchange SDP, so there is no point
+      // opening a camera the user would only have to close again.
+      if (!url) {
+        setError(SOCKET_UNCONFIGURED_MESSAGE)
+        setPhase('error')
+        return
+      }
+
       // Named `activeSocket`, not `connection`: the handlers below declare
       // their own `connection` for the RTCPeerConnection, and shadowing it
       // would silently send `emit` to the peer connection instead of the
       // socket.
-      const activeSocket: AppSocket = io(SOCKET_URL, socketOptions(ticket))
+      const activeSocket: AppSocket = io(url, socketOptions(ticket))
       socket = activeSocket
       socketRef.current = activeSocket
 
@@ -285,7 +297,7 @@ export function useP2PRoom() {
         setError(
           cause.message === 'unauthorized'
             ? 'The socket server rejected your session. Reload the page to get a fresh one.'
-            : `Could not reach the realtime server at ${SOCKET_URL}. Is it running?`,
+            : `Could not reach the realtime server at ${url}. Is it running?`,
         )
         setPhase('error')
       })

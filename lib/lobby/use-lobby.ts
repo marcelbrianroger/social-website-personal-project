@@ -8,8 +8,11 @@ import {
   type AnonymousSession,
   type LobbyMember,
 } from '@/lib/socket/events'
-import { fetchSocketTicket, socketOptions } from '@/lib/socket/connect'
-import { SOCKET_URL } from '@/lib/webrtc/ice-config'
+import {
+  SOCKET_UNCONFIGURED_MESSAGE,
+  resolveSocketConnection,
+  socketOptions,
+} from '@/lib/socket/connect'
 import type { AppSocket } from '@/lib/webrtc/use-p2p-room'
 
 /**
@@ -63,13 +66,19 @@ export function useLobby(lobbyId: string): LobbyState {
     let socket: AppSocket | null = null
 
     void (async () => {
-      // Authenticates the handshake. The session cookie alone is not enough
-      // once the socket server is on another registrable domain — see
-      // fetchSocketTicket.
-      const ticket = await fetchSocketTicket()
+      // Authenticates the handshake, and carries the address to dial. The
+      // session cookie alone is not enough once the socket server is on another
+      // registrable domain — see resolveSocketConnection.
+      const { url, ticket } = await resolveSocketConnection()
       if (cancelled) return
 
-      const connection: AppSocket = io(SOCKET_URL, socketOptions(ticket))
+      if (!url) {
+        setError(SOCKET_UNCONFIGURED_MESSAGE)
+        setPhase('error')
+        return
+      }
+
+      const connection: AppSocket = io(url, socketOptions(ticket))
       socket = connection
       socketRef.current = connection
 
@@ -120,7 +129,7 @@ export function useLobby(lobbyId: string): LobbyState {
         setError(
           cause.message === 'unauthorized'
             ? 'The socket server rejected your session. Reload the page to get a fresh one.'
-            : `Could not reach the realtime server at ${SOCKET_URL}. Is it running?`,
+            : `Could not reach the realtime server at ${url}. Is it running?`,
         )
         setPhase('error')
       })

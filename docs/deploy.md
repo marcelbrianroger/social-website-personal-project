@@ -58,8 +58,8 @@ reasoning at the cookie definition.
 
 ## The ordering problem
 
-Vercel needs Railway's URL (`NEXT_PUBLIC_SOCKET_URL`). Railway needs Vercel's
-URL (`SOCKET_CORS_ORIGIN`). Neither exists yet.
+Vercel needs Railway's URL (`SOCKET_URL`). Railway needs Vercel's URL
+(`SOCKET_CORS_ORIGIN`). Neither exists yet.
 
 Break the cycle by deploying Railway first with CORS left at its default, then
 coming back in step 4. Railway's URL is knowable before its first successful
@@ -128,7 +128,7 @@ Variables:
 
 ```
 SESSION_JWT_SECRET          <the same secret, byte-identical>
-NEXT_PUBLIC_SOCKET_URL      https://<your-railway-domain>
+SOCKET_URL                  https://<your-railway-domain>
 GEO_ALLOWED_COUNTRIES       DE
 GEO_TRUST_PROXY_HEADERS     true
 GEO_TRUSTED_COUNTRY_HEADER  x-vercel-ip-country
@@ -148,9 +148,15 @@ These are server-side only — no `NEXT_PUBLIC_` prefix, deliberately.
 `app/api/ice/route.ts` mints per-visitor credentials from the secret, so the
 browser never receives anything reusable.
 
-`NEXT_PUBLIC_SOCKET_URL` is inlined at **build** time. Editing it later in the
-dashboard changes nothing until you redeploy. Use `https://` — socket.io
-upgrades to `wss://` by itself.
+`SOCKET_URL` is read per request by `/api/socket-ticket`, which hands it to the
+browser alongside the handshake ticket. Editing it in the dashboard therefore
+takes effect on save — no rebuild. Use `https://` (socket.io upgrades to `wss://`
+by itself) and no trailing slash, which would break the CORS match in step 4.
+
+Deliberately **not** `NEXT_PUBLIC_`. That prefix inlines the value during
+`next build`, so a project first deployed without it ships an app that has no
+socket address at all — the failure this indirection exists to prevent. The old
+name still works as a fallback if it is already set.
 
 Header trust is safe here specifically because Vercel's edge overwrites
 `x-vercel-ip-country` on every request. That is the condition `.env.example`
@@ -211,7 +217,8 @@ WebRTC — they will connect via host candidates even when nothing else would.
 | Handshake rejected, secrets match           | `/api/socket-ticket` returning 401 — check proxy.ts still matches API routes |
 | Video stuck at `checking`, everything else fine | No TURN relay configured. Expected; see Known gaps             |
 | Browser console shows a CORS error          | Vercel domain missing from `SOCKET_CORS_ORIGIN`, or a trailing `/` |
-| Client still dials `localhost:4000`         | `NEXT_PUBLIC_SOCKET_URL` set but not redeployed — it is build-time |
+| "No realtime server configured" on the site | `SOCKET_URL` unset on Vercel, or the socket server was never deployed |
+| Client still dials `localhost:4000`         | Only possible on a dev build; production no longer falls back to it |
 | Railway deploy green, connections time out  | Something is overriding `PORT`; unset it and let Railway inject    |
 | 403 before the page renders                 | Region lock. You are outside DE, or on a VPN                       |
 | `/health` reports `redis: unreachable`      | `REDIS_URL` reference did not resolve                             |

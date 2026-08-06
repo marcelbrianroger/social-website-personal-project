@@ -80,6 +80,3 @@ function urlsOf(server: RTCIceServer): string[] {
   if (typeof urls === 'string') return [urls]
   return Array.isArray(urls) ? urls : []
 }
-
-export const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL ?? 'http://localhost:4000'

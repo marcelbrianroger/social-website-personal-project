@@ -10,8 +10,11 @@ import {
   type DuduBroadcast,
   type ServerToClientEvents,
 } from '@/lib/socket/events'
-import { fetchSocketTicket, socketOptions } from '@/lib/socket/connect'
-import { SOCKET_URL } from '@/lib/webrtc/ice-config'
+import {
+  SOCKET_UNCONFIGURED_MESSAGE,
+  resolveSocketConnection,
+  socketOptions,
+} from '@/lib/socket/connect'
 
 /**
  * The DUDU wall: a global anonymous feed where posts vanish 24 hours after
@@ -57,10 +60,16 @@ export function useDuduWall() {
       // Ticket before connecting. A handshake cannot be re-authenticated in
       // place — a rejected one has to be torn down and rebuilt — so waiting is
       // cheaper than connecting and hoping the cookie made it.
-      const ticket = await fetchSocketTicket()
+      const { url, ticket } = await resolveSocketConnection()
       if (cancelled) return
 
-      const connection: AppSocket = io(SOCKET_URL, socketOptions(ticket))
+      if (!url) {
+        setConnected(false)
+        setError(SOCKET_UNCONFIGURED_MESSAGE)
+        return
+      }
+
+      const connection: AppSocket = io(url, socketOptions(ticket))
       socket = connection
       socketRef.current = connection
 
@@ -84,7 +93,7 @@ export function useDuduWall() {
         setError(
           cause.message === 'unauthorized'
             ? 'The server rejected your session. Reload the page to get a fresh one.'
-            : `Could not reach the realtime server at ${SOCKET_URL}. Is it running?`,
+            : `Could not reach the realtime server at ${url}. Is it running?`,
         )
       })
     })()

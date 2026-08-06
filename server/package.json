@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Real-time Socket.io backend for the DUDU platform.",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",

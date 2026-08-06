@@ -3,9 +3,8 @@
 import { useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
 
-import { fetchSocketTicket, socketOptions } from '@/lib/socket/connect'
+import { resolveSocketConnection, socketOptions } from '@/lib/socket/connect'
 import type { LobbySummary } from '@/lib/socket/events'
-import { SOCKET_URL } from '@/lib/webrtc/ice-config'
 import type { AppSocket } from '@/lib/webrtc/use-p2p-room'
 
 /**
@@ -32,10 +31,17 @@ export function useOpenLobbies() {
     let socket: AppSocket | null = null
 
     void (async () => {
-      const ticket = await fetchSocketTicket()
+      const { url, ticket } = await resolveSocketConnection()
       if (cancelled) return
 
-      const connection: AppSocket = io(SOCKET_URL, socketOptions(ticket))
+      // Nothing to dial. The browse page degrades to its join-by-ID field,
+      // which is the same shape as the connect_error path below.
+      if (!url) {
+        setPhase('error')
+        return
+      }
+
+      const connection: AppSocket = io(url, socketOptions(ticket))
       socket = connection
 
       // `session:ready` is the handshake completing; watching before it would
