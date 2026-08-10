@@ -22,7 +22,7 @@ function createPrismaClient(): PrismaClient {
 
   if (!connectionString) {
     throw new Error(
-      'DATABASE_URL is not set. Copy .env.example to .env and start Postgres with `docker compose up -d`.',
+      'DATABASE_URL is not set. Copy .env.example to .env and start Postgres with `npm run db:start`.',
     )
   }
 

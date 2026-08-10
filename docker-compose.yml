@@ -1,23 +1,10 @@
-version: '3.8'
+# Redis only. Postgres runs natively from the PostgreSQL 18 install on :5432
+# (see README "Getting started") — do not add a postgres service back here
+# without changing its port, or the two will fight over 5432.
 
 services:
-  postgres:
-    image: postgres:15
-    container_name: dudu_postgres
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password123
-      POSTGRES_DB: dududb
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
   redis:
     image: redis:7
     container_name: dudu_redis
     ports:
       - "6379:6379"
-
-volumes:
-  postgres_data:

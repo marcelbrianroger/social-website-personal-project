@@ -20,7 +20,7 @@ cookie. Access is restricted to visitors in Germany.
 > the wall, one feature among four. DUDU also survives throughout the code as an
 > internal identifier — the `dudu_session` cookie, the `dudu:*` socket events,
 > the `dudu:web` JWT issuer, the `dudu-web` / `dudu-server` packages, the
-> `dudu_postgres` / `dudu_redis` containers. Those are load-bearing: the JWT
+> `dudu_redis` container, the `dududb` database. Those are load-bearing: the JWT
 > issuer in particular is verified byte-for-byte by `server/src/session.ts`, and
 > renaming it breaks every socket handshake.
 
@@ -30,14 +30,15 @@ cookie. Access is restricted to visitors in Germany.
 | --------- | ----------------------------------------------- |
 | Frontend  | Next.js 16 (App Router), TypeScript, Tailwind 4 |
 | Real-time | Node.js + Socket.io (`/server`)                 |
-| Database  | PostgreSQL via Prisma 7                         |
+| Database  | PostgreSQL 18 via Prisma 7                      |
 | Cache/bus | Redis                                           |
 
 ## Getting started
 
 ```bash
 # 1. Infrastructure
-docker compose up -d
+docker compose up -d   # Redis
+npm run db:status      # Postgres 18 runs as a Windows service; db:start if stopped
 
 # 2. Environment
 cp .env.example .env
@@ -58,6 +59,33 @@ npm run server:dev   # http://localhost:4000
 
 > `SESSION_JWT_SECRET` must be **identical** for both processes — they share the
 > root `.env` for exactly this reason. A mismatch rejects every socket handshake.
+
+**On Postgres.** It runs from the native PostgreSQL 18 install
+(`C:\Program Files\PostgreSQL\18`), not from `docker-compose`, which is now
+Redis-only. It is managed by the **`postgresql-18` Windows service**, set to
+start automatically, so step 1's `npm run db:start` is only needed if the
+service is stopped.
+
+The EDB installer never got this far on its own: its `initdb` step failed, so
+the cluster was created by hand and the service registered afterwards with
+`pg_ctl register`. Nothing about that is unusual to operate — it just means a
+reinstall would not reproduce it.
+
+The cluster is deliberately `timezone = 'UTC'` and `listen_addresses =
+'localhost'`. Connection details match `DATABASE_URL`: role `admin`, database
+`dududb`, port **5432**. The superuser is `postgres` / `postgres` — local dev
+only, and the server is not reachable off this machine.
+
+**If the service refuses to start,** the usual cause is a postmaster already
+running against the same data directory — typically one started by hand with
+`npm run db:start`. The two cannot coexist: the service dies immediately with
+`FATAL: lock file "postmaster.pid" already exists`, which lands in the Windows
+Application event log rather than `data\log\`. Stop the stray one first:
+
+```powershell
+npm run db:stop          # or: pg_ctl -m fast -w stop
+Start-Service postgresql-18
+```
 
 **If `server:dev` fails with `EADDRINUSE`,** the server is already running from
 an earlier session. Closing a terminal on Windows does not stop it. Either use
