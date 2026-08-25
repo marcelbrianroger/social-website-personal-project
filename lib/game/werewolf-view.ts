@@ -17,26 +17,42 @@ import type { GameView } from '@/lib/socket/events'
  * model — a villager's payload does not contain a single wolf's sessionId.
  *
  * THE OPTIONAL-LOOKING FIELDS ARE NOT OPTIONAL, THEY ARE EMPTY. `inspections`
- * arrives as `{}` for everyone who is not the Seer and `packmates` as `[]` for
- * everyone who is not a wolf. That is the server's redaction, not a loading
- * state: there is no request the client could make that would fill them in.
+ * arrives as `{}` for everyone who is not the Seer, `packmates` as `[]` for
+ * everyone who is not a wolf, and `pendingKill` as null for everyone who is not
+ * the Witch standing in her own phase. That is the server's redaction, not a
+ * loading state: there is no request the client could make that would fill them
+ * in.
  */
 
 export type WerewolfPhase =
   | 'reveal'
+  /** Cupid's one and only beat. Skipped entirely at sizes with no Cupid. */
+  | 'nightZero'
   | 'night'
+  /** The Witch alone, after the pack has settled on somebody. */
+  | 'witch'
   | 'dawn'
+  /** A dead Hunter taking one more person with them. */
+  | 'revenge'
   | 'day'
   | 'vote'
   | 'verdict'
   | 'finished'
 
-export type WerewolfRole = 'werewolf' | 'seer' | 'guard' | 'villager'
+export type WerewolfRole =
+  | 'werewolf'
+  | 'seer'
+  | 'guard'
+  | 'witch'
+  | 'hunter'
+  | 'cupid'
+  | 'jester'
+  | 'villager'
 
 /** What the Seer reads. Alignment only — never the exact role. */
 export type Alignment = 'werewolf' | 'village'
 
-export type WinningTeam = 'werewolves' | 'village'
+export type WinningTeam = 'werewolves' | 'village' | 'jester'
 
 export interface WerewolfPlayer {
   sessionId: string
@@ -54,17 +70,28 @@ export interface WerewolfResult {
 /** The redacted half — exactly what `werewolf.viewFor` returns. */
 export interface WerewolfProjection {
   phase: WerewolfPhase
-  /** 1-based. `0` during `reveal`, before the first night opens. */
+  /** 1-based. `0` during `reveal` and `nightZero`, before the first night. */
   night: number
   phaseEndsAt: number
   dead: string[]
 
-  /** Who the pack took last night. null when nobody died. */
+  /** Who the pack took last night. null when nobody died to them. */
   lastKilled: string | null
   /** Whether the Guard's shield is why nobody died. */
   lastSaved: boolean
+  /** Whether the Witch's heal is why nobody died. */
+  lastHealed: boolean
+  /** Who the Witch poisoned, once it has happened. Public after the fact. */
+  lastPoisoned: string | null
   /** Who the last vote hanged. null after a tie, which takes nobody. */
   lastLynched: string | null
+  /** Who the Hunter took with them. */
+  lastShot: string | null
+  /**
+   * EVERYONE who died in the most recent resolution, the Lovers' cascade
+   * included. A night can now kill three people, and `lastKilled` names one.
+   */
+  lastDeaths: string[]
 
   /** `{}` during `vote` itself: a live tally is what causes bandwagoning. */
   votes: Record<string, string>
@@ -89,13 +116,48 @@ export interface WerewolfProjection {
   guardTarget: string | null
   /** Who the Guard covered last night, and so may not cover again. */
   lastProtected: string | null
+
+  /**
+   * Who the pack settled on, shown to the WITCH and only during her own phase.
+   *
+   * ALREADY NET OF THE GUARD: null here means nobody is dying tonight, whether
+   * because the pack never agreed or because the shield got there first. So a
+   * null with `pendingSaved` true is the Witch being told to keep her potion,
+   * not a payload that failed to load.
+   */
+  pendingKill: string | null
+  /** Whether the Guard is why `pendingKill` is null. Witch-only, phase-only. */
+  pendingSaved: boolean
+  /** Potions spent for the whole game. `false` for everyone but the Witch. */
+  healUsed: boolean
+  poisonUsed: boolean
+  /** What the Witch has already done tonight, echoed back to her. */
+  witchHealed: boolean
+  witchPoison: string | null
+
+  /**
+   * The bound pair.
+   *
+   * `[]` unless this viewer is Cupid, the game is over, or the bond has already
+   * cost somebody their life — at which point both halves are dead, both roles
+   * are revealed, and hiding the pair would conceal nothing.
+   */
+  lovers: string[]
+  /** Your partner, if you are one of them. null otherwise. */
+  yourLover: string | null
+
+  /** The dead Hunter who still owes the table a shot. Public. */
+  revengeBy: string | null
+
+  /** Set once decided. `'jester'` means neither side achieved anything. */
+  winningTeam: WinningTeam | null
 }
 
 /** `GameView` and its projection, joined. This is what components consume. */
 export interface WerewolfTable extends WerewolfProjection {
   version: number
   players: WerewolfPlayer[]
-  /** Who may act right now. The night's roles, or the living during a vote. */
+  /** Who may act right now. The night's roles, the Witch, a voter — or the Hunter. */
   actors: string[]
   finished: boolean
   result: WerewolfResult | null
@@ -113,8 +175,11 @@ export interface WerewolfTable extends WerewolfProjection {
 
 const PHASES: readonly string[] = [
   'reveal',
+  'nightZero',
   'night',
+  'witch',
   'dawn',
+  'revenge',
   'day',
   'vote',
   'verdict',
@@ -160,8 +225,11 @@ export function asWerewolf(view: GameView | null): WerewolfTable | null {
 
 export const PHASE_LABEL: Record<WerewolfPhase, string> = {
   reveal: 'Roles dealt',
+  nightZero: 'The first night',
   night: 'Night',
+  witch: "The Witch's turn",
   dawn: 'Dawn',
+  revenge: "The Hunter's shot",
   day: 'Discussion',
   vote: 'Voting',
   verdict: 'Verdict',
@@ -172,6 +240,10 @@ export const ROLE_LABEL: Record<WerewolfRole, string> = {
   werewolf: 'Werewolf',
   seer: 'Seer',
   guard: 'Guard',
+  witch: 'Witch',
+  hunter: 'Hunter',
+  cupid: 'Cupid',
+  jester: 'Jester',
   villager: 'Villager',
 }
 
@@ -182,8 +254,15 @@ export const ROLE_BRIEF: Record<WerewolfRole, string> = {
   seer: 'Every night you may read one person: werewolf or not. Do not be in a hurry to say so out loud.',
   guard:
     'Every night you may cover one person from the pack. Never the same person two nights running.',
-  villager:
-    'You have no special power. Only your vote, and that is enough.',
+  witch:
+    'You wake after the pack and you see who they took. One potion saves that person, one kills anybody you like. Each of them works once, for the whole game.',
+  hunter:
+    'You have no night action. But whenever you die — eaten, poisoned or hanged — you take one person down with you, and you choose who.',
+  cupid:
+    'On the first night you tie two people together. From then on they live and die as one: kill either and the other goes with them.',
+  jester:
+    'You do not win with the village and you do not win with the pack. You win by getting the table to hang you in daylight — and then you win alone.',
+  villager: 'You have no special power. Only your vote, and that is enough.',
 }
 
 /**
@@ -195,8 +274,11 @@ export const ROLE_BRIEF: Record<WerewolfRole, string> = {
  */
 export const PHASE_SECONDS: Record<WerewolfPhase, number | null> = {
   reveal: 10,
+  nightZero: 30,
   night: 45,
+  witch: 30,
   dawn: 8,
+  revenge: 20,
   day: 90,
   vote: 45,
   verdict: 8,
@@ -213,6 +295,13 @@ export type ChatChannel = 'table' | 'pack' | 'dead'
 
 /** Phases in which a living villager's `chatAudience` returns `ok: true`. */
 export const CHAT_OPEN_PHASES: readonly WerewolfPhase[] = ['day', 'vote']
+
+/** Phases that count as night for the pack's private channel. */
+export const NIGHT_PHASES: readonly WerewolfPhase[] = [
+  'nightZero',
+  'night',
+  'witch',
+]
 
 // --- Derivations -----------------------------------------------------------
 
@@ -233,6 +322,14 @@ export function nicknameOf(
     table.players.find((player) => player.sessionId === sessionId)?.nickname ??
     null
   )
+}
+
+/** Several sessionIds as one readable list. Used all over the narration. */
+export function nicknamesOf(
+  table: WerewolfTable,
+  sessionIds: readonly string[],
+): string {
+  return sessionIds.map((id) => nicknameOf(table, id) ?? 'somebody').join(' and ')
 }
 
 /** Living players in seat order — the night's menu and the vote roster. */
@@ -298,7 +395,9 @@ export function readyThreshold(table: WerewolfTable): number {
  * The move this viewer owes tonight, or null if they have nothing to do.
  *
  * Derived from the role rather than from `actors`, because the panel needs to
- * know WHICH control to draw, not merely whether to draw one.
+ * know WHICH control to draw, not merely whether to draw one. Scoped to `night`
+ * proper: Cupid and the Witch have phases of their own, and asking this
+ * function about them would conflate three different screens.
  */
 export function nightAction(
   table: WerewolfTable,
@@ -369,12 +468,105 @@ export function canTargetTonight(
   }
 }
 
+// --- Cupid -----------------------------------------------------------------
+
+/** Whether this viewer is the Cupid whose one beat is open right now. */
+export function canBond(table: WerewolfTable, sessionId: string | null): boolean {
+  return (
+    sessionId !== null &&
+    table.phase === 'nightZero' &&
+    table.yourRole === 'cupid' &&
+    isAlive(table, sessionId) &&
+    table.lovers.length === 0
+  )
+}
+
+// --- The Witch -------------------------------------------------------------
+
+/**
+ * What the Witch may still do tonight.
+ *
+ * `heal` needs a victim to undo, which is why `pendingKill` being null closes
+ * it — that null already accounts for the Guard, so it covers both "the pack
+ * never agreed" and "somebody else got there first".
+ */
+export function witchOptions(
+  table: WerewolfTable,
+  sessionId: string | null,
+): { heal: boolean; poison: boolean } {
+  if (
+    !sessionId ||
+    table.phase !== 'witch' ||
+    table.yourRole !== 'witch' ||
+    !isAlive(table, sessionId)
+  ) {
+    return { heal: false, poison: false }
+  }
+
+  return {
+    heal: !table.healUsed && table.pendingKill !== null,
+    poison: !table.poisonUsed,
+  }
+}
+
+/** Mirrors the server's `poison` gate. A hint, not a gate. */
+export function canPoison(
+  table: WerewolfTable,
+  sessionId: string | null,
+  target: string,
+): boolean {
+  if (!witchOptions(table, sessionId).poison) return false
+  return isAlive(table, target) && target !== sessionId
+}
+
+// --- The Hunter ------------------------------------------------------------
+
+/**
+ * Whether this viewer is the dead Hunter currently holding the gun.
+ *
+ * The one place in this game where being in `dead` does not end your turn — so
+ * every caller must ask this rather than `isAlive`.
+ */
+export function isRevenger(
+  table: WerewolfTable,
+  sessionId: string | null,
+): boolean {
+  return (
+    sessionId !== null &&
+    table.phase === 'revenge' &&
+    table.revengeBy === sessionId
+  )
+}
+
+/** Who the Hunter may still shoot. Living only — a corpse is not a target. */
+export function shootableBy(table: WerewolfTable): WerewolfPlayer[] {
+  return livingPlayers(table)
+}
+
+// --- Narration -------------------------------------------------------------
+
+/**
+ * Everyone the last resolution killed BEYOND the one it is named for.
+ *
+ * The dawn and verdict panels lead with the headline death — who the pack ate,
+ * who the table hanged — and this is the rest: a poisoning, and above all a
+ * Lover pulled down by a death nobody aimed at them. Without it the roster
+ * silently grows a second corpse and no line of text explains why.
+ */
+export function collateralOf(
+  table: WerewolfTable,
+  headlines: ReadonlyArray<string | null>,
+): string[] {
+  return table.lastDeaths.filter((id) => !headlines.includes(id))
+}
+
 /**
  * Whether this viewer may type right now.
  *
  * Mirrors the server's rule rather than guessing: the eliminated always have
- * the `dead` channel, wolves have the `pack` channel at night, and everyone
- * living has the table during the day and the vote.
+ * the `dead` channel, wolves have the `pack` channel through the whole night —
+ * Cupid's beat and the Witch's included — and everyone living has the table
+ * during the day and the vote.
  */
 export function canChat(
   table: WerewolfTable | null,
@@ -383,7 +575,7 @@ export function canChat(
   if (!table) return true
   if (table.finished) return true
   if (sessionId && !isAlive(table, sessionId)) return true
-  if (table.phase === 'night') return table.yourRole === 'werewolf'
+  if (NIGHT_PHASES.includes(table.phase)) return table.yourRole === 'werewolf'
 
   return CHAT_OPEN_PHASES.includes(table.phase)
 }

@@ -7,15 +7,21 @@ import { toSeconds, useCountdown } from '@/lib/game/use-countdown'
 import { useGame } from '@/lib/game/use-game'
 import {
   asWerewolf,
+  canBond,
+  canPoison,
   canTargetTonight,
+  collateralOf,
   isAlive,
+  isRevenger,
   livingPlayers,
   nicknameOf,
+  nicknamesOf,
   nightAction,
   nightChoice,
   packTally,
   readyThreshold,
   voteTally,
+  witchOptions,
   PHASE_LABEL,
   PHASE_SECONDS,
   ROLE_BRIEF,
@@ -29,28 +35,36 @@ import type { AppSocket } from '@/lib/webrtc/use-p2p-room'
 /**
  * Werewolf, at the table.
  *
- * FOUR PLAYERS SEE FOUR DIFFERENT SCREENS, and none of that is decided here.
- * The wolf's packmate list, the Seer's ledger and the Guard's shield are absent
- * from everyone else's payload — `werewolf.viewFor` on the server built each
- * viewer their own. So this component is not choosing what to hide; there is
- * genuinely nothing here to bypass. What it chooses is what to DRAW, which is a
- * different question with the same answer per role.
+ * EIGHT PLAYERS SEE EIGHT DIFFERENT SCREENS, and none of that is decided here.
+ * The wolf's packmate list, the Seer's ledger, the Guard's shield, the Witch's
+ * victim and the Lovers' bond are absent from everyone else's payload —
+ * `werewolf.viewFor` on the server built each viewer their own. So this
+ * component is not choosing what to hide; there is genuinely nothing here to
+ * bypass. What it chooses is what to DRAW, which is a different question with
+ * the same answer per role.
  *
  * As everywhere else in this app the UI only *disables* what it believes is
  * illegal. Every click is still sent, and the server is the sole judge —
  * anything enforced in the browser can be undone from devtools.
  *
- * NIGHT CHOICES ARE ECHOED, THE DAY VOTE IS NOT. A wolf gets `wolfVotes` back
- * and the Seer gets `seerTarget` back, so those panels read their own selection
- * straight off the server. `votes` stays `{}` for the whole voting phase by
- * design, so the only way to show "you picked Rina" is to remember it locally —
- * hence `sent`, which is discarded the moment the phase turns over.
+ * NIGHT CHOICES ARE ECHOED, THE DAY VOTE IS NOT. A wolf gets `wolfVotes` back,
+ * the Seer gets `seerTarget` and the Witch gets `witchPoison`, so those panels
+ * read their own selection straight off the server. `votes` stays `{}` for the
+ * whole voting phase by design, so the only way to show "you picked Rina" is to
+ * remember it locally — hence `sent`, which is discarded the moment the phase
+ * turns over.
+ *
+ * TWO PANELS BREAK THE "ONE CLICK, ONE MOVE" SHAPE, both for the same reason.
+ * Cupid's bond needs TWO names and the server will not accept half of one, so
+ * `NightZeroPanel` collects a pair locally before sending anything. The Witch
+ * has two independent potions and may spend both in one night, so `WitchPanel`
+ * stays open after each until she says she is done.
  */
 
 /**
  * Outline control.
  *
- * The only button on this panel with a fixed style. Every other control here is
+ * The only button style on this panel that is fixed. Every other control here is
  * a target in a list, and those carry their own selected/blocked states — a
  * filled `PRIMARY` alongside them would claim a hierarchy the table does not
  * have, since picking a victim is not a lesser action than starting the game.
@@ -60,6 +74,8 @@ const SECONDARY =
 
 const EYEBROW =
   'font-mono text-[0.6875rem] uppercase tracking-wide text-ink-soft'
+
+const NOTE = 'font-mono text-[0.8125rem] leading-relaxed text-ink'
 
 const DISPLAY: React.CSSProperties = {
   fontVariationSettings: "'wght' 800, 'wdth' 95",
@@ -123,7 +139,8 @@ function PhaseClock({ table }: { table: WerewolfTable }) {
  *
  * Every branch below renders from a field that is simply ABSENT for the wrong
  * viewer, so a villager reading this component's source learns nothing they
- * could act on — `packmates` is `[]` in their payload, not filtered here.
+ * could act on — `packmates` is `[]` in their payload, and `yourLover` is null,
+ * neither of them filtered here.
  */
 function RolePanel({
   table,
@@ -163,9 +180,33 @@ function RolePanel({
         <div className="mt-4">
           <p className={EYEBROW}>your pack</p>
           <p className="mt-1 font-mono text-[0.8125rem] text-ink">
-            {table.packmates
-              .map((id) => nicknameOf(table, id) ?? 'someone')
-              .join(', ')}
+            {nicknamesOf(table, table.packmates)}
+          </p>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------- the bond */}
+      {table.yourLover && (
+        <div className="mt-4">
+          <p className={EYEBROW}>you are in love with</p>
+          <p className="mt-1 font-mono text-[0.8125rem] text-ink">
+            <span className="bg-pink px-1 font-semibold">
+              {nicknameOf(table, table.yourLover) ?? 'someone'}
+            </span>
+          </p>
+          <p className="mt-1 font-mono text-[0.75rem] leading-relaxed text-ink-soft">
+            Whichever of you dies first, the other goes in the same breath. No
+            potion, shield or vote interrupts it.
+          </p>
+        </div>
+      )}
+
+      {/* Cupid sees the pair they made, whether or not they are in it. */}
+      {table.yourRole === 'cupid' && table.lovers.length === 2 && (
+        <div className="mt-4">
+          <p className={EYEBROW}>you tied together</p>
+          <p className="mt-1 font-mono text-[0.8125rem] text-ink">
+            {nicknamesOf(table, table.lovers)}
           </p>
         </div>
       )}
@@ -204,6 +245,35 @@ function RolePanel({
           . Tonight it has to be somebody else.
         </p>
       )}
+
+      {/* ---------------------------------------------- the witch's shelf */}
+      {table.yourRole === 'witch' && (
+        <div className="mt-4">
+          <p className={EYEBROW}>your potions</p>
+          <ul className="mt-1 space-y-1">
+            <li className="font-mono text-[0.8125rem] text-ink">
+              Heal{' · '}
+              <span className={table.healUsed ? 'text-ink-soft line-through' : 'bg-yellow px-1'}>
+                {table.healUsed ? 'spent' : 'ready'}
+              </span>
+            </li>
+            <li className="font-mono text-[0.8125rem] text-ink">
+              Poison{' · '}
+              <span className={table.poisonUsed ? 'text-ink-soft line-through' : 'bg-yellow px-1'}>
+                {table.poisonUsed ? 'spent' : 'ready'}
+              </span>
+            </li>
+          </ul>
+        </div>
+      )}
+
+      {/* --------------------------------------------- the hunter's promise */}
+      {table.yourRole === 'hunter' && (
+        <p className="mt-4 font-mono text-[0.75rem] leading-relaxed text-ink-soft">
+          Nothing to do at night. Keep watching anyway — the moment you die you
+          get one shot, and twenty seconds to decide who it is for.
+        </p>
+      )}
     </div>
   )
 }
@@ -213,7 +283,9 @@ function RolePanel({
  *
  * Doubles as the vote tally once votes are public, and as the graveyard: a dead
  * player's role is printed next to their name because the server revealed it,
- * for everyone, the moment they died.
+ * for everyone, the moment they died. Lovers are flagged the same way — once
+ * the bond has cost somebody their life it is public, so marking it here tells
+ * nobody anything the bodies did not already.
  */
 function Roster({
   table,
@@ -233,6 +305,7 @@ function Roster({
         const dayVotes = tally[player.sessionId] ?? 0
         const packVotes = pack[player.sessionId] ?? 0
         const missing = table.disconnected[player.sessionId] !== undefined
+        const inLove = table.lovers.includes(player.sessionId)
 
         return (
           <li
@@ -256,6 +329,20 @@ function Roster({
             {revealed && (
               <span className="text-[0.625rem] uppercase tracking-wide no-underline">
                 {ROLE_LABEL[revealed]}
+              </span>
+            )}
+
+            {/* `lovers` is `[]` in the payload of anyone not entitled to it. */}
+            {inLove && (
+              <span className="bg-pink px-1 text-[0.625rem] uppercase tracking-wide no-underline">
+                lover
+              </span>
+            )}
+
+            {/* The Hunter, dead, still holding the gun. Public by design. */}
+            {table.revengeBy === player.sessionId && (
+              <span className="border border-ink px-1 text-[0.625rem] uppercase tracking-wide no-underline">
+                taking aim
               </span>
             )}
 
@@ -286,7 +373,7 @@ function Roster({
   )
 }
 
-/** A pickable list of players. Shared by the night actions and the day vote. */
+/** A pickable list of players. Shared by every targeting panel in the game. */
 function TargetList({
   targets,
   chosen,
@@ -295,17 +382,20 @@ function TargetList({
   label,
 }: {
   targets: WerewolfPlayer[]
-  chosen: string | null
+  /** The single current pick, or several — Cupid picks two at once. */
+  chosen: string | readonly string[] | null
   /** Why this target is not pickable, or null when it is. A hint, not a gate. */
   disabledFor: (sessionId: string) => string | null
   onPick: (sessionId: string) => void
   label: string
 }) {
+  const picks = chosen === null ? [] : typeof chosen === 'string' ? [chosen] : chosen
+
   return (
     <ul className="mt-3 space-y-2" aria-label={label}>
       {targets.map((player) => {
         const blocked = disabledFor(player.sessionId)
-        const picked = chosen === player.sessionId
+        const picked = picks.includes(player.sessionId)
 
         return (
           <li key={player.sessionId}>
@@ -339,12 +429,83 @@ function TargetList({
 }
 
 /**
+ * Night zero. Cupid, once, and nobody else ever.
+ *
+ * COLLECTS BOTH NAMES BEFORE SENDING ANYTHING. The server takes `bond` with a
+ * pair and refuses anything else, because a one-sided bond is not a state the
+ * rules have — so the half-finished selection lives here, in local state, and
+ * never as a move. Toggling a name off again is free right up until the second
+ * one lands.
+ */
+function NightZeroPanel({
+  table,
+  sessionId,
+  onMove,
+}: {
+  table: WerewolfTable
+  sessionId: string | null
+  onMove: (intent: unknown) => void
+}) {
+  const [picks, setPicks] = useState<string[]>([])
+
+  if (!canBond(table, sessionId)) {
+    return (
+      <Waiting>
+        {table.lovers.length > 0
+          ? 'Cupid has chosen. Two people at this table are now bound to each other, and neither of them can outlive the other.'
+          : 'The first night. Cupid is awake, choosing two people to tie together. Everyone else is asleep — even the pack does not hunt tonight.'}
+      </Waiting>
+    )
+  }
+
+  const toggle = (id: string) => {
+    if (picks.includes(id)) {
+      setPicks(picks.filter((pick) => pick !== id))
+      return
+    }
+
+    // The second name commits the pair. There is no confirm step: the choice
+    // IS the two names, and a button asking "are you sure" after them would add
+    // a click without adding a decision.
+    const next = [...picks, id]
+    if (next.length < 2) {
+      setPicks(next)
+      return
+    }
+
+    onMove({ type: 'bond', targets: next })
+    setPicks(next)
+  }
+
+  return (
+    <div>
+      <p className="font-mono text-[0.75rem] leading-relaxed text-ink-soft">
+        {picks.length === 0
+          ? 'Pick two people. From tonight they live and die together — kill either one and the other goes with them. You may tie yourself in.'
+          : `${nicknameOf(table, picks[0] ?? '') ?? 'Somebody'} is chosen. Pick the second, and the bond is made.`}
+      </p>
+
+      <TargetList
+        label="Tie together"
+        targets={livingPlayers(table)}
+        chosen={picks}
+        disabledFor={(id) =>
+          picks.length >= 2 && !picks.includes(id) ? 'bond made' : null
+        }
+        onPick={toggle}
+      />
+    </div>
+  )
+}
+
+/**
  * The night.
  *
- * Three roles act at once and a villager acts not at all — which is why this
+ * Three roles act at once and everyone else acts not at all — which is why this
  * renders a real panel for the sleeping majority too. In a timed game a player
  * staring at a blank box assumes the connection died rather than that they have
- * nothing to do.
+ * nothing to do. The Witch is among the sleepers HERE: her phase comes next,
+ * and it is the whole point of her that she sees the kill first.
  */
 function NightPanel({
   table,
@@ -363,7 +524,9 @@ function NightPanel({
       <Waiting>
         {sessionId !== null && !isAlive(table, sessionId)
           ? 'You are dead. The night carries on without you, but you can still talk to the others who are out.'
-          : 'Night. You are asleep. The wolves, the Seer and the Guard are moving. Wait for dawn.'}
+          : table.yourRole === 'witch'
+            ? 'Night. The pack is choosing. Stay asleep — you wake up after them, and you get to see what they did.'
+            : 'Night. You are asleep. The wolves, the Seer and the Guard are moving. Wait for dawn.'}
       </Waiting>
     )
   }
@@ -401,6 +564,218 @@ function NightPanel({
         onPick={(target) => onMove({ type: action, target })}
       />
     </div>
+  )
+}
+
+/**
+ * The Witch, awake after the pack.
+ *
+ * THE ONLY PANEL THAT SHOWS A KILL BEFORE IT HAPPENS. `pendingKill` reaches
+ * exactly one browser and only while this phase is open — outside it the server
+ * sends null, so there is no window in which it sits in anyone's payload waiting
+ * to be read.
+ *
+ * Two independent decisions, so the panel does not close on the first. She may
+ * heal and then poison, poison and then heal, or do neither — `pass` is what
+ * says she is finished, and the server closes the phase by itself only once both
+ * potions are gone.
+ */
+function WitchPanel({
+  table,
+  sessionId,
+  onMove,
+}: {
+  table: WerewolfTable
+  sessionId: string | null
+  onMove: (intent: unknown) => void
+}) {
+  const options = witchOptions(table, sessionId)
+  const isWitch = table.yourRole === 'witch'
+
+  if (!isWitch || (sessionId !== null && !isAlive(table, sessionId))) {
+    return (
+      <Waiting>
+        {sessionId !== null && !isAlive(table, sessionId)
+          ? 'You are dead. The Witch is awake, and whatever she does you will read about at dawn.'
+          : 'The Witch is awake. She has seen what the pack did, and she is deciding whether to undo it.'}
+      </Waiting>
+    )
+  }
+
+  const victim = nicknameOf(table, table.pendingKill)
+
+  return (
+    <div>
+      {/* -------------------------------------------- what the pack did */}
+      <p className={NOTE}>
+        {table.pendingKill ? (
+          <>
+            The pack went for{' '}
+            <span className="bg-yellow px-1 font-semibold">{victim}</span>{' '}
+            tonight.
+          </>
+        ) : table.pendingSaved ? (
+          'The pack attacked, and it came to nothing — somebody else got there first. Nobody is dying tonight, so keep your heal.'
+        ) : (
+          'The pack never settled on anybody tonight. There is nothing to undo.'
+        )}
+      </p>
+
+      {/* ------------------------------------------------------ the heal */}
+      {table.witchHealed ? (
+        <p className="mt-4 border-l-4 border-pink bg-stock px-3 py-2.5 font-mono text-[0.75rem] leading-relaxed text-ink">
+          You spent the heal. They wake up in the morning like nothing happened,
+          and the table will be told only that nobody died.
+        </p>
+      ) : (
+        <button
+          type="button"
+          onClick={() => onMove({ type: 'heal' })}
+          disabled={!options.heal}
+          className={`${SECONDARY} mt-4 w-full`}
+        >
+          {table.healUsed
+            ? 'Heal — already spent'
+            : table.pendingKill
+              ? `Save ${victim ?? 'them'} (uses your only heal)`
+              : 'Heal — nobody to save tonight'}
+        </button>
+      )}
+
+      {/* ---------------------------------------------------- the poison */}
+      <div className="mt-5">
+        <p className={EYEBROW}>the other bottle</p>
+
+        {table.witchPoison ? (
+          <p className="mt-2 border-l-4 border-pink bg-stock px-3 py-2.5 font-mono text-[0.75rem] leading-relaxed text-ink">
+            You poisoned{' '}
+            <span className="font-semibold">
+              {nicknameOf(table, table.witchPoison) ?? 'somebody'}
+            </span>
+            . They will be found at dawn, and nothing about the body says it was
+            you rather than the pack.
+          </p>
+        ) : table.poisonUsed ? (
+          <p className="mt-2 font-mono text-[0.75rem] leading-relaxed text-ink-soft">
+            The poison is gone. You used it on an earlier night.
+          </p>
+        ) : (
+          <>
+            <p className="mt-2 font-mono text-[0.75rem] leading-relaxed text-ink-soft">
+              You may kill one person tonight, once in the whole game. Nobody is
+              told it was poison.
+            </p>
+            <TargetList
+              label="Poison who"
+              targets={livingPlayers(table)}
+              chosen={null}
+              disabledFor={(id) =>
+                canPoison(table, sessionId, id)
+                  ? null
+                  : id === sessionId
+                    ? 'yourself'
+                    : 'not tonight'
+              }
+              onPick={(target) => onMove({ type: 'poison', target })}
+            />
+          </>
+        )}
+      </div>
+
+      {/* -------------------------------------------------------- finish */}
+      <button
+        type="button"
+        onClick={() => onMove({ type: 'pass' })}
+        className={`${SECONDARY} mt-5 w-full`}
+      >
+        Done for tonight
+      </button>
+    </div>
+  )
+}
+
+/**
+ * The Hunter's shot.
+ *
+ * THE ONE PANEL A DEAD PLAYER DRIVES. Everywhere else in this game dying ends
+ * your turn, so this checks `isRevenger` rather than `isAlive` — asking the
+ * usual question here would lock the Hunter out of the only phase that exists
+ * for them.
+ */
+function RevengePanel({
+  table,
+  sessionId,
+  onMove,
+}: {
+  table: WerewolfTable
+  sessionId: string | null
+  onMove: (intent: unknown) => void
+}) {
+  const hunter = nicknameOf(table, table.revengeBy) ?? 'The Hunter'
+
+  if (!isRevenger(table, sessionId)) {
+    return (
+      <p className={NOTE}>
+        <span className="bg-yellow px-1 font-semibold">{hunter}</span> was the
+        Hunter — and a dying Hunter does not go alone. They are choosing who
+        follows them right now.
+      </p>
+    )
+  }
+
+  return (
+    <div>
+      <p className={NOTE}>
+        You are dead. Take one person with you.
+      </p>
+      <p className="mt-2 font-mono text-[0.75rem] leading-relaxed text-ink-soft">
+        One shot, and the clock is short. Let it run out and nobody goes with
+        you.
+      </p>
+
+      <TargetList
+        label="Shoot who"
+        targets={livingPlayers(table)}
+        chosen={null}
+        disabledFor={() => null}
+        onPick={(target) => onMove({ type: 'shoot', target })}
+      />
+    </div>
+  )
+}
+
+/**
+ * What the Hunter's shot did, carried into the phase that follows it.
+ *
+ * NOT PART OF ANY PANEL, because the shot is the one death in this game that
+ * lands between phases rather than inside one. `revenge` closes the instant the
+ * trigger is pulled — there is nobody left to wait for — so the phase that would
+ * have narrated it never opens, and without this the victim simply turns up dead
+ * in the roster with no line of text anywhere explaining it.
+ *
+ * The server clears `lastShot` at the next resolution in either direction
+ * (`closeWitch` heading into dawn, `resolveVote` heading into a verdict), so
+ * this shows for exactly one day or one night and then goes quiet on its own.
+ */
+function HuntersShotNote({ table }: { table: WerewolfTable }) {
+  if (!table.lastShot || table.phase === 'revenge') return null
+
+  const hunter = nicknameOf(table, table.revengeBy)
+  const shot = nicknameOf(table, table.lastShot) ?? 'somebody'
+  const also = collateralOf(table, [table.lastShot])
+
+  return (
+    <p className={`${NOTE} mb-5 border-l-4 border-pink bg-stock px-3 py-2.5`}>
+      {hunter ? `${hunter}, dying, ` : 'The dying Hunter '}took{' '}
+      <span className="bg-yellow px-1 font-semibold">{shot}</span> with them.
+      {also.length > 0 && (
+        <>
+          {' '}
+          <span className="font-semibold">{nicknamesOf(table, also)}</span> went
+          too — the shot found somebody who was not free to die alone.
+        </>
+      )}
+    </p>
   )
 }
 
@@ -449,55 +824,123 @@ function ReadyToVote({
   )
 }
 
-/** What the night did. Written for the whole table — this part is public. */
-function DawnPanel({ table }: { table: WerewolfTable }) {
-  if (table.lastSaved) {
-    return (
-      <p className="font-mono text-[0.8125rem] leading-relaxed text-ink">
-        The pack attacked last night, but{' '}
-        <span className="bg-yellow px-1">nobody died</span>. The Guard covered
-        exactly the right person.
-      </p>
-    )
-  }
-
-  if (!table.lastKilled) {
-    return (
-      <p className="font-mono text-[0.8125rem] leading-relaxed text-ink">
-        Nobody died last night.
-      </p>
-    )
-  }
+/**
+ * Whoever the bond dragged down, on top of the death everyone was expecting.
+ *
+ * Its own component because both `dawn` and `verdict` need it and the reason is
+ * the same in each: the roster grows a corpse nobody voted for or ate, and
+ * without a line of text the table has no idea where it came from.
+ */
+function Collateral({
+  table,
+  headlines,
+}: {
+  table: WerewolfTable
+  headlines: ReadonlyArray<string | null>
+}) {
+  const also = collateralOf(table, headlines)
+  if (also.length === 0) return null
 
   return (
-    <p className="font-mono text-[0.8125rem] leading-relaxed text-ink">
-      <span className="bg-yellow px-1 font-semibold">
-        {nicknameOf(table, table.lastKilled) ?? 'Somebody'}
-      </span>{' '}
-      did not wake up this morning. Their role is open in the list below.
+    <p className="mt-3 border-l-4 border-pink bg-stock px-3 py-2.5 font-mono text-[0.75rem] leading-relaxed text-ink">
+      <span className="font-semibold">{nicknamesOf(table, also)}</span> died in
+      the same moment. Somebody at this table was tied to a person who was not
+      going to live through it.
     </p>
   )
 }
 
-/** What the vote did — including the case where it did nothing. */
+/** What the night did. Written for the whole table — this part is public. */
+function DawnPanel({ table }: { table: WerewolfTable }) {
+  const poisoned = nicknameOf(table, table.lastPoisoned)
+
+  return (
+    <div>
+      {table.lastHealed ? (
+        <p className={NOTE}>
+          The pack attacked last night, and{' '}
+          <span className="bg-yellow px-1">it did not take</span>. Someone was
+          already awake with a bottle in their hand.
+        </p>
+      ) : table.lastSaved ? (
+        <p className={NOTE}>
+          The pack attacked last night, but{' '}
+          <span className="bg-yellow px-1">nobody died</span>. The Guard covered
+          exactly the right person.
+        </p>
+      ) : table.lastKilled ? (
+        <p className={NOTE}>
+          <span className="bg-yellow px-1 font-semibold">
+            {nicknameOf(table, table.lastKilled) ?? 'Somebody'}
+          </span>{' '}
+          did not wake up this morning. Their role is open in the list below.
+        </p>
+      ) : (
+        <p className={NOTE}>Nobody was taken by the pack last night.</p>
+      )}
+
+      {/* The poison is announced, but never attributed. As far as the table can
+          tell from the body, this is another kill. */}
+      {poisoned && (
+        <p className={`${NOTE} mt-3`}>
+          <span className="bg-yellow px-1 font-semibold">{poisoned}</span> was
+          found dead as well. Nothing about it says who did it.
+        </p>
+      )}
+
+      <Collateral table={table} headlines={[table.lastKilled, table.lastPoisoned]} />
+
+      {table.lastDeaths.length === 0 && !table.lastSaved && !table.lastHealed && (
+        <p className="mt-3 font-mono text-[0.75rem] leading-relaxed text-ink-soft">
+          A quiet night. That is worth exactly as much suspicion as a loud one.
+        </p>
+      )}
+    </div>
+  )
+}
+
+/** What the vote did — including the two cases where it backfired. */
 function VerdictPanel({ table }: { table: WerewolfTable }) {
   if (!table.lastLynched) {
     return (
-      <p className="font-mono text-[0.8125rem] leading-relaxed text-ink">
+      <p className={NOTE}>
         The vote was a <span className="bg-yellow px-1">tie</span>. Nobody
         hangs today. A day thrown away.
       </p>
     )
   }
 
+  const hanged = nicknameOf(table, table.lastLynched) ?? 'somebody'
+
+  // The Jester's win is the one outcome the table hands over by doing exactly
+  // what it set out to do, so the panel says so plainly rather than burying it
+  // under the usual "their role is open below".
+  if (table.winningTeam === 'jester') {
+    return (
+      <div>
+        <p className={NOTE}>
+          The table hanged{' '}
+          <span className="bg-pink px-1 font-semibold">{hanged}</span> — and{' '}
+          <span className="bg-yellow px-1 font-semibold">
+            they were the Jester
+          </span>
+          . That was the entire plan, and it worked. The game is over and they
+          have won it alone.
+        </p>
+        <Collateral table={table} headlines={[table.lastLynched]} />
+      </div>
+    )
+  }
+
   return (
-    <p className="font-mono text-[0.8125rem] leading-relaxed text-ink">
-      The table chose{' '}
-      <span className="bg-yellow px-1 font-semibold">
-        {nicknameOf(table, table.lastLynched) ?? 'somebody'}
-      </span>
-      . Their role is open in the list below.
-    </p>
+    <div>
+      <p className={NOTE}>
+        The table chose{' '}
+        <span className="bg-yellow px-1 font-semibold">{hanged}</span>. Their
+        role is open in the list below.
+      </p>
+      <Collateral table={table} headlines={[table.lastLynched]} />
+    </div>
   )
 }
 
@@ -505,9 +948,14 @@ function outcomeLabel(table: WerewolfTable): string {
   if (!table.result) return 'Finished'
   if (table.result.reason === 'forfeit') return 'Broke up part way through'
 
-  return table.result.team === 'werewolves'
-    ? 'The wolves win'
-    : 'The village wins'
+  switch (table.result.team) {
+    case 'werewolves':
+      return 'The wolves win'
+    case 'jester':
+      return 'The Jester wins alone'
+    default:
+      return 'The village wins'
+  }
 }
 
 // --- Board -----------------------------------------------------------------
@@ -540,7 +988,8 @@ export function WerewolfBoard({
    *
    * NOT an optimistic game update — `votes` stays `{}` through the whole vote
    * phase by design, so your own choice is the one thing the server will not
-   * echo back. Night choices need no equivalent: those ARE echoed.
+   * echo back. Night choices need no equivalent: those ARE echoed, and so are
+   * the Witch's two potions.
    */
   const [sent, setSent] = useState<string | null>(null)
   const [seenPhase, setSeenPhase] = useState<WerewolfPhase | null>(null)
@@ -609,11 +1058,23 @@ export function WerewolfBoard({
 
           {/* ------------------------------------------------ the phase */}
           <div className="mt-6">
+            {/* Sits above the panel, not inside one: the shot happened between
+                phases, and it is the first thing the table needs to read. */}
+            <HuntersShotNote table={table} />
+
             {table.phase === 'reveal' && (
               <Waiting>
                 Roles are being dealt. Remember yours: it is not shown again
                 until the game is over.
               </Waiting>
+            )}
+
+            {table.phase === 'nightZero' && (
+              <NightZeroPanel
+                table={table}
+                sessionId={sessionId}
+                onMove={move}
+              />
             )}
 
             {table.phase === 'night' && (
@@ -624,7 +1085,16 @@ export function WerewolfBoard({
               />
             )}
 
+            {table.phase === 'witch' && (
+              <WitchPanel table={table} sessionId={sessionId} onMove={move} />
+            )}
+
             {table.phase === 'dawn' && <DawnPanel table={table} />}
+
+            {/* Checked on `isRevenger`, not `alive`. The actor here is dead. */}
+            {table.phase === 'revenge' && (
+              <RevengePanel table={table} sessionId={sessionId} onMove={move} />
+            )}
 
             {table.phase === 'day' &&
               (alive ? (
@@ -654,7 +1124,8 @@ export function WerewolfBoard({
                     targets={livingPlayers(table)}
                     chosen={sent}
                     // Voting for yourself is legal — the server accepts it, and
-                    // a player cornered into it is making a real choice.
+                    // a player cornered into it is making a real choice. For a
+                    // Jester it is the whole strategy.
                     disabledFor={() => null}
                     onPick={(target) => {
                       move({ type: 'vote', target })
@@ -685,6 +1156,16 @@ export function WerewolfBoard({
                       ? 'You were on the winning side.'
                       : 'You were not on the winning side.'}{' '}
                     Every role is open in the list below.
+                  </p>
+                )}
+
+                {table.lovers.length === 2 && (
+                  <p className="mt-3 font-mono text-[0.75rem] leading-relaxed text-ink-soft">
+                    Cupid tied{' '}
+                    <span className="text-ink">
+                      {nicknamesOf(table, table.lovers)}
+                    </span>{' '}
+                    together on the first night.
                   </p>
                 )}
               </div>
