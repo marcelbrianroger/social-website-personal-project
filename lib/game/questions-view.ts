@@ -85,7 +85,7 @@ export function isMyTurn(table: QuestionsTable, sessionId: string | null): boole
 
 /** Whoever is holding the card, for "It's X's turn to ask". */
 export function askerNickname(table: QuestionsTable): string {
-  return table.activeTurn ? nicknameOf(table, table.activeTurn) : 'Dia'
+  return table.activeTurn ? nicknameOf(table, table.activeTurn) : 'They'
 }
 
 /** The other seat, for "Watching [name] do their dare...". */
@@ -97,7 +97,7 @@ export function partnerOf(
 }
 
 export function nicknameOf(table: QuestionsTable, sessionId: string): string {
-  return table.players.find((player) => player.sessionId === sessionId)?.nickname ?? 'Dia'
+  return table.players.find((player) => player.sessionId === sessionId)?.nickname ?? 'They'
 }
 
 /**
@@ -113,7 +113,7 @@ export function progressOf(table: QuestionsTable): number {
 
 /** Labels for the three escalating sets. */
 export const SET_LABEL: Record<1 | 2 | 3, string> = {
-  1: 'Set satu · pemanasan',
-  2: 'Set dua · makin dalam',
-  3: 'Set tiga · paling jujur',
+  1: 'Set one · warming up',
+  2: 'Set two · going deeper',
+  3: 'Set three · most honest',
 }

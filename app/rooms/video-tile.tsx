@@ -63,7 +63,7 @@ export function VideoTile({
 
       {!stream && (
         <div className="absolute inset-0 grid place-items-center px-4 text-center font-mono text-xs text-ink-soft">
-          {status ?? 'nunggu video'}
+          {status ?? 'waiting for video'}
         </div>
       )}
 

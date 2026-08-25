@@ -159,31 +159,31 @@ export function asWerewolf(view: GameView | null): WerewolfTable | null {
 // --- Labels ----------------------------------------------------------------
 
 export const PHASE_LABEL: Record<WerewolfPhase, string> = {
-  reveal: 'Bagi peran',
-  night: 'Malam',
-  dawn: 'Pagi',
-  day: 'Diskusi',
+  reveal: 'Roles dealt',
+  night: 'Night',
+  dawn: 'Dawn',
+  day: 'Discussion',
   vote: 'Voting',
-  verdict: 'Hasil voting',
-  finished: 'Selesai',
+  verdict: 'Verdict',
+  finished: 'Finished',
 }
 
 export const ROLE_LABEL: Record<WerewolfRole, string> = {
   werewolf: 'Werewolf',
-  seer: 'Peramal',
-  guard: 'Penjaga',
-  villager: 'Warga',
+  seer: 'Seer',
+  guard: 'Guard',
+  villager: 'Villager',
 }
 
 /** One line telling a player what their role is actually for. */
 export const ROLE_BRIEF: Record<WerewolfRole, string> = {
   werewolf:
-    'Tiap malam kalian makan satu orang. Siang hari kamu warga biasa — sampai ada yang curiga.',
-  seer: 'Tiap malam kamu bisa ngintip satu orang: werewolf atau bukan. Jangan buru-buru ngaku.',
+    'Every night the pack eats one person. By day you are an ordinary villager — until somebody starts wondering.',
+  seer: 'Every night you may read one person: werewolf or not. Do not be in a hurry to say so out loud.',
   guard:
-    'Tiap malam kamu bisa nutupin satu orang dari werewolf. Nggak boleh orang yang sama dua malam berturut-turut.',
+    'Every night you may cover one person from the pack. Never the same person two nights running.',
   villager:
-    'Kamu nggak punya kemampuan apa-apa. Cuma suara kamu pas voting — dan itu cukup.',
+    'You have no special power. Only your vote — and that is enough.',
 }
 
 /**

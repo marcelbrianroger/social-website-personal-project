@@ -46,13 +46,13 @@ export function SiteHeader() {
         <div className="flex flex-wrap items-end gap-x-5 gap-y-2">
           <nav className="flex items-baseline gap-4 font-mono text-xs">
             <Link href="/wall" className="hover:bg-yellow">
-              mading
+              wall
             </Link>
             <Link href="/rooms" className="hover:bg-yellow">
-              ruang
+              rooms
             </Link>
             <Link href="/lobby" className="hover:bg-yellow">
-              main
+              play
             </Link>
           </nav>
 
@@ -70,7 +70,7 @@ export function SiteFooter() {
         className={`${SHELL} flex flex-wrap items-baseline justify-between gap-3 py-6 font-mono text-[0.6875rem] text-ink-soft`}
       >
         <span>social aachen website</span>
-        <span>cuma bisa dibuka dari Jerman · nur aus Deutschland</span>
+        <span>only reachable from Germany · nur aus Deutschland</span>
       </div>
     </footer>
   )
@@ -119,7 +119,7 @@ export function ConnectionStatus({
           aria-hidden="true"
           className={`size-2 rounded-full ${connected ? 'bg-pink' : 'border border-ink-soft'}`}
         />
-        {connected ? 'nyambung' : 'putus'}
+        {connected ? 'connected' : 'dropped'}
       </span>
 
       {detail && <span>{detail}</span>}

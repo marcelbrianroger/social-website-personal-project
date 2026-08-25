@@ -9,15 +9,15 @@ import { MAX_MESSAGE_LENGTH } from "@/lib/socket/events";
 /** How long until this slip comes down. */
 function timeLeft(expiresAt: string): string {
   const remaining = new Date(expiresAt).getTime() - Date.now();
-  if (remaining <= 0) return "habis";
+  if (remaining <= 0) return "gone";
 
   const hours = Math.floor(remaining / 3_600_000);
-  if (hours >= 1) return `${hours} jam lagi`;
+  if (hours >= 1) return `${hours}h left`;
 
   const minutes = Math.floor(remaining / 60_000);
-  if (minutes >= 1) return `${minutes} menit lagi`;
+  if (minutes >= 1) return `${minutes}m left`;
 
-  return `${Math.floor(remaining / 1000)} detik lagi`;
+  return `${Math.floor(remaining / 1000)}s left`;
 }
 
 /** Under an hour, it is close enough to the end to mark. */
@@ -53,13 +53,13 @@ export function WallClient() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="font-mono text-xs lowercase tracking-wide text-ink-soft">
-            mading
+            the wall
           </p>
           <h1
             className="mt-3 font-display text-[clamp(1.875rem,5vw,3rem)] leading-[1.02] tracking-[-0.02em]"
             style={{ fontVariationSettings: "'wght' 800, 'wdth' 92" }}
           >
-            Semua hilang setelah 24 jam.
+            Everything is gone after 24 hours.
           </h1>
         </div>
 
@@ -87,8 +87,8 @@ export function WallClient() {
           disabled={!connected}
           rows={3}
           maxLength={MAX_MESSAGE_LENGTH + 40}
-          placeholder="Tulis apa aja…"
-          aria-label="Tulisan kamu"
+          placeholder="Write anything…"
+          aria-label="Your note"
           className="w-full resize-none bg-transparent text-[1.0625rem] leading-relaxed text-ink outline-none placeholder:text-ink-soft/70 disabled:opacity-50"
         />
 
@@ -99,7 +99,7 @@ export function WallClient() {
             }`}
           >
             {remaining}
-            <span className="sr-only"> huruf tersisa</span>
+            <span className="sr-only"> characters left</span>
           </span>
 
           <button
@@ -107,7 +107,7 @@ export function WallClient() {
             disabled={!canPost}
             className="border-2 border-ink bg-ink px-6 py-2.5 font-mono text-sm text-paper transition-colors hover:bg-pink hover:text-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-paper"
           >
-            {posting ? "Nempel…" : "Tempel"}
+            {posting ? "Pinning…" : "Pin it up"}
           </button>
         </div>
       </form>
@@ -120,7 +120,7 @@ export function WallClient() {
 
       {messages.length === 0 ? (
         <p className="mt-10 border-2 border-dashed border-rule px-5 py-16 text-center text-ink-soft">
-          Madingnya masih kosong. Tempel yang pertama.
+          The wall is empty. Pin up the first one.
         </p>
       ) : (
         <ul className="board mt-10 grid grid-cols-1 items-start p-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -167,8 +167,8 @@ export function WallClient() {
       )}
 
       <p className="mt-10 max-w-2xl border-t-2 border-ink pt-5 text-sm leading-relaxed text-ink-soft">
-        Semua tulisan lewat filter dulu sebelum kelihatan. Link nggak boleh, dan
-        maksimal lima kali nempel per menit.
+        Everything goes through a filter before it shows up. No links, and no
+        more than five notes a minute.
       </p>
     </div>
   );

@@ -71,9 +71,9 @@ const MAX_PLAYERS = 8
 
 /** The action verb on each night panel's buttons. */
 const NIGHT_VERB = {
-  kill: 'Makan',
-  inspect: 'Ramal',
-  protect: 'Jaga',
+  kill: 'Eat',
+  inspect: 'Read',
+  protect: 'Cover',
 } as const
 
 // --- Pieces ----------------------------------------------------------------
@@ -138,33 +138,33 @@ function RolePanel({
   return (
     <div className="mt-6 border-2 border-ink bg-paper p-5">
       <div className="flex items-baseline justify-between gap-3">
-        <p className={EYEBROW}>peran kamu</p>
+        <p className={EYEBROW}>your role</p>
         {dead && (
           <p className="border border-ink px-1.5 font-mono text-[0.625rem] uppercase tracking-wide text-ink-soft">
-            udah mati
+            dead
           </p>
         )}
       </div>
 
       <p className="mt-1.5 font-display text-2xl leading-none" style={DISPLAY}>
         <span className="bg-yellow box-decoration-clone px-2 py-0.5">
-          {role === null ? 'Nonton' : ROLE_LABEL[role]}
+          {role === null ? 'Watching' : ROLE_LABEL[role]}
         </span>
       </p>
 
       <p className="mt-4 border-l-4 border-pink bg-stock px-3 py-2.5 font-mono text-[0.75rem] leading-relaxed text-ink">
         {role === null
-          ? 'Kamu nggak ikut main di meja ini. Yang kamu lihat sama persis kayak yang dilihat ruangan.'
+          ? 'You are not playing at this table. You see exactly what the room sees, and nothing more.'
           : ROLE_BRIEF[role]}
       </p>
 
       {/* ------------------------------------------------------- the pack */}
       {table.packmates.length > 0 && (
         <div className="mt-4">
-          <p className={EYEBROW}>temen sekawanan</p>
+          <p className={EYEBROW}>your pack</p>
           <p className="mt-1 font-mono text-[0.8125rem] text-ink">
             {table.packmates
-              .map((id) => nicknameOf(table, id) ?? 'entah siapa')
+              .map((id) => nicknameOf(table, id) ?? 'someone')
               .join(', ')}
           </p>
         </div>
@@ -173,7 +173,7 @@ function RolePanel({
       {/* --------------------------------------------- the seer's ledger */}
       {Object.keys(table.inspections).length > 0 && (
         <div className="mt-4">
-          <p className={EYEBROW}>hasil ramalan</p>
+          <p className={EYEBROW}>what you have read</p>
           <ul className="mt-1 space-y-1">
             {Object.entries(table.inspections).map(([id, alignment]) => (
               <li key={id} className="font-mono text-[0.8125rem] text-ink">
@@ -186,7 +186,7 @@ function RolePanel({
                       : 'text-ink-soft'
                   }
                 >
-                  {alignment === 'werewolf' ? 'WEREWOLF' : 'bukan werewolf'}
+                  {alignment === 'werewolf' ? 'WEREWOLF' : 'not a werewolf'}
                 </span>
               </li>
             ))}
@@ -197,11 +197,11 @@ function RolePanel({
       {/* ------------------------------------------------- the guard's log */}
       {table.yourRole === 'guard' && table.lastProtected && (
         <p className="mt-4 font-mono text-[0.75rem] text-ink-soft">
-          Semalam kamu jagain{' '}
+          Last night you covered{' '}
           <span className="text-ink">
             {nicknameOf(table, table.lastProtected) ?? '—'}
           </span>
-          . Malam ini harus orang lain.
+          . Tonight it has to be somebody else.
         </p>
       )}
     </div>
@@ -247,7 +247,7 @@ function Roster({
 
             {player.sessionId === sessionId && (
               <span className="text-[0.625rem] uppercase tracking-wide text-ink-soft no-underline">
-                kamu
+                you
               </span>
             )}
 
@@ -261,7 +261,7 @@ function Roster({
 
             {missing && alive && (
               <span className="text-[0.625rem] uppercase tracking-wide text-ink-soft no-underline">
-                putus — nunggu balik
+                dropped — waiting
               </span>
             )}
 
@@ -269,14 +269,14 @@ function Roster({
                 the vote itself. */}
             {dayVotes > 0 && (
               <span className="ml-auto bg-yellow px-1.5 tabular-nums no-underline">
-                {dayVotes} suara
+                {dayVotes} vote{dayVotes === 1 ? '' : 's'}
               </span>
             )}
 
             {/* Wolves only: `wolfVotes` is `{}` in everyone else's payload. */}
             {packVotes > 0 && (
               <span className="ml-auto border border-ink px-1.5 tabular-nums no-underline">
-                {packVotes} kawanan
+                {packVotes} from the pack
               </span>
             )}
           </li>
@@ -327,7 +327,7 @@ function TargetList({
               )}
               {picked && (
                 <span className="ml-2 text-[0.625rem] uppercase tracking-wide">
-                  pilihan kamu
+                  your pick
                 </span>
               )}
             </button>
@@ -362,41 +362,41 @@ function NightPanel({
     return (
       <Waiting>
         {sessionId !== null && !isAlive(table, sessionId)
-          ? 'Kamu udah mati. Malam jalan terus tanpa kamu — tapi kamu masih bisa ngobrol sama yang udah mati.'
-          : 'Malam. Kamu tidur — werewolf, peramal sama penjaga lagi gerak. Tungguin pagi.'}
+          ? 'You are dead. The night carries on without you — but you can still talk to the others who are out.'
+          : 'Night. You are asleep — the wolves, the Seer and the Guard are moving. Wait for dawn.'}
       </Waiting>
     )
   }
 
   const hint = {
-    kill: 'Pilih satu orang buat dimakan malam ini. Kalau kawanan kamu milih beda-beda, yang paling banyak dipilih yang kena.',
-    inspect: 'Pilih satu orang buat diintip. Kamu cuma dikasih tahu dia werewolf atau bukan.',
+    kill: 'Pick one person to eat tonight. If the pack splits, whoever gets the most votes is taken.',
+    inspect: 'Pick one person to read. All you are told is whether they are a werewolf.',
     protect:
-      'Pilih satu orang buat dijagain. Kalau werewolf nyerang dia malam ini, dia selamat.',
+      'Pick one person to cover. If the pack attacks them tonight, they survive.',
   }[action]
 
   return (
     <div>
       <p className="font-mono text-[0.75rem] leading-relaxed text-ink-soft">
         {chosen
-          ? `Udah kepilih: ${nicknameOf(table, chosen) ?? '—'}. Masih bisa diganti sampai malam habis.`
+          ? `Picked: ${nicknameOf(table, chosen) ?? '—'}. You can still change it until the night is over.`
           : hint}
       </p>
 
       <TargetList
-        label={`${NIGHT_VERB[action]} siapa`}
+        label={`${NIGHT_VERB[action]} who`}
         targets={livingPlayers(table)}
         chosen={chosen}
         disabledFor={(id) =>
           canTargetTonight(table, sessionId, id)
             ? null
             : id === sessionId
-              ? 'kamu sendiri'
+              ? 'yourself'
               : action === 'kill'
-                ? 'sekawanan'
+                ? 'your pack'
                 : action === 'inspect'
-                  ? 'udah diramal'
-                  : 'semalam udah'
+                  ? 'already read'
+                  : 'covered last night'
         }
         onPick={(target) => onMove({ type: action, target })}
       />
@@ -421,8 +421,8 @@ function ReadyToVote({
   return (
     <div>
       <p className="font-mono text-[0.75rem] leading-relaxed text-ink-soft">
-        Debat di chat. Nggak ada gerakan di fase ini — tapi kalian nggak harus
-        nunggu jamnya habis.
+        Argue it out in chat. There is no move to make in this phase — but you
+        do not have to wait the clock out.
       </p>
 
       <button
@@ -433,17 +433,17 @@ function ReadyToVote({
           youAreReady ? 'bg-yellow' : 'bg-paper hover:bg-yellow'
         }`}
       >
-        {youAreReady ? 'Siap voting — pencet lagi buat batal' : 'Siap voting'}
+        {youAreReady ? 'Ready to vote — press again to take it back' : 'Ready to vote'}
       </button>
 
       <p aria-live="polite" className="mt-2 font-mono text-[0.6875rem] text-ink-soft">
         <span className="tabular-nums text-ink">
-          {ready} dari {needed}
+          {ready} of {needed}
         </span>{' '}
-        siap.{' '}
+        ready.{' '}
         {needed - ready > 0
-          ? `${needed - ready} lagi, voting langsung dibuka.`
-          : 'Voting dibuka.'}
+          ? `${needed - ready} more and voting opens.`
+          : 'Voting is open.'}
       </p>
     </div>
   )
@@ -454,8 +454,9 @@ function DawnPanel({ table }: { table: WerewolfTable }) {
   if (table.lastSaved) {
     return (
       <p className="font-mono text-[0.8125rem] leading-relaxed text-ink">
-        Werewolf nyerang semalam, tapi <span className="bg-yellow px-1">nggak ada yang mati</span>.
-        Penjaga nutupin orang yang tepat.
+        The pack attacked last night, but{' '}
+        <span className="bg-yellow px-1">nobody died</span>. The Guard covered
+        exactly the right person.
       </p>
     )
   }
@@ -463,7 +464,7 @@ function DawnPanel({ table }: { table: WerewolfTable }) {
   if (!table.lastKilled) {
     return (
       <p className="font-mono text-[0.8125rem] leading-relaxed text-ink">
-        Semalam nggak ada yang mati.
+        Nobody died last night.
       </p>
     )
   }
@@ -471,9 +472,9 @@ function DawnPanel({ table }: { table: WerewolfTable }) {
   return (
     <p className="font-mono text-[0.8125rem] leading-relaxed text-ink">
       <span className="bg-yellow px-1 font-semibold">
-        {nicknameOf(table, table.lastKilled) ?? 'Seseorang'}
+        {nicknameOf(table, table.lastKilled) ?? 'Somebody'}
       </span>{' '}
-      nggak bangun pagi ini. Perannya udah kebuka di daftar bawah.
+      did not wake up this morning. Their role is open in the list below.
     </p>
   )
 }
@@ -483,28 +484,30 @@ function VerdictPanel({ table }: { table: WerewolfTable }) {
   if (!table.lastLynched) {
     return (
       <p className="font-mono text-[0.8125rem] leading-relaxed text-ink">
-        Suaranya <span className="bg-yellow px-1">seri</span> — nggak ada yang
-        digantung hari ini. Satu hari kebuang.
+        The vote was a <span className="bg-yellow px-1">tie</span> — nobody
+        hangs today. A day thrown away.
       </p>
     )
   }
 
   return (
     <p className="font-mono text-[0.8125rem] leading-relaxed text-ink">
-      Meja milih{' '}
+      The table chose{' '}
       <span className="bg-yellow px-1 font-semibold">
-        {nicknameOf(table, table.lastLynched) ?? 'seseorang'}
+        {nicknameOf(table, table.lastLynched) ?? 'somebody'}
       </span>
-      . Perannya udah kebuka di daftar bawah.
+      . Their role is open in the list below.
     </p>
   )
 }
 
 function outcomeLabel(table: WerewolfTable): string {
-  if (!table.result) return 'Selesai'
-  if (table.result.reason === 'forfeit') return 'Bubar di tengah jalan'
+  if (!table.result) return 'Finished'
+  if (table.result.reason === 'forfeit') return 'Broke up part way through'
 
-  return table.result.team === 'werewolves' ? 'Werewolf menang' : 'Warga menang'
+  return table.result.team === 'werewolves'
+    ? 'The wolves win'
+    : 'The village wins'
 }
 
 // --- Board -----------------------------------------------------------------
@@ -571,18 +574,18 @@ export function WerewolfBoard({
           </h2>
 
           <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink">
-            {!table && busyElsewhere && 'Ada game lain yang lagi jalan.'}
+            {!table && busyElsewhere && 'Another game is already running.'}
             {!table && !busyElsewhere && seated < MIN_PLAYERS &&
-              `Butuh ${MIN_PLAYERS} orang. Baru ${seated} di sini.`}
+              `Needs ${MIN_PLAYERS} people. Only ${seated} here so far.`}
             {!table && !busyElsewhere && seated > MAX_PLAYERS &&
-              `Kebanyakan — ${MAX_PLAYERS} orang batasnya.`}
+              `Too many — ${MAX_PLAYERS} is the limit.`}
             {!table && !busyElsewhere && !wrongSize &&
-              `${seated} orang duduk. Malam pertama nunggu kamu.`}
+              `${seated} seated. The first night is waiting on you.`}
             {table && table.finished && outcomeLabel(table)}
             {table && !table.finished && (
               <>
                 {PHASE_LABEL[table.phase]}
-                {table.night > 0 && ` · malam ke-${table.night}`}
+                {table.night > 0 && ` · night ${table.night}`}
               </>
             )}
           </p>
@@ -594,7 +597,7 @@ export function WerewolfBoard({
           disabled={starting || busyElsewhere || running || wrongSize}
           className={SECONDARY}
         >
-          {table?.finished ? 'Main lagi' : starting ? 'Bagi peran…' : 'Mulai'}
+          {table?.finished ? 'Play again' : starting ? 'Dealing…' : 'Start'}
         </button>
       </div>
 
@@ -608,8 +611,8 @@ export function WerewolfBoard({
           <div className="mt-6">
             {table.phase === 'reveal' && (
               <Waiting>
-                Peran lagi dibagi. Inget baik-baik — nggak ditunjukin lagi
-                sampai permainan selesai.
+                Roles are being dealt. Remember yours — it is not shown again
+                until the game is over.
               </Waiting>
             )}
 
@@ -632,8 +635,8 @@ export function WerewolfBoard({
                 />
               ) : (
                 <Waiting>
-                  Kamu udah mati. Yang hidup lagi berdebat — kamu cuma bisa
-                  ngobrol sama sesama yang udah mati.
+                  You are dead. The living are arguing it out — you can only
+                  talk to the others who are out.
                 </Waiting>
               ))}
 
@@ -642,12 +645,12 @@ export function WerewolfBoard({
                 <div>
                   <p className="font-mono text-[0.75rem] leading-relaxed text-ink-soft">
                     {sent
-                      ? 'Suara kamu udah masuk. Yang lain masih milih — nggak ada yang lihat hitungannya sampai fase ini kelar.'
-                      : 'Tunjuk satu orang yang kamu curigai. Suara disembunyiin sampai semua milih, dan kalau seri nggak ada yang digantung.'}
+                      ? 'Your vote is in. The others are still choosing — nobody sees the count until this phase is over.'
+                      : 'Point at whoever you suspect. Votes stay hidden until everyone has chosen, and a tie hangs nobody.'}
                   </p>
 
                   <TargetList
-                    label="Voting siapa"
+                    label="Vote for who"
                     targets={livingPlayers(table)}
                     chosen={sent}
                     // Voting for yourself is legal — the server accepts it, and
@@ -661,7 +664,7 @@ export function WerewolfBoard({
                 </div>
               ) : (
                 <Waiting>
-                  Kamu udah mati. Yang hidup lagi voting — kamu nggak ikut.
+                  You are dead. The living are voting — you are not part of it.
                 </Waiting>
               ))}
 
@@ -679,9 +682,9 @@ export function WerewolfBoard({
                   <p className="mt-3 font-mono text-[0.75rem] leading-relaxed text-ink-soft">
                     {sessionId !== null &&
                     table.result.winnerSessionIds.includes(sessionId)
-                      ? 'Kamu di pihak yang menang.'
-                      : 'Kamu nggak di pihak yang menang.'}{' '}
-                    Semua peran udah kebuka di daftar bawah.
+                      ? 'You were on the winning side.'
+                      : 'You were not on the winning side.'}{' '}
+                    Every role is open in the list below.
                   </p>
                 )}
               </div>
@@ -701,8 +704,8 @@ export function WerewolfBoard({
 
       {table && (
         <p className="mt-5 font-mono text-[0.6875rem] text-ink-soft">
-          v{table.version} · {table.players.length} pemain ·{' '}
-          {table.dead.length} mati
+          v{table.version} · {table.players.length} players ·{' '}
+          {table.dead.length} dead
         </p>
       )}
     </section>

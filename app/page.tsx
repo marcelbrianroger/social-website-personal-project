@@ -7,10 +7,10 @@ import { getCurrentSession } from "@/lib/session/current-session";
 /**
  * Home.
  *
- * Written in Indonesian, mixing in the German words this audience actually uses
+ * Written in plain, spoken English, keeping the German words this audience uses
  * daily — Anmeldung, Bürgeramt, Mensa, WG-Zimmer, Pontstraße. That mixture is
- * how the people this is for genuinely speak, and it is doing more work than
- * any amount of styling to say who the site belongs to.
+ * how the people this is for genuinely talk, and it is doing more work than any
+ * amount of styling to say who the site belongs to.
  *
  * Every claim is checked against the code: the 24 hours come from
  * DUDU_TTL_SECONDS, the two-per-room from ROOM_CAPACITY, and the nickname is
@@ -28,14 +28,14 @@ export default async function Home() {
       {/* ------------------------------------------------------------- hero */}
       <section className={`${SHELL} pt-14 pb-20 sm:pt-20 sm:pb-24`}>
         <p className="font-mono text-xs lowercase tracking-wide text-ink-soft">
-          mading anonim buat anak indonesia di aachen
+          an anonymous noticeboard for indonesians in aachen
         </p>
 
         <h1
           className="mt-6 max-w-4xl font-display text-[clamp(2.75rem,10.5vw,6rem)] uppercase leading-[0.88] tracking-[-0.03em]"
           style={{ fontVariationSettings: "'wght' 800, 'wdth' 90" }}
         >
-          Ada yang masih <span className={MARKER}>bangun</span>.
+          Someone is still <span className={MARKER}>awake</span>.
         </h1>
 
         {/* Two columns from md up: the pitch reads on the left, the name sits
@@ -43,9 +43,9 @@ export default async function Home() {
         <div className="mt-10 grid gap-10 md:grid-cols-[1fr_auto] md:items-start md:gap-14">
           <div>
             <p className="max-w-xl text-[1.125rem] leading-relaxed text-ink">
-              Tulis apa aja di mading. Hilang sendiri setelah 24 jam. Atau
-              langsung video call sama orang yang lagi online — nggak perlu
-              kenalan dulu, nggak perlu daftar.
+              Write anything on the wall. It disappears on its own after 24
+              hours. Or go straight into a video call with whoever is online —
+              no introductions first, no sign-up.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-3">
@@ -53,13 +53,13 @@ export default async function Home() {
                 href="/wall"
                 className="border-2 border-ink bg-ink px-6 py-3 font-mono text-sm text-paper transition-colors hover:bg-pink hover:text-ink"
               >
-                Buka mading
+                Open the wall
               </Link>
               <Link
                 href="/rooms"
                 className="border-2 border-ink px-6 py-3 font-mono text-sm text-ink transition-colors hover:bg-yellow"
               >
-                Buka ruang video
+                Open a video room
               </Link>
             </div>
           </div>
@@ -67,24 +67,25 @@ export default async function Home() {
           {/* The name, as a printed label. Real data, not a mockup. */}
           <div className="max-w-sm border-2 border-ink bg-stock px-5 py-4 md:w-72">
             <p className="font-mono text-[0.6875rem] lowercase tracking-wide text-ink-soft">
-              namamu di sini
+              your name here
             </p>
             <p
               className="mt-1.5 break-words font-display text-2xl leading-none"
               style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
             >
-              {session ? session.nickname : "belum dikasih"}
+              {session ? session.nickname : "not issued yet"}
             </p>
             <p className="mt-3 max-w-xs text-[0.8125rem] leading-relaxed text-ink-soft">
               {session ? (
                 <>
-                  Dikasih otomatis pas kamu buka halaman ini. Bahasa Jerman, ya…
-                  soalnya kita emang lagi di Jerman.
+                  Handed to you the moment you opened this page. German, yes —
+                  because we are, in fact, in Germany.
                 </>
               ) : (
                 <>
-                  Proxy nggak jalan di path ini, jadi belum ada nama. Cek{" "}
-                  <code className="font-mono">matcher</code> di{" "}
+                  The proxy does not run on this path, so there is no name yet.
+                  Check{" "}
+                  <code className="font-mono">matcher</code> in{" "}
                   <code className="font-mono">proxy.ts</code>.
                 </>
               )}
@@ -97,20 +98,20 @@ export default async function Home() {
       <section className="border-t-2 border-ink py-16 sm:py-20">
         <div className={SHELL}>
           <p className="font-mono text-xs lowercase tracking-wide text-ink-soft">
-            mading
+            the wall
           </p>
 
           <h2
             className="mt-4 max-w-3xl font-display text-[clamp(1.875rem,5vw,3.25rem)] leading-[1.02] tracking-[-0.02em]"
             style={{ fontVariationSettings: "'wght' 800, 'wdth' 92" }}
           >
-            Semua hilang setelah 24 jam.
+            Everything is gone after 24 hours.
           </h2>
 
           <p className="mt-6 max-w-2xl text-[1.0625rem] leading-relaxed text-ink">
-            Siapa aja yang lagi online bisa nempel. Nggak ada arsip, nggak ada
-            undo, nggak bisa diminta balik. Di bawah ini yang paling deket waktu
-            habisnya.
+            Anyone who is online can pin something up. No archive, no undo,
+            nothing you can ask back. Below are the ones closest to coming
+            down.
           </p>
 
           <div className="mt-10">
@@ -123,33 +124,33 @@ export default async function Home() {
       <section className="border-t-2 border-ink py-16 sm:py-20">
         <div className={SHELL}>
           <p className="font-mono text-xs lowercase tracking-wide text-ink-soft">
-            selain mading
+            besides the wall
           </p>
 
-          {/* Satu kartu per tujuan, bukan per pintu masuk. Nyari partner sama
-              masuk pakai ID ruang dua-duanya nyampe di /rooms, jadi dua-duanya
-              diceritain di kartu yang sama — bukan dipisah jadi dua kartu yang
-              kelihatan kayak dua fitur beda. */}
+          {/* One card per destination, not per door. Finding a partner and
+              typing in a room ID both land on /rooms, so both are told on the
+              same card — rather than split into two cards that would read as
+              two separate features. */}
           <div className="mt-10 grid grid-cols-1 gap-y-10 sm:gap-x-10 md:grid-cols-2">
             <article className="flex flex-col border-t-2 border-ink pt-5">
               <h3
                 className="font-display text-xl leading-tight"
                 style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
               >
-                Ruang video
+                Video rooms
               </h3>
               <p className="mt-3 flex-1 text-[0.9375rem] leading-relaxed text-ink">
-                Dua orang per ruang. Pencet sekali terus tunggu sampai ada yang
-                juga lagi nunggu — atau masuk pakai ID ruang kalau udah
-                janjian. Video sama suaranya jalan langsung dari browser ke
-                browser, nggak lewat server kami, jadi di sisi kami emang nggak
-                ada apa-apa buat direkam. Di dalem ruang bisa main tic-tac-toe.
+                Two people per room. Press once and wait until somebody else
+                is waiting too — or type in a room ID if you already arranged
+                it. Video and audio go straight from browser to browser, never
+                through our server, so on our side there is genuinely nothing
+                to record. Inside a room you can play tic-tac-toe.
               </p>
               <Link
                 href="/rooms"
                 className={`mt-5 self-start ${MARKER} py-0.5 text-sm`}
               >
-                Buka ruang
+                Open a room
               </Link>
             </article>
 
@@ -161,16 +162,16 @@ export default async function Home() {
                 Mr. White
               </h3>
               <p className="mt-3 flex-1 text-[0.9375rem] leading-relaxed text-ink">
-                Empat sampai delapan orang, nggak pakai video. Semua pegang satu
-                kata rahasia — kecuali satu orang, yang harus pura-pura tau.
-                Papannya dipegang server; browser kamu cuma bisa minta jalan,
-                nggak pernah bisa nentuin sendiri.
+                Four to eight players, no video. Everyone holds the same
+                secret word — except one, who has to pretend they know it. The
+                board is held by the server; your browser can only ask to move,
+                and never gets to decide for itself.
               </p>
               <Link
                 href="/lobby"
                 className={`mt-5 self-start ${MARKER} py-0.5 text-sm`}
               >
-                buka/gabung permainan
+                open or join a table
               </Link>
             </article>
           </div>
@@ -181,7 +182,7 @@ export default async function Home() {
       <section className="border-t-2 border-ink py-16 sm:py-20">
         <div className={SHELL}>
           <p className="font-mono text-xs lowercase tracking-wide text-ink-soft">
-            aturan
+            the rules
           </p>
 
           <dl className="mt-10 grid grid-cols-1 gap-x-10 gap-y-9 sm:grid-cols-2">
@@ -190,11 +191,11 @@ export default async function Home() {
                 className="font-display text-lg"
                 style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
               >
-                Cuma dari Jerman
+                Germany only
               </dt>
               <dd className="mt-2.5 text-[0.9375rem] leading-relaxed text-ink">
-                Asal permintaan dicek duluan sebelum apa pun jalan. Dari luar
-                Jerman, situs ini nggak jawab sama sekali.
+                Where a request comes from is checked before anything else
+                runs. From outside Germany, this site does not answer at all.
               </dd>
             </div>
 
@@ -203,12 +204,12 @@ export default async function Home() {
                 className="font-display text-lg"
                 style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
               >
-                Nggak ada yang disimpan
+                Nothing is kept
               </dt>
               <dd className="mt-2.5 text-[0.9375rem] leading-relaxed text-ink">
-                Mading nyimpen tulisan 24 jam terus dibuang. Game dihapus begitu
-                ruangnya kosong. Video nggak pernah direkam, soalnya emang nggak
-                pernah nyampe ke kami.
+                The wall holds a note for 24 hours and then throws it away.
+                Games are deleted the moment the room empties. Video is never
+                recorded, because it never reaches us in the first place.
               </dd>
             </div>
 
@@ -217,15 +218,14 @@ export default async function Home() {
                 className="font-display text-lg"
                 style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
               >
-                Nggak ada akun
+                No accounts
               </dt>
               <dd className="mt-2.5 max-w-2xl text-[0.9375rem] leading-relaxed text-ink">
-                Nggak ada yang bisa didaftarin, nggak ada juga yang bisa
-                dihapus.
+                There is nothing to sign up for, and nothing to delete.
                 {session ? (
                   <>
                     {" "}
-                    Ini doang yang situs ini tau tentang kamu:
+                    This is everything the site knows about you:
                     <span className="mt-3 block break-all border-2 border-ink bg-stock px-3 py-2 font-mono text-[0.8125rem]">
                       {session.sessionId}
                     </span>
@@ -233,7 +233,7 @@ export default async function Home() {
                 ) : (
                   <>
                     {" "}
-                    Cuma cookie bertanda tangan isinya satu id sama satu nama.
+                    Just a signed cookie holding one id and one name.
                   </>
                 )}
               </dd>

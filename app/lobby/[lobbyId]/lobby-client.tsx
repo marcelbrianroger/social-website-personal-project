@@ -64,7 +64,7 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
 
   if (lobbyPhase === 'error') {
     return (
-      <div className={`${TABLE_SHELL} py-16`} lang="en">
+      <div className={`${TABLE_SHELL} py-16`}>
         <h1
           className="font-display text-2xl leading-tight"
           style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
@@ -87,7 +87,7 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
 
   if (lobbyPhase !== 'seated') {
     return (
-      <div className={`${TABLE_SHELL} py-16`} lang="en">
+      <div className={`${TABLE_SHELL} py-16`}>
         <p className={EYEBROW}>mr. white · lobby</p>
         <p className="mt-3 font-mono text-sm text-ink-soft">
           {lobbyPhase === 'connecting' ? 'Connecting…' : 'Taking a seat…'}
@@ -99,9 +99,7 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
   // ---------------------------------------------------------------- table
 
   return (
-    // The root layout is lang="id"; this screen's copy is English, and a screen
-    // reader needs telling so it does not read it with Indonesian phonetics.
-    <div lang="en" className={`${TABLE_SHELL} py-10 sm:py-14`}>
+    <div className={`${TABLE_SHELL} py-10 sm:py-14`}>
       <RoomHeader
         lobbyId={lobbyId}
         seated={members.length}

@@ -158,10 +158,10 @@ export function GameBoard({
   }
 
   function turnText(current: TicTacToeState): string {
-    if (!myTurn) return 'Giliran dia.'
+    if (!myTurn) return 'Their turn.'
     return anywhere
-      ? 'Giliran kamu — bebas pilih papan mana aja.'
-      : `Giliran kamu — main di papan ${(current.activeBoardIndex ?? 0) + 1}.`
+      ? 'Your turn — pick any board you like.'
+      : `Your turn — play in board ${(current.activeBoardIndex ?? 0) + 1}.`
   }
 
   function outcomeText(current: GameView): string {
@@ -170,11 +170,11 @@ export function GameBoard({
 
     // A draw returns before this, so the list is never empty by the time it is
     // read — Tic-Tac-Toe wins and forfeits both name exactly one survivor.
-    if (reason === 'draw') return 'Seri.'
+    if (reason === 'draw') return 'Draw.'
     if (winnerSessionIds[0] === sessionId) {
-      return reason === 'forfeit' ? 'Kamu menang — lawannya keluar.' : 'Kamu menang.'
+      return reason === 'forfeit' ? 'You win — they left.' : 'You win.'
     }
-    return reason === 'forfeit' ? 'Gamenya ditinggal.' : 'Kamu kalah.'
+    return reason === 'forfeit' ? 'You walked out of the game.' : 'You lose.'
   }
 
   return (
@@ -188,14 +188,14 @@ export function GameBoard({
             {mine?.label ?? 'Ultimate Tic-Tac-Toe'}
           </h2>
           <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink">
-            {!mine && peerCount === 0 && 'Butuh satu orang lagi di ruang ini.'}
-            {!mine && peerCount > 0 && !busyElsewhere && 'Siap kapan aja.'}
-            {!mine && busyElsewhere && 'Ada game lain yang lagi jalan.'}
+            {!mine && peerCount === 0 && 'Needs one more person in this room.'}
+            {!mine && peerCount > 0 && !busyElsewhere && 'Ready whenever you are.'}
+            {!mine && busyElsewhere && 'Another game is already running.'}
             {mine && mine.finished && outcomeText(mine)}
             {mine && !mine.finished && state && turnText(state)}
             {mine && !mine.finished && myMark && (
               <span className="ml-2 bg-yellow px-1.5 font-mono text-[0.6875rem]">
-                kamu {myMark}
+                you are {myMark}
               </span>
             )}
           </p>
@@ -207,7 +207,7 @@ export function GameBoard({
           disabled={starting || busyElsewhere || Boolean(mine && !mine.finished)}
           className="border-2 border-ink px-5 py-2.5 font-mono text-sm text-ink transition-colors hover:bg-yellow disabled:opacity-40 disabled:hover:bg-transparent"
         >
-          {mine?.finished ? 'Main lagi' : starting ? 'Mulai…' : 'Mulai game'}
+          {mine?.finished ? 'Play again' : starting ? 'Starting…' : 'Start game'}
         </button>
       </div>
 
@@ -263,8 +263,8 @@ export function GameBoard({
                         type="button"
                         onClick={() => move({ board, cell })}
                         disabled={!playable}
-                        aria-label={`Papan ${board + 1}, kotak ${cell + 1}${
-                          mark ? `, ${mark}` : ', kosong'
+                        aria-label={`Board ${board + 1}, square ${cell + 1}${
+                          mark ? `, ${mark}` : ', empty'
                         }`}
                         className={`grid aspect-square place-items-center font-display text-lg text-ink ${cellTone} ${
                           playable
@@ -327,8 +327,8 @@ export function GameBoard({
       {state && !finished && (
         <p className="mt-3 font-mono text-[0.6875rem] text-ink-soft">
           {anywhere
-            ? 'Papan tujuan udah selesai — giliran ini bebas.'
-            : 'Kotak yang kamu ambil nentuin papan lawan berikutnya.'}
+            ? 'The board you were sent to is already decided — this turn is free.'
+            : 'The square you take names the board they have to answer in.'}
         </p>
       )}
 

@@ -73,9 +73,7 @@ export function LobbyEntry() {
   }
 
   return (
-    // The root layout is lang="id"; this whole feature's copy is English, and a
-    // screen reader needs telling so it is not read with Indonesian phonetics.
-    <div lang="en" className={`${SHELL} py-12 sm:py-16`}>
+    <div className={`${SHELL} py-12 sm:py-16`}>
       <p className="font-mono text-xs lowercase tracking-wide text-ink-soft">
         mr. white
       </p>

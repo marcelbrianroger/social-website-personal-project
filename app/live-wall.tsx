@@ -48,32 +48,32 @@ interface Seed {
  */
 const SEED: Seed[] = [
   {
-    body: 'ada yang tau tempat potong rambut murah deket Pontstraße?',
+    body: 'anyone know somewhere cheap for a haircut near Pontstraße?',
     author: 'LeiseUhu204',
     remainingMs: 14_000,
   },
   {
-    body: 'Anmeldung akhirnya kelar. cuma butuh tiga bulan.',
+    body: 'Anmeldung finally done. only took three months.',
     author: 'NebelBrücke881',
     remainingMs: 47_000,
   },
   {
-    body: 'jam 2 pagi di sini, jam 7 pagi di rumah. mama udah bangun.',
+    body: '2am here, 7am back home. mum is already up.',
     author: 'WinterFunke126',
     remainingMs: 96_000,
   },
   {
-    body: 'kangen nasi padang. bukan yang di restoran, yang di warung deket rumah.',
+    body: 'missing nasi padang. not the restaurant kind — the warung down the road kind.',
     author: 'SanftOtter332',
     remainingMs: 168_000,
   },
   {
-    body: 'gelap terus dari jam 4 sore. kapan panas lagi ya',
+    body: 'dark from 4pm every single day. when does it get warm again',
     author: 'SturmRabe549',
     remainingMs: 243_000,
   },
   {
-    body: 'nulis ini soalnya besok pasti udah hilang',
+    body: 'writing this because by tomorrow it will be gone',
     author: 'FlinkFuchs417',
     remainingMs: 391_000,
   },
@@ -81,16 +81,16 @@ const SEED: Seed[] = [
 
 /** Slips that go up as pins come free. */
 const INCOMING: Array<Omit<Seed, 'remainingMs'>> = [
-  { body: 'Indomie restock di Asia Markt. buruan sebelum abis', author: 'KlugReiher773' },
-  { body: 'besok ujian Mathe. doain ya', author: 'ZartWolke615' },
-  { body: 'ada yang mau nemenin ke Bürgeramt? aku nggak ngerti formulirnya', author: 'FroheIgel288' },
-  { body: 'first snow. belum pernah lihat salju seumur hidup', author: 'MutigLuchs902' },
-  { body: 'udah dua minggu nggak ngomong bahasa Indonesia sama siapa pun', author: 'GoldenAnker451' },
+  { body: 'Indomie restocked at the Asia Markt. go before it is gone', author: 'KlugReiher773' },
+  { body: 'Mathe exam tomorrow. wish me luck', author: 'ZartWolke615' },
+  { body: 'anyone want to come to the Bürgeramt with me? the form makes no sense', author: 'FroheIgel288' },
+  { body: 'first snow. never seen snow in my life', author: 'MutigLuchs902' },
+  { body: 'two weeks now without speaking Indonesian to anyone', author: 'GoldenAnker451' },
   { body: 'wer ist noch wach', author: 'StolzKranich137' },
-  { body: 'ketemu orang random di video, ngobrol sejam soal bakso. worth it', author: 'HellSpecht660' },
-  { body: 'mensa hari ini lumayan. jarang jarang', author: 'AbendBiber375' },
-  { body: 'WG-Zimmer masih kosong satu di Burtscheid kalau ada yang nyari', author: 'RuhigDachs818' },
-  { body: 'kadang cuma pengen ada yang bilang halo', author: 'SilbernTurm240' },
+  { body: 'met a stranger on video, talked about bakso for an hour. worth it', author: 'HellSpecht660' },
+  { body: 'mensa was actually decent today. that never happens', author: 'AbendBiber375' },
+  { body: 'one WG-Zimmer still free in Burtscheid if anyone is looking', author: 'RuhigDachs818' },
+  { body: 'sometimes you just want somebody to say hello', author: 'SilbernTurm240' },
 ]
 
 /**
@@ -250,8 +250,8 @@ export function LiveWall() {
                       readable form is given once and the display hidden. */}
                   <span aria-hidden="true">{formatRemaining(note.remainingMs)}</span>
                   <span className="sr-only">
-                    dicopot kurang dari{' '}
-                    {Math.max(1, Math.ceil(note.remainingMs / 60_000))} menit lagi
+                    comes down in under{' '}
+                    {Math.max(1, Math.ceil(note.remainingMs / 60_000))} minutes
                   </span>
                 </span>
               </div>
@@ -264,7 +264,7 @@ export function LiveWall() {
         <span className="bg-pink px-1.5 text-paper tabular-nums">
           {String(takenDown).padStart(2, '0')}
         </span>{' '}
-        kertas udah dicopot sejak kamu buka halaman ini.
+        notes have come down since you opened this page.
       </p>
     </div>
   )

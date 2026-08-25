@@ -10,11 +10,11 @@ import { QuestionsBoard } from './questions-board'
 import { VideoTile } from './video-tile'
 
 const PHASE_LABEL: Record<string, string> = {
-  idle: 'belum nyambung',
-  'requesting-media': 'minta izin kamera',
-  joining: 'lagi masuk',
-  searching: 'lagi nyari',
-  'in-room': 'di dalam ruang',
+  idle: 'not connected',
+  'requesting-media': 'asking for the camera',
+  joining: 'joining',
+  searching: 'searching',
+  'in-room': 'in the room',
   error: 'error',
 }
 
@@ -94,7 +94,7 @@ export function RoomClient() {
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
           <div className="flex items-baseline gap-2">
             <span className="font-mono text-[0.6875rem] lowercase tracking-wide text-ink-soft">
-              ruang
+              room
             </span>
             <span className="bg-yellow px-1.5 font-mono text-sm text-ink">
               {roomId}
@@ -104,7 +104,7 @@ export function RoomClient() {
           <ConnectionStatus
             connected
             nickname={session?.nickname ?? null}
-            detail={peer ? peer.connectionState : 'nunggu partner'}
+            detail={peer ? peer.connectionState : 'waiting for a partner'}
           />
         </div>
 
@@ -135,10 +135,10 @@ export function RoomClient() {
             <VideoTile
               className="h-full w-full"
               stream={localStream}
-              label={session ? `${session.nickname} (kamu)` : 'Kamu'}
+              label={session ? `${session.nickname} (you)` : 'You'}
               muted
               mirrored
-              status={cameraEnabled && localStream ? undefined : 'kamera mati'}
+              status={cameraEnabled && localStream ? undefined : 'camera off'}
             />
           </div>
 
@@ -159,7 +159,7 @@ export function RoomClient() {
             // Clear of both the tile's own centred placeholder and the control
             // bar under it.
             <p className="pointer-events-none absolute inset-x-0 bottom-[4.5rem] z-10 mx-auto w-fit max-w-[calc(100%-1.5rem)] border-2 border-ink bg-ink px-4 py-2 text-center font-mono text-xs text-paper">
-              Nunggu orang lain masuk ke{' '}
+              Waiting for somebody else to join{' '}
               <span className="bg-yellow px-1 text-ink">{roomId}</span>
             </p>
           )}
@@ -173,7 +173,7 @@ export function RoomClient() {
               aria-pressed={!micEnabled}
               className={`pointer-events-auto ${micChip}`}
             >
-              {micEnabled ? 'Matiin mic' : 'Nyalain mic'}
+              {micEnabled ? 'Mute mic' : 'Unmute mic'}
             </button>
 
             <button
@@ -182,7 +182,7 @@ export function RoomClient() {
               aria-pressed={!cameraEnabled}
               className={`pointer-events-auto ${cameraChip}`}
             >
-              {cameraEnabled ? 'Matiin kamera' : 'Nyalain kamera'}
+              {cameraEnabled ? 'Camera off' : 'Camera on'}
             </button>
 
             <button
@@ -190,7 +190,7 @@ export function RoomClient() {
               onClick={leave}
               className={`pointer-events-auto ${CONTROL} bg-paper text-ink hover:bg-pink`}
             >
-              Keluar
+              Leave
             </button>
           </div>
         </section>
@@ -227,13 +227,13 @@ export function RoomClient() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="font-mono text-xs lowercase tracking-wide text-ink-soft">
-            ruang video
+            video rooms
           </p>
           <h1
             className="mt-3 font-display text-[clamp(1.875rem,5vw,3rem)] leading-[1.02] tracking-[-0.02em]"
             style={{ fontVariationSettings: "'wght' 800, 'wdth' 92" }}
           >
-            Berdua aja, nggak lewat siapa-siapa.
+            Just the two of you, through nobody else.
           </h1>
         </div>
 
@@ -247,7 +247,7 @@ export function RoomClient() {
       {/*
        * Two ways in, one panel.
        *
-       * These used to be two full-width blocks with an "atau" rule set between
+       * These used to be two full-width blocks with an "or" rule set between
        * them, which spent most of a screen saying that a button and a text
        * field are alternatives. The hairline between the halves says it
        * instead: a 2px gap over an ink ground is the same rule, drawn once.
@@ -259,12 +259,12 @@ export function RoomClient() {
               className="font-display text-xl leading-tight"
               style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
             >
-              Cari teman ngobrol
+              Find someone to talk to
             </h2>
             <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink">
               {searching
-                ? `Lagi nunggu partner${queuePosition ? ` · nomor ${queuePosition} di antrean` : ''}…`
-                : 'Pencet sekali. Begitu ada orang lain yang juga nunggu, kalian langsung dimasukin ke satu ruang.'}
+                ? `Waiting for a partner${queuePosition ? ` · number ${queuePosition} in the queue` : ''}…`
+                : 'Press once. The moment somebody else is waiting too, the two of you are put in a room together.'}
             </p>
           </div>
 
@@ -274,7 +274,7 @@ export function RoomClient() {
               onClick={cancelMatch}
               className={`${SECONDARY} self-start`}
             >
-              Berhenti nyari
+              Stop searching
             </button>
           ) : (
             <button
@@ -283,7 +283,7 @@ export function RoomClient() {
               disabled={busy}
               className={`${PRIMARY} self-start`}
             >
-              Cari sekarang
+              Search now
             </button>
           )}
         </div>
@@ -300,10 +300,10 @@ export function RoomClient() {
               className="font-display text-xl leading-tight"
               style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
             >
-              Udah janjian?
+              Already arranged it?
             </h2>
             <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink">
-              Masuk pakai ID ruang yang sama. Satu ruang cuma muat dua orang.
+              Join with the same room ID. A room only holds two people.
             </p>
           </div>
 
@@ -313,7 +313,7 @@ export function RoomClient() {
               onChange={(event) => setInput(event.target.value)}
               disabled={busy || searching}
               placeholder="aachen-1"
-              aria-label="ID ruang"
+              aria-label="Room ID"
               className="min-w-32 flex-1 border-2 border-ink bg-paper px-4 py-2.5 font-mono text-sm text-ink outline-none placeholder:text-ink-soft/70 disabled:opacity-50"
             />
             <button
@@ -321,7 +321,7 @@ export function RoomClient() {
               disabled={busy || searching || !input.trim()}
               className={SECONDARY}
             >
-              {busy ? 'Masuk…' : 'Masuk'}
+              {busy ? 'Joining…' : 'Join'}
             </button>
           </div>
         </form>
@@ -343,10 +343,10 @@ export function RoomClient() {
           <VideoTile
             className="aspect-video w-full flex-1 sm:max-w-2xl"
             stream={localStream}
-            label={session ? `${session.nickname} (kamu)` : 'Kamu'}
+            label={session ? `${session.nickname} (you)` : 'You'}
             muted
             mirrored
-            status={cameraEnabled ? undefined : 'kamera mati'}
+            status={cameraEnabled ? undefined : 'camera off'}
           />
 
           <div className="flex flex-wrap gap-3 sm:flex-col sm:items-start">
@@ -356,7 +356,7 @@ export function RoomClient() {
               aria-pressed={!micEnabled}
               className={SECONDARY}
             >
-              {micEnabled ? 'Matiin mic' : 'Nyalain mic'}
+              {micEnabled ? 'Mute mic' : 'Unmute mic'}
             </button>
             <button
               type="button"
@@ -364,7 +364,7 @@ export function RoomClient() {
               aria-pressed={!cameraEnabled}
               className={SECONDARY}
             >
-              {cameraEnabled ? 'Matiin kamera' : 'Nyalain kamera'}
+              {cameraEnabled ? 'Camera off' : 'Camera on'}
             </button>
           </div>
         </section>
@@ -372,10 +372,11 @@ export function RoomClient() {
 
       {!turnAvailable && (
         <p className="mt-10 max-w-2xl border-t-2 border-ink pt-5 text-sm leading-relaxed text-ink-soft">
-          Belum ada server TURN, jadi cuma STUN yang jalan. Dua orang di jaringan
-          yang sama bisa nyambung; kalau di balik symmetric NAT bisa mentok di{' '}
-          <code className="font-mono text-ink">checking</code> dan nggak pernah
-          nyambung.
+          There is no TURN server yet, so only STUN is running. Two people on
+          the same network will connect; behind a symmetric NAT the call can
+          stall at{' '}
+          <code className="font-mono text-ink">checking</code> and never connect
+          at all.
         </p>
       )}
     </div>

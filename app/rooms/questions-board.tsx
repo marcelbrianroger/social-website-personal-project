@@ -49,13 +49,13 @@ function OutcomeLine({
   if (table.result.reason === 'forfeit') {
     const stayed = table.result.winnerSessionIds[0] === sessionId
     return (
-      <>{stayed ? 'Lawan kamu keluar duluan.' : 'Kamu keluar dari sesi ini.'}</>
+      <>{stayed ? 'Your partner left first.' : 'You walked out of this session.'}</>
     )
   }
 
   // Co-operative: finishing names both of them, so there is no loser to write
   // a line for.
-  return <>Selesai. 36 pertanyaan, berdua.</>
+  return <>Done. Thirty-six questions, the two of you.</>
 }
 
 /**
@@ -77,7 +77,7 @@ function QuestionCard({
     return (
       <div className="mt-6 border-2 border-ink bg-paper p-6">
         <p className="font-mono text-[0.6875rem] uppercase tracking-wide text-ink-soft">
-          Giliran kamu yang baca
+          Your turn to read
         </p>
         <p
           className="mt-3 font-display text-2xl leading-snug text-ink"
@@ -94,10 +94,11 @@ function QuestionCard({
     // load, and this is a card lying face down on purpose.
     <div className="mt-6 border-2 border-dashed border-rule bg-stock p-6">
       <p className="font-mono text-[0.6875rem] uppercase tracking-wide text-ink-soft">
-        Kartu lagi dipegang {askerNickname(table)}
+        {askerNickname(table)} is holding the card
       </p>
       <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-soft">
-        Giliran {askerNickname(table)} yang baca pertanyaannya — kamu jawab dulu, abis itu gantian dia.
+        {askerNickname(table)} reads the question out — you answer first, then
+        they do.
       </p>
     </div>
   )
@@ -127,10 +128,10 @@ function DarePanel({
   return (
     <div className="mt-6 border-2 border-ink bg-yellow p-6">
       <p className="font-mono text-[0.6875rem] uppercase tracking-wide text-ink">
-        {mine ? 'Hukuman buat kamu' : `Hukuman buat ${performer}`}
+        {mine ? 'Your penalty' : `Penalty for ${performer}`}
         {' · '}
         {/* Skipping is what the veto bought; naming it keeps the cost visible. */}
-        pertanyaan {dare.questionIndex + 1} dilewati
+        question {dare.questionIndex + 1} skipped
       </p>
 
       <p
@@ -143,17 +144,17 @@ function DarePanel({
       <div className="mt-5 flex flex-wrap items-center gap-4">
         {canResolve ? (
           <button type="button" onClick={onResolve} className={PRIMARY}>
-            Udah dilakuin
+            They did it
           </button>
         ) : (
           <p className="font-mono text-sm text-ink">
-            Nunggu {partnerOf(table, sessionId)?.nickname ?? 'lawan kamu'} mastiin…
+            Waiting for {partnerOf(table, sessionId)?.nickname ?? 'your partner'} to confirm…
           </p>
         )}
 
         {!mine && (
           <p className="text-[0.9375rem] leading-relaxed text-ink">
-            Lagi lihat {performer} ngerjain hukumannya…
+            Watching {performer} do their penalty…
           </p>
         )}
 
@@ -161,7 +162,7 @@ function DarePanel({
           // The partner holds the only button, so the clock is the promise that
           // the room cannot be frozen by one person wandering off.
           <span className="ml-auto font-mono text-[0.6875rem] text-ink">
-            lanjut otomatis dalam {Math.floor(seconds / 60)}:
+            moves on automatically in {Math.floor(seconds / 60)}:
             {String(seconds % 60).padStart(2, '0')}
           </span>
         )}
@@ -205,12 +206,12 @@ export function QuestionsBoard({
             className="font-display text-xl leading-tight"
             style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
           >
-            36 Pertanyaan
+            36 Questions
           </h2>
           <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink">
-            {!table && peerCount === 0 && 'Butuh satu orang lagi di ruang ini.'}
-            {!table && peerCount > 0 && !busyElsewhere && 'Ngobrol beneran, 36 pertanyaan.'}
-            {!table && busyElsewhere && 'Ada game lain yang lagi jalan.'}
+            {!table && peerCount === 0 && 'Needs one more person in this room.'}
+            {!table && peerCount > 0 && !busyElsewhere && 'A real conversation, in thirty-six questions.'}
+            {!table && busyElsewhere && 'Another game is already running.'}
             {table && table.finished && (
               <OutcomeLine table={table} sessionId={sessionId} />
             )}
@@ -224,7 +225,7 @@ export function QuestionsBoard({
           disabled={starting || busyElsewhere || Boolean(table && !table.finished)}
           className={SECONDARY}
         >
-          {table?.finished ? 'Ulang lagi' : starting ? 'Mulai…' : 'Mulai'}
+          {table?.finished ? 'Go again' : starting ? 'Starting…' : 'Start'}
         </button>
       </div>
 
@@ -268,7 +269,7 @@ export function QuestionsBoard({
                 disabled={!canAct}
                 className={PRIMARY}
               >
-                Lanjut
+                Next
               </button>
 
               <button
@@ -278,8 +279,8 @@ export function QuestionsBoard({
                 className={SECONDARY}
                 title={
                   myVetos > 0
-                    ? 'Nolak jawab, tapi ada hukumannya'
-                    : 'Jatah veto kamu udah habis'
+                    ? 'Refuse to answer — there is a penalty'
+                    : 'You have used up your vetoes'
                 }
               >
                 Veto
@@ -287,8 +288,8 @@ export function QuestionsBoard({
 
               <span className="font-mono text-[0.6875rem] text-ink-soft">
                 {myVetos > 0
-                  ? `sisa ${myVetos} veto · ada hukumannya`
-                  : 'veto kamu udah kepakai'}
+                  ? `${myVetos} veto left · there is a penalty`
+                  : 'your veto is spent'}
               </span>
             </div>
           )}

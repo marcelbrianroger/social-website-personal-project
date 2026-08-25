@@ -8,8 +8,8 @@ import "./globals.css";
  * Type.
  *
  * Bricolage Grotesque is deliberately a little awkward — the flat-topped 'a',
- * the odd 'g'. Set heavy and tight it reads as a hand-lettered mading header
- * rather than a corporate display face.
+ * the odd 'g'. Set heavy and tight it reads as a hand-lettered noticeboard
+ * header rather than a corporate display face.
  *
  * Courier Prime is a real typewriter face, and it is doing the most work of the
  * three: every timestamp, nickname and label is "typed", which is what sells
@@ -36,9 +36,9 @@ const courier = Courier_Prime({
 });
 
 export const metadata: Metadata = {
-  title: "Social Aachen Website — ada yang masih bangun",
+  title: "Social Aachen Website — someone is still awake",
   description:
-    "Mading anonim buat anak Indonesia di Aachen. Tulis apa aja, hilang sendiri setelah 24 jam. Video call sama yang lagi online. Nggak perlu daftar.",
+    "An anonymous noticeboard for Indonesians in Aachen. Write anything; it deletes itself after 24 hours. Video call whoever is online. No sign-up.",
 };
 
 export default function RootLayout({
@@ -48,7 +48,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="id"
+      lang="en"
       className={`${bricolage.variable} ${karla.variable} ${courier.variable} h-full`}
     >
       <body className="min-h-full flex flex-col bg-paper text-ink">
