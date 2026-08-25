@@ -136,17 +136,30 @@ GEO_FALLBACK                allow
 GEO_BYPASS_LOCALHOST        false
 ```
 
-Optionally, to enable the TURN relay (see Known gaps if you skip it):
+And the TURN relay, without which cross-network calls fail (see Known gaps):
 
 ```
-TURN_URL                    turn:relay.example.com:3478?transport=udp,turns:relay.example.com:5349
-TURN_STATIC_AUTH_SECRET     <the provider's static-auth-secret>
+CLOUDFLARE_TURN_KEY_ID      <from the Cloudflare dashboard>
+CLOUDFLARE_TURN_API_TOKEN   <shown once at key creation>
 TURN_TTL_SECONDS            43200
 ```
 
+Create the key under **Realtime → TURN Keys** in the Cloudflare dashboard. TURN
+and the Realtime SFU share one 1,000 GB/month free allowance, then cost $0.05
+per real-time GB relayed; only pairs that actually need a relay consume it.
+
 These are server-side only — no `NEXT_PUBLIC_` prefix, deliberately.
-`app/api/ice/route.ts` mints per-visitor credentials from the secret, so the
-browser never receives anything reusable.
+`app/api/ice/route.ts` exchanges the token for short-lived per-visitor
+credentials, so the browser never receives anything reusable.
+
+To verify after deploying, with a session cookie in hand:
+
+```
+curl -s -c /tmp/cj https://<your-domain>/api/ice | grep -o 'turn:[^"]*'
+```
+
+An empty result means the variables did not take effect — the route degrades to
+STUN silently by design, and logs the reason in the Vercel function logs.
 
 `SOCKET_URL` is read per request by `/api/socket-ticket`, which hands it to the
 browser alongside the handshake ticket. Editing it in the dashboard therefore
@@ -200,10 +213,13 @@ WebRTC — they will connect via host candidates even when nothing else would.
 
 ## Known gaps
 
-- **TURN is supported but optional.** Leave `TURN_URL` and
-  `TURN_STATIC_AUTH_SECRET` unset and the app runs on STUN alone — pairs behind
-  symmetric NAT (roughly 10–20% of real pairs) will sit at `checking` forever.
-  Games, lobby, chat and the wall are unaffected; this is video/audio only. The
+- **TURN is optional in code, effectively mandatory in production.** Leave
+  `CLOUDFLARE_TURN_KEY_ID` and `CLOUDFLARE_TURN_API_TOKEN` unset and the app
+  runs on STUN alone — pairs behind symmetric NAT or carrier-grade NAT reach
+  `connecting` and then `failed`. That is not a rare edge case for a
+  Germany-locked deployment: DS-Lite is common on consumer lines and has no
+  reachable IPv4 path at all, and every mobile connection is CGNAT. Games,
+  lobby, chat and the wall are unaffected; this is video/audio only. The
   `/rooms` page shows a notice while no relay is configured.
 - **Single socket instance.** The Redis adapter supports scaling, but games hold
   in-memory state, so a restart or redeploy drops every live game.

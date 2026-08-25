@@ -97,8 +97,7 @@ function QuestionCard({
         Kartu lagi dipegang {askerNickname(table)}
       </p>
       <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-soft">
-        Giliran {askerNickname(table)} yang baca pertanyaannya — dengerin aja
-        dulu, nggak usah ngintip.
+        Giliran {askerNickname(table)} yang baca pertanyaannya — kamu jawab dulu, abis itu gantian dia.
       </p>
     </div>
   )
@@ -198,14 +197,8 @@ export function QuestionsBoard({
   const canAct = Boolean(table && !table.finished && sessionId && table.actors.includes(sessionId))
   const dare = table?.activeDare ?? null
 
-  // Moving on belongs to whoever can actually SEE the question — they are the
-  // only one who knows whether it has been asked yet. Refusing does not: the
-  // person being asked is the one who wants out of it.
-  const canAdvance = Boolean(table && !table.finished && isMyTurn(table, sessionId))
-  const canVeto = canAct && myVetos > 0
-
   return (
-    <section className="mt-10 border-2 border-ink bg-stock p-6">
+    <section className="border-2 border-ink bg-stock p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2
@@ -272,13 +265,8 @@ export function QuestionsBoard({
               <button
                 type="button"
                 onClick={() => move({ type: 'next' })}
-                disabled={!canAdvance}
+                disabled={!canAct}
                 className={PRIMARY}
-                title={
-                  canAdvance
-                    ? 'Lanjut ke pertanyaan berikutnya'
-                    : `Yang megang kartu (${askerNickname(table)}) yang mencet lanjut`
-                }
               >
                 Lanjut
               </button>
@@ -286,7 +274,7 @@ export function QuestionsBoard({
               <button
                 type="button"
                 onClick={() => move({ type: 'veto' })}
-                disabled={!canVeto}
+                disabled={!canAct || myVetos <= 0}
                 className={SECONDARY}
                 title={
                   myVetos > 0
@@ -298,16 +286,9 @@ export function QuestionsBoard({
               </button>
 
               <span className="font-mono text-[0.6875rem] text-ink-soft">
-                {/*
-                 * Says why Lanjut is dead before it says anything about vetoes.
-                 * A greyed primary button with no explanation reads as broken,
-                 * and this is the state the listener spends half the game in.
-                 */}
-                {!canAdvance
-                  ? `${askerNickname(table)} yang mencet lanjut`
-                  : myVetos > 0
-                    ? `sisa ${myVetos} veto · ada hukumannya`
-                    : 'veto kamu udah kepakai'}
+                {myVetos > 0
+                  ? `sisa ${myVetos} veto · ada hukumannya`
+                  : 'veto kamu udah kepakai'}
               </span>
             </div>
           )}

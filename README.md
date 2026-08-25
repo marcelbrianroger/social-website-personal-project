@@ -306,8 +306,10 @@ two different primitives.
 **The moderation filter is a heuristic placeholder,** not the AI filter
 `CLAUDE.md` calls for.
 
-**No TURN server.** Only public STUN is configured, so peers behind symmetric
-NAT will not connect.
+**TURN must be configured per deployment.** `app/api/ice/route.ts` mints
+Cloudflare Realtime relay credentials, but only when `CLOUDFLARE_TURN_KEY_ID`
+and `CLOUDFLARE_TURN_API_TOKEN` are set. Without them the app runs on STUN
+alone and peers behind symmetric NAT or DS-Lite fail to connect.
 
 **Postgres is not written by the realtime server.**
 

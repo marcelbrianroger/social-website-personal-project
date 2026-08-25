@@ -178,7 +178,7 @@ export function GameBoard({
   }
 
   return (
-    <section className="mt-10 border-2 border-ink bg-stock p-6">
+    <section className="border-2 border-ink bg-stock p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2
