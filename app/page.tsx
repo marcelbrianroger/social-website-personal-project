@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { SHELL } from "@/app/chrome";
 import { LiveWall } from "@/app/live-wall";
+import { NameCard } from "@/app/name-card";
 import { getCurrentSession } from "@/lib/session/current-session";
 
 /**
@@ -67,33 +68,9 @@ export default async function Home() {
             </div>
           </div>
 
-          {/* The name, as a printed label. Real data, not a mockup. */}
-          <div className="max-w-sm border-2 border-ink bg-stock px-5 py-4 md:w-72">
-            <p className="font-mono text-[0.6875rem] lowercase tracking-wide text-ink-soft">
-              your name here
-            </p>
-            <p
-              className="mt-1.5 break-words font-display text-2xl leading-none"
-              style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
-            >
-              {session ? session.nickname : "not issued yet"}
-            </p>
-            <p className="mt-3 max-w-xs text-[0.8125rem] leading-relaxed text-ink-soft">
-              {session ? (
-                <>
-                  Handed to you the moment you opened this page. German, yes,
-                  because we are, in fact, in Germany.
-                </>
-              ) : (
-                <>
-                  The proxy does not run on this path, so there is no name yet.
-                  Check{" "}
-                  <code className="font-mono">matcher</code> in{" "}
-                  <code className="font-mono">proxy.ts</code>.
-                </>
-              )}
-            </p>
-          </div>
+          {/* The name, as a printed label — and the one thing on this page the
+              visitor gets to overwrite. Real data, not a mockup. */}
+          <NameCard session={session} />
         </div>
       </section>
 
