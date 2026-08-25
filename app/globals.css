@@ -99,17 +99,27 @@ body {
  * which is what makes it read as paper coming off a board rather than a div
  * fading out.
  */
+/*
+ * Both keyframes carry --nudge-x / --nudge-y, the per-slot offset that makes
+ * slips overlap. A keyframe writes the whole transform, and `both` fill leaves
+ * the last one in force forever — so a slip that omitted the nudge here would
+ * quietly slide back into the grid the moment its animation finished, and stay
+ * there. The end state has to be the resting transform exactly.
+ */
 @keyframes unpin {
   0% {
-    transform: rotate(var(--tilt, 0deg));
+    transform: rotate(var(--tilt, 0deg))
+      translate(var(--nudge-x, 0px), var(--nudge-y, 0px));
     opacity: 1;
   }
   35% {
-    transform: rotate(calc(var(--tilt, 0deg) + 7deg));
+    transform: rotate(calc(var(--tilt, 0deg) + 7deg))
+      translate(var(--nudge-x, 0px), var(--nudge-y, 0px));
     opacity: 1;
   }
   100% {
-    transform: rotate(calc(var(--tilt, 0deg) + 14deg)) translateY(28px);
+    transform: rotate(calc(var(--tilt, 0deg) + 14deg))
+      translate(var(--nudge-x, 0px), calc(var(--nudge-y, 0px) + 28px));
     opacity: 0;
   }
 }
@@ -117,11 +127,13 @@ body {
 @keyframes pin-up {
   from {
     opacity: 0;
-    transform: rotate(calc(var(--tilt, 0deg) - 4deg)) translateY(-10px);
+    transform: rotate(calc(var(--tilt, 0deg) - 4deg))
+      translate(var(--nudge-x, 0px), calc(var(--nudge-y, 0px) - 10px));
   }
   to {
     opacity: 1;
-    transform: rotate(var(--tilt, 0deg));
+    transform: rotate(var(--tilt, 0deg))
+      translate(var(--nudge-x, 0px), var(--nudge-y, 0px));
   }
 }
 

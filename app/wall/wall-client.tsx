@@ -3,41 +3,9 @@
 import { useState } from "react";
 
 import { ConnectionStatus, SHELL, SystemNote } from "@/app/chrome";
+import { BOARD, WallSlip } from "@/app/wall-slip";
 import { useDuduWall } from "@/lib/dudu/use-dudu-wall";
 import { MAX_MESSAGE_LENGTH } from "@/lib/socket/events";
-
-/** How long until this slip comes down. */
-function timeLeft(expiresAt: string): string {
-  const remaining = new Date(expiresAt).getTime() - Date.now();
-  if (remaining <= 0) return "gone";
-
-  const hours = Math.floor(remaining / 3_600_000);
-  if (hours >= 1) return `${hours}h left`;
-
-  const minutes = Math.floor(remaining / 60_000);
-  if (minutes >= 1) return `${minutes}m left`;
-
-  return `${Math.floor(remaining / 1000)}s left`;
-}
-
-/** Under an hour, it is close enough to the end to mark. */
-function isSoon(expiresAt: string): boolean {
-  return new Date(expiresAt).getTime() - Date.now() < 3_600_000;
-}
-
-/**
- * Deterministic tilts and nudges, so the board looks pinned rather than laid
- * out. The nudge is a translate, not a margin, so it cannot break the grid.
- */
-const TILTS = [-1.6, 1.1, -0.7, 1.4, -1.2, 0.6];
-const NUDGES = [
-  [0, 0],
-  [-5, 3],
-  [4, -2],
-  [-3, -4],
-  [5, 3],
-  [-4, 2],
-] as const;
 
 export function WallClient() {
   const { messages, session, connected, error, posting, post, clearError } =
@@ -123,46 +91,10 @@ export function WallClient() {
           The wall is empty. Pin up the first one.
         </p>
       ) : (
-        <ul className="board mt-10 grid grid-cols-1 items-start p-3 sm:grid-cols-2 lg:grid-cols-3">
-          {messages.map((message, index) => {
-            const tilt = TILTS[index % TILTS.length]!;
-            const [nudgeX, nudgeY] = NUDGES[index % NUDGES.length]!;
-
-            return (
-              <li
-                key={message.id}
-                style={{
-                  transform: `rotate(${tilt}deg) translate(${nudgeX}px, ${nudgeY}px)`,
-                  zIndex: index % 2 === 0 ? 2 : 1,
-                }}
-                className="slip relative flex min-h-44 flex-col justify-between border-2 border-ink bg-stock px-6 pt-10 pb-5"
-              >
-                <span
-                  aria-hidden="true"
-                  className="absolute left-[13px] top-[13px] size-2.5 rounded-full bg-pink"
-                />
-
-                <p className="whitespace-pre-wrap break-words text-[1.0625rem] leading-snug text-ink">
-                  {message.body}
-                </p>
-
-                <div className="mt-6 flex items-baseline justify-between gap-3 font-mono text-[0.6875rem]">
-                  <span className="truncate text-ink-soft">
-                    {message.nickname}
-                  </span>
-                  <span
-                    className={`shrink-0 ${
-                      isSoon(message.expiresAt)
-                        ? "bg-pink px-1 text-paper"
-                        : "text-ink-soft"
-                    }`}
-                  >
-                    {timeLeft(message.expiresAt)}
-                  </span>
-                </div>
-              </li>
-            );
-          })}
+        <ul className={`${BOARD} mt-10`}>
+          {messages.map((message, index) => (
+            <WallSlip key={message.id} message={message} slot={index} />
+          ))}
         </ul>
       )}
 

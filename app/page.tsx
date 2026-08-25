@@ -15,6 +15,9 @@ import { getCurrentSession } from "@/lib/session/current-session";
  * Every claim is checked against the code: the 24 hours come from
  * DUDU_TTL_SECONDS, the two-per-room from ROOM_CAPACITY, and the nickname is
  * whatever lib/session/nickname.ts actually issued this visitor.
+ *
+ * The board below is the wall itself, not a picture of it — the same socket,
+ * history and expiry /wall runs on. Nothing on this page is written by us.
  */
 
 /** Ink on yellow — a highlighter pass. The only way colour touches type here. */
@@ -110,8 +113,8 @@ export default async function Home() {
 
           <p className="mt-6 max-w-2xl text-[1.0625rem] leading-relaxed text-ink">
             Anyone who is online can pin something up. No archive, no undo,
-            nothing you can ask back. Below are the ones closest to coming
-            down.
+            nothing you can ask back. Below is what is on it right now, written
+            by whoever was here before you.
           </p>
 
           <div className="mt-10">
