@@ -347,11 +347,11 @@ export const MOVE_ERROR_TEXT: Record<string, string> = {
   // Mr. White. `wrong-phase` is the common one: a 45-second vote can close
   // between the click and the packet arriving.
   'wrong-phase': 'That phase has already moved on.',
-  eliminated: 'You are out — the living are deciding this one.',
+  eliminated: 'You are out. The living are deciding this one.',
   'invalid-target': 'That is not someone you can vote for.',
   'target-eliminated': 'They are already out.',
   'not-mr-white': 'Only Mr. White may guess the word.',
-  'not-one-word': 'One word only — no spaces.',
+  'not-one-word': 'One word only, no spaces.',
   'clue-too-long': 'That is too long for one word.',
 
   // 36 Questions. `not-your-dare` is the one that needs explaining: the partner
@@ -372,7 +372,7 @@ export const MOVE_ERROR_TEXT: Record<string, string> = {
   'not-the-guard': 'Only the Guard may cover someone.',
   'target-is-pack': 'The pack does not eat its own.',
   'cannot-inspect-self': 'You already know what you are.',
-  'already-inspected': 'You have read them before — spend the night on someone new.',
+  'already-inspected': 'You have read them before. Spend the night on someone new.',
   'repeat-protection': 'You covered them last night. Someone else tonight.',
 }
 
@@ -391,10 +391,10 @@ export const CHAT_ERROR_TEXT: Record<string, string> = {
   'not-a-player': 'You are watching, not playing.',
   'not-in-a-room': 'You are not at a table.',
   'no-game': 'No game is running.',
-  'rate-limited': 'Slow down — twenty messages per minute.',
+  'rate-limited': 'Slow down. Twenty messages per minute.',
   'malformed-message': 'That message made no sense.',
   'too-short': 'Write something first.',
-  'too-long': 'Too long — 280 characters maximum.',
+  'too-long': 'Too long. 280 characters maximum.',
   'links-not-allowed': 'Links are not allowed here.',
   'character-spam': 'That looks like character spam.',
   'excessive-caps': 'Please stop shouting.',
@@ -487,9 +487,9 @@ export const JOIN_ERROR_TEXT: Record<string, string> = {
 
 /** Human-readable text for the DUDU post failures the server can return. */
 export const POST_ERROR_TEXT: Record<string, string> = {
-  'rate-limited': 'Slow down — five posts per minute.',
+  'rate-limited': 'Slow down. Five posts per minute.',
   'too-short': 'Write something first.',
-  'too-long': 'Too long — 280 characters maximum.',
+  'too-long': 'Too long. 280 characters maximum.',
   'links-not-allowed': 'Links are not allowed on the wall.',
   'character-spam': 'That looks like character spam.',
   'excessive-caps': 'Please stop shouting.',

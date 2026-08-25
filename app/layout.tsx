@@ -36,7 +36,7 @@ const courier = Courier_Prime({
 });
 
 export const metadata: Metadata = {
-  title: "Social Aachen Website — someone is still awake",
+  title: "Social Aachen Website: someone is still awake",
   description:
     "An anonymous noticeboard for Indonesians in Aachen. Write anything; it deletes itself after 24 hours. Video call whoever is online. No sign-up.",
 };

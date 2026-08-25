@@ -63,7 +63,7 @@ const SEED: Seed[] = [
     remainingMs: 96_000,
   },
   {
-    body: 'missing nasi padang. not the restaurant kind — the warung down the road kind.',
+    body: 'missing nasi padang. not the restaurant kind, the warung down the road kind.',
     author: 'SanftOtter332',
     remainingMs: 168_000,
   },

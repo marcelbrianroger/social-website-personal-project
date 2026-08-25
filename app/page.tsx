@@ -44,7 +44,7 @@ export default async function Home() {
           <div>
             <p className="max-w-xl text-[1.125rem] leading-relaxed text-ink">
               Write anything on the wall. It disappears on its own after 24
-              hours. Or go straight into a video call with whoever is online —
+              hours. Or go straight into a video call with whoever is online.
               no introductions first, no sign-up.
             </p>
 
@@ -78,7 +78,7 @@ export default async function Home() {
             <p className="mt-3 max-w-xs text-[0.8125rem] leading-relaxed text-ink-soft">
               {session ? (
                 <>
-                  Handed to you the moment you opened this page. German, yes —
+                  Handed to you the moment you opened this page. German, yes,
                   because we are, in fact, in Germany.
                 </>
               ) : (
@@ -141,7 +141,7 @@ export default async function Home() {
               </h3>
               <p className="mt-3 flex-1 text-[0.9375rem] leading-relaxed text-ink">
                 Two people per room. Press once and wait until somebody else
-                is waiting too — or type in a room ID if you already arranged
+                is waiting too, or type in a room ID if you already arranged
                 it. Video and audio go straight from browser to browser, never
                 through our server, so on our side there is genuinely nothing
                 to record. Inside a room you can play tic-tac-toe.
@@ -163,7 +163,7 @@ export default async function Home() {
               </h3>
               <p className="mt-3 flex-1 text-[0.9375rem] leading-relaxed text-ink">
                 Four to eight players, no video. Everyone holds the same
-                secret word — except one, who has to pretend they know it. The
+                secret word, except one, who has to pretend they know it. The
                 board is held by the server; your browser can only ask to move,
                 and never gets to decide for itself.
               </p>

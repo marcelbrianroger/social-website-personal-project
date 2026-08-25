@@ -45,7 +45,7 @@ function asTicTacToe(view: GameView | null): TicTacToeState | null {
 
 /** What gets stamped across a local board once it is settled. */
 function outcomeGlyph(outcome: BoardOutcome): string {
-  if (outcome === 'draw') return '—'
+  if (outcome === 'draw') return '='
   return outcome ?? ''
 }
 
@@ -160,8 +160,8 @@ export function GameBoard({
   function turnText(current: TicTacToeState): string {
     if (!myTurn) return 'Their turn.'
     return anywhere
-      ? 'Your turn — pick any board you like.'
-      : `Your turn — play in board ${(current.activeBoardIndex ?? 0) + 1}.`
+      ? 'Your turn. Pick any board you like.'
+      : `Your turn. Play in board ${(current.activeBoardIndex ?? 0) + 1}.`
   }
 
   function outcomeText(current: GameView): string {
@@ -172,7 +172,7 @@ export function GameBoard({
     // read — Tic-Tac-Toe wins and forfeits both name exactly one survivor.
     if (reason === 'draw') return 'Draw.'
     if (winnerSessionIds[0] === sessionId) {
-      return reason === 'forfeit' ? 'You win — they left.' : 'You win.'
+      return reason === 'forfeit' ? 'You win. They left.' : 'You win.'
     }
     return reason === 'forfeit' ? 'You walked out of the game.' : 'You lose.'
   }
@@ -327,7 +327,7 @@ export function GameBoard({
       {state && !finished && (
         <p className="mt-3 font-mono text-[0.6875rem] text-ink-soft">
           {anywhere
-            ? 'The board you were sent to is already decided — this turn is free.'
+            ? 'The board you were sent to is already decided. This turn is free.'
             : 'The square you take names the board they have to answer in.'}
         </p>
       )}

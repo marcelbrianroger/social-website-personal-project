@@ -97,7 +97,7 @@ function QuestionCard({
         {askerNickname(table)} is holding the card
       </p>
       <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-soft">
-        {askerNickname(table)} reads the question out — you answer first, then
+        {askerNickname(table)} reads the question out. You answer first, then
         they do.
       </p>
     </div>
@@ -279,7 +279,7 @@ export function QuestionsBoard({
                 className={SECONDARY}
                 title={
                   myVetos > 0
-                    ? 'Refuse to answer — there is a penalty'
+                    ? 'Refuse to answer (there is a penalty)'
                     : 'You have used up your vetoes'
                 }
               >

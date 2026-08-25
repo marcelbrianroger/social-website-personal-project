@@ -178,7 +178,7 @@ function RolePanel({
             {Object.entries(table.inspections).map(([id, alignment]) => (
               <li key={id} className="font-mono text-[0.8125rem] text-ink">
                 {nicknameOf(table, id) ?? id}
-                {' — '}
+                {' · '}
                 <span
                   className={
                     alignment === 'werewolf'
@@ -199,7 +199,7 @@ function RolePanel({
         <p className="mt-4 font-mono text-[0.75rem] text-ink-soft">
           Last night you covered{' '}
           <span className="text-ink">
-            {nicknameOf(table, table.lastProtected) ?? '—'}
+            {nicknameOf(table, table.lastProtected) ?? '-'}
           </span>
           . Tonight it has to be somebody else.
         </p>
@@ -261,7 +261,7 @@ function Roster({
 
             {missing && alive && (
               <span className="text-[0.625rem] uppercase tracking-wide text-ink-soft no-underline">
-                dropped — waiting
+                dropped, waiting
               </span>
             )}
 
@@ -362,8 +362,8 @@ function NightPanel({
     return (
       <Waiting>
         {sessionId !== null && !isAlive(table, sessionId)
-          ? 'You are dead. The night carries on without you — but you can still talk to the others who are out.'
-          : 'Night. You are asleep — the wolves, the Seer and the Guard are moving. Wait for dawn.'}
+          ? 'You are dead. The night carries on without you, but you can still talk to the others who are out.'
+          : 'Night. You are asleep. The wolves, the Seer and the Guard are moving. Wait for dawn.'}
       </Waiting>
     )
   }
@@ -379,7 +379,7 @@ function NightPanel({
     <div>
       <p className="font-mono text-[0.75rem] leading-relaxed text-ink-soft">
         {chosen
-          ? `Picked: ${nicknameOf(table, chosen) ?? '—'}. You can still change it until the night is over.`
+          ? `Picked: ${nicknameOf(table, chosen) ?? '-'}. You can still change it until the night is over.`
           : hint}
       </p>
 
@@ -421,8 +421,8 @@ function ReadyToVote({
   return (
     <div>
       <p className="font-mono text-[0.75rem] leading-relaxed text-ink-soft">
-        Argue it out in chat. There is no move to make in this phase — but you
-        do not have to wait the clock out.
+        Argue it out in chat. There is no move to make in this phase, though
+        you do not have to wait the clock out.
       </p>
 
       <button
@@ -433,7 +433,7 @@ function ReadyToVote({
           youAreReady ? 'bg-yellow' : 'bg-paper hover:bg-yellow'
         }`}
       >
-        {youAreReady ? 'Ready to vote — press again to take it back' : 'Ready to vote'}
+        {youAreReady ? 'Ready to vote (press again to take it back)' : 'Ready to vote'}
       </button>
 
       <p aria-live="polite" className="mt-2 font-mono text-[0.6875rem] text-ink-soft">
@@ -484,7 +484,7 @@ function VerdictPanel({ table }: { table: WerewolfTable }) {
   if (!table.lastLynched) {
     return (
       <p className="font-mono text-[0.8125rem] leading-relaxed text-ink">
-        The vote was a <span className="bg-yellow px-1">tie</span> — nobody
+        The vote was a <span className="bg-yellow px-1">tie</span>. Nobody
         hangs today. A day thrown away.
       </p>
     )
@@ -578,7 +578,7 @@ export function WerewolfBoard({
             {!table && !busyElsewhere && seated < MIN_PLAYERS &&
               `Needs ${MIN_PLAYERS} people. Only ${seated} here so far.`}
             {!table && !busyElsewhere && seated > MAX_PLAYERS &&
-              `Too many — ${MAX_PLAYERS} is the limit.`}
+              `Too many players. ${MAX_PLAYERS} is the limit.`}
             {!table && !busyElsewhere && !wrongSize &&
               `${seated} seated. The first night is waiting on you.`}
             {table && table.finished && outcomeLabel(table)}
@@ -611,7 +611,7 @@ export function WerewolfBoard({
           <div className="mt-6">
             {table.phase === 'reveal' && (
               <Waiting>
-                Roles are being dealt. Remember yours — it is not shown again
+                Roles are being dealt. Remember yours: it is not shown again
                 until the game is over.
               </Waiting>
             )}
@@ -635,7 +635,7 @@ export function WerewolfBoard({
                 />
               ) : (
                 <Waiting>
-                  You are dead. The living are arguing it out — you can only
+                  You are dead. The living are arguing it out. You can only
                   talk to the others who are out.
                 </Waiting>
               ))}
@@ -645,7 +645,7 @@ export function WerewolfBoard({
                 <div>
                   <p className="font-mono text-[0.75rem] leading-relaxed text-ink-soft">
                     {sent
-                      ? 'Your vote is in. The others are still choosing — nobody sees the count until this phase is over.'
+                      ? 'Your vote is in. The others are still choosing. Nobody sees the count until this phase is over.'
                       : 'Point at whoever you suspect. Votes stay hidden until everyone has chosen, and a tie hangs nobody.'}
                   </p>
 
@@ -664,7 +664,7 @@ export function WerewolfBoard({
                 </div>
               ) : (
                 <Waiting>
-                  You are dead. The living are voting — you are not part of it.
+                  You are dead. The living are voting. You are not part of it.
                 </Waiting>
               ))}
 

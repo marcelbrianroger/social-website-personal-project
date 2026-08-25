@@ -178,12 +178,12 @@ export const ROLE_LABEL: Record<WerewolfRole, string> = {
 /** One line telling a player what their role is actually for. */
 export const ROLE_BRIEF: Record<WerewolfRole, string> = {
   werewolf:
-    'Every night the pack eats one person. By day you are an ordinary villager — until somebody starts wondering.',
+    'Every night the pack eats one person. By day you are an ordinary villager, until somebody starts wondering.',
   seer: 'Every night you may read one person: werewolf or not. Do not be in a hurry to say so out loud.',
   guard:
     'Every night you may cover one person from the pack. Never the same person two nights running.',
   villager:
-    'You have no special power. Only your vote — and that is enough.',
+    'You have no special power. Only your vote, and that is enough.',
 }
 
 /**

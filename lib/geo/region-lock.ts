@@ -135,7 +135,7 @@ export function accessDeniedResponse(decision: RegionDecision): Response {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>403 — Zugriff verweigert</title>
+<title>403: Zugriff verweigert</title>
 <style>
   :root { color-scheme: light dark; }
   body {
@@ -152,7 +152,7 @@ export function accessDeniedResponse(decision: RegionDecision): Response {
 <body>
   <main>
     <h1>403</h1>
-    <p><strong>Zugriff verweigert — Access Denied</strong></p>
+    <p><strong>Zugriff verweigert: Access Denied</strong></p>
     <p>Dieser Dienst ist nur aus Deutschland erreichbar.</p>
     <p>This service is only available from Germany.</p>
   </main>

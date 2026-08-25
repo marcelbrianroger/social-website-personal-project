@@ -70,7 +70,7 @@ export function RoleCard({
         <p
           className="mt-1.5 grid h-[2.75rem] place-items-center border-2 border-dashed border-rule font-mono text-[0.6875rem] uppercase tracking-[0.2em] text-ink-soft"
           aria-label={
-            role === null ? 'No word — you are watching' : 'No word issued'
+            role === null ? 'No word: you are watching' : 'No word issued'
           }
         >
           no word
@@ -87,7 +87,7 @@ export function RoleCard({
           ? 'You are not seated at this table. You see what the room sees and nothing more.'
           : isImpostor
             ? 'Everyone else shares a word. Read their clues, work out what it is, and give one of your own that does not give you away.'
-            : 'Everyone but one of you has this word. Give a clue that proves you know it — without handing it to the one who does not.'}
+            : 'Everyone but one of you has this word. Give a clue that proves you know it, without handing it to the one who does not.'}
       </p>
     </section>
   )

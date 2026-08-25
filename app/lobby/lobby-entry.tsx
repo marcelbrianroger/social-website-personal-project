@@ -87,7 +87,7 @@ export function LobbyEntry() {
 
       <p className="mt-6 max-w-2xl text-[1.0625rem] leading-relaxed text-ink">
         Four to eight players, no video. Everyone is given the same secret word
-        except one — Mr. White, who has to work it out from what everyone else
+        except one, Mr. White, who has to work it out from what everyone else
         says without giving themselves away.
       </p>
 
@@ -100,7 +100,7 @@ export function LobbyEntry() {
         </h2>
         <p className="mt-2 max-w-md text-[0.9375rem] leading-relaxed text-ink">
           You get an ID. Send it to three or more people and they type it in
-          below — the game starts when everyone is seated.
+          below. The game starts when everyone is seated.
         </p>
 
         <button type="button" onClick={open} className={`${PRIMARY} mt-5`}>
@@ -227,7 +227,7 @@ export function LobbyEntry() {
       <div className="mt-12 max-w-2xl space-y-3 border-t-2 border-ink pt-5 text-sm leading-relaxed text-ink-soft">
         <p>
           Nothing is kept. The table is deleted the moment the last person
-          leaves, and chat is never stored at all — not even for the people
+          leaves, and chat is never stored at all, not even for the people
           still in the room.
         </p>
         <p>

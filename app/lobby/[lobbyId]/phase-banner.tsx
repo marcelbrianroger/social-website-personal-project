@@ -95,7 +95,7 @@ export function PhaseBanner({
       {seconds === null && (
         <p className="mt-2 font-mono text-[0.6875rem] text-ink-soft">
           {phase === 'finished'
-            ? 'no clock — the table is done'
+            ? 'no clock: the table is done'
             : 'no clock until the game starts'}
         </p>
       )}

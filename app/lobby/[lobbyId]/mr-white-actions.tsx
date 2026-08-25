@@ -98,7 +98,7 @@ export function MrWhiteActions({
           <div>
             <p className="font-mono text-[0.75rem] leading-relaxed text-ink-soft">
               {seated < MIN_PLAYERS
-                ? `Mr. White needs ${MIN_PLAYERS} players. ${seated} here — share the lobby ID above.`
+                ? `Mr. White needs ${MIN_PLAYERS} players. ${seated} here. Share the lobby ID above.`
                 : seated > MAX_PLAYERS
                   ? `Too many for one table: ${MAX_PLAYERS} is the limit.`
                   : isHost
@@ -126,7 +126,7 @@ export function MrWhiteActions({
 
         {table?.phase === 'reveal' && (
           <Waiting>
-            Roles are being dealt. Memorise what you were given — it is not
+            Roles are being dealt. Memorise what you were given: it is not
             shown again until the game ends.
           </Waiting>
         )}
@@ -135,7 +135,7 @@ export function MrWhiteActions({
           (yourTurn ? (
             <WordForm
               label="One word, out loud"
-              hint="Exactly one word — no spaces. Prove you know the secret without handing it over."
+              hint="Exactly one word, no spaces. Prove you know the secret without handing it over."
               placeholder="one word"
               action="Give clue"
               value={draft}
@@ -170,7 +170,7 @@ export function MrWhiteActions({
             <>
               <p className="font-mono text-[0.75rem] leading-relaxed text-ink-soft">
                 {sent
-                  ? 'Vote cast. Others are still deciding — nobody sees a tally until the phase ends.'
+                  ? 'Vote cast. Others are still deciding. Nobody sees a tally until the phase ends.'
                   : 'Accuse one player of being Mr. White. Votes stay hidden until everyone has cast.'}
               </p>
 
@@ -325,8 +325,8 @@ function ReadyToVote({
   return (
     <div>
       <p className="font-mono text-[0.75rem] leading-relaxed text-ink-soft">
-        Argue it out in chat. No moves this phase — but you do not have to sit
-        out the clock.
+        Argue it out in chat. No moves this phase, though you do not have to
+        sit out the clock.
       </p>
 
       <button
@@ -337,7 +337,7 @@ function ReadyToVote({
           youAreReady ? 'bg-yellow' : 'bg-paper hover:bg-yellow'
         }`}
       >
-        {youAreReady ? 'Ready — tap to undo' : 'Ready to vote'}
+        {youAreReady ? 'Ready (tap to undo)' : 'Ready to vote'}
       </button>
 
       <p
