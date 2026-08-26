@@ -2,11 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-import {
-  PHASE_LABEL,
-  type ChatEntry,
-  type MrWhitePhase,
-} from '@/lib/game/mr-white-view'
+import type { ChatEntry } from '@/lib/game/mr-white-view'
 import { MAX_MESSAGE_LENGTH } from '@/lib/socket/events'
 
 import { EYEBROW, FIELD, PANEL, PRIMARY, Timestamp } from './controls'
@@ -32,7 +28,7 @@ import { EYEBROW, FIELD, PANEL, PRIMARY, Timestamp } from './controls'
 export function ChatPanel({
   entries,
   you,
-  phase,
+  phaseLabel,
   open,
   deadChannel = false,
   error,
@@ -41,8 +37,13 @@ export function ChatPanel({
   entries: ChatEntry[]
   /** Your sessionId, so your own lines can be marked. `null` when observing. */
   you: string | null
-  /** Null before a game starts, when the lobby channel is open to everyone. */
-  phase: MrWhitePhase | null
+  /**
+   * The phase name in words, or null before a game starts.
+   *
+   * A LABEL RATHER THAN A KEY, so this panel serves every game in the room
+   * without importing any of their vocabularies.
+   */
+  phaseLabel: string | null
   /** False whenever `chatAudience` would return `chat-closed`. */
   open: boolean
   /** True once you are eliminated — you are on the `dead` channel from then on. */
@@ -167,10 +168,10 @@ export function ChatPanel({
               open
                 ? deadChannel
                   ? 'the other eliminated players can hear you'
-                  : phase
+                  : phaseLabel
                     ? 'say something'
                     : 'say something while you wait'
-                : `chat is closed during ${(phase ? PHASE_LABEL[phase] : 'this phase').toLowerCase()}`
+                : `chat is closed during ${(phaseLabel ?? 'this phase').toLowerCase()}`
             }
             className={FIELD}
           />

@@ -2,11 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 
-import {
-  PHASE_LOG,
-  type ChatEntry,
-  type MrWhitePhase,
-} from '@/lib/game/mr-white-view'
+import type { ChatEntry } from '@/lib/game/mr-white-view'
 import { CHAT_ERROR_TEXT } from '@/lib/socket/events'
 import type { AppSocket } from '@/lib/webrtc/use-p2p-room'
 
@@ -28,8 +24,22 @@ import type { AppSocket } from '@/lib/webrtc/use-p2p-room'
  */
 export function useGameChat(
   socket: AppSocket | null,
-  /** Current phase, or null before a game starts. Drives the `[STATE]` lines. */
-  phase: MrWhitePhase | null,
+  /**
+   * A stable key for the current phase, or null before a game starts.
+   *
+   * COMPARED, NEVER INDEXED. It is only ever tested against the previous value
+   * to notice a transition, which is why any game's phase key works here and
+   * why two games may safely share a name like `vote` — only one game runs in a
+   * lobby at a time.
+   */
+  phase: string | null,
+  /**
+   * The `[STATE]` line to write on entering that phase, already in words.
+   *
+   * Supplied by the caller rather than looked up, because the wording belongs
+   * to the game and this hook is shared. Null means write nothing.
+   */
+  phaseNote: string | null,
   /**
    * Server epoch ms from the push that carried this phase.
    *
@@ -42,7 +52,7 @@ export function useGameChat(
 ) {
   const [entries, setEntries] = useState<ChatEntry[]>([])
   const [error, setError] = useState<string | null>(null)
-  const [seenPhase, setSeenPhase] = useState<MrWhitePhase | null>(null)
+  const [seenPhase, setSeenPhase] = useState<string | null>(null)
 
   /**
    * Append a `[STATE]` line when the phase turns over.
@@ -54,15 +64,15 @@ export function useGameChat(
   if (phase !== seenPhase) {
     setSeenPhase(phase)
 
-    if (phase) {
+    if (phase && phaseNote) {
       setEntries((current) => [
         ...current,
         {
           kind: 'system',
-          // Phase plus server timestamp: a game re-enters `clue` every round,
-          // so the phase alone would collide as a React key.
+          // Phase plus server timestamp: a game re-enters `clue` — or `night` —
+          // every round, so the phase alone would collide as a React key.
           id: `state-${phase}-${serverNow}`,
-          text: PHASE_LOG[phase],
+          text: phaseNote,
           at: serverNow,
         },
       ])

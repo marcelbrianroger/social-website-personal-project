@@ -1,3 +1,4 @@
+import type { TableSeat, TableSummary } from '@/lib/game/table-view'
 import type { GameView } from '@/lib/socket/events'
 
 /**
@@ -286,4 +287,54 @@ export function canChat(
   if (sessionId && !isAlive(table, sessionId)) return true
 
   return CHAT_OPEN_PHASES.includes(table.phase)
+}
+
+// --- The lobby room's furniture --------------------------------------------
+
+/**
+ * Project a Mr. White table down to the room's game-agnostic shape.
+ *
+ * See `lib/game/table-view.ts` for why this indirection exists at all. The one
+ * judgement in here is the seat note: a clue is what the rail carried before
+ * this shape existed, and it stays the default because reading the clues back
+ * in seat order IS the deduction. A revealed role outranks it only once the
+ * game is over, when the clue no longer matters and the role does.
+ */
+export function mrWhiteSummary(table: MrWhiteTable): TableSummary {
+  const tally = voteTally(table)
+
+  const seats: TableSeat[] = table.players.map((player) => {
+    const revealed = table.roles?.[player.sessionId]
+    const clue = table.clues[player.sessionId]
+
+    const note = revealed
+      ? revealed === 'mr-white'
+        ? 'MR. WHITE'
+        : 'CIVILIAN'
+      : (clue ?? null)
+
+    return {
+      sessionId: player.sessionId,
+      nickname: player.nickname,
+      seat: player.seat,
+      alive: isAlive(table, player.sessionId),
+      actor: isActor(table, player.sessionId),
+      votes: tally[player.sessionId] ?? 0,
+      note,
+      droppedUntil: reconnectingUntil(table, player.sessionId),
+    }
+  })
+
+  return {
+    phaseLabel: PHASE_LABEL[table.phase],
+    phaseSeconds: PHASE_SECONDS[table.phase],
+    roundLabel: `round ${table.round}`,
+    phaseEndsAt: table.finished ? null : table.phaseEndsAt,
+    serverNow: table.serverNow,
+    seats,
+    aliveCount: seats.filter((seat) => seat.alive).length,
+    finished: table.finished,
+    phaseNote: PHASE_LOG[table.phase],
+    phaseKey: table.phase,
+  }
 }

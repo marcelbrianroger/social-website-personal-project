@@ -1,28 +1,54 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { SystemNote } from '@/app/chrome'
-import { asMrWhite, canChat, isAlive } from '@/lib/game/mr-white-view'
+import {
+  asMrWhite,
+  canChat as canChatMrWhite,
+  isAlive as isAliveMrWhite,
+  mrWhiteSummary,
+} from '@/lib/game/mr-white-view'
+import { waitingSummary } from '@/lib/game/table-view'
 import { useGame } from '@/lib/game/use-game'
 import { useGameChat } from '@/lib/game/use-game-chat'
+import {
+  asWerewolf,
+  canChat as canChatWerewolf,
+  isAlive as isAliveWerewolf,
+  werewolfSummary,
+} from '@/lib/game/werewolf-view'
 import { useLobby } from '@/lib/lobby/use-lobby'
 
 import { ChatPanel } from './chat-panel'
 import { EYEBROW } from './controls'
+import { GamePicker, LOBBY_GAMES } from './game-picker'
 import { MrWhiteActions } from './mr-white-actions'
 import { PhaseBanner } from './phase-banner'
 import { PlayerRail } from './player-rail'
 import { RoleCard } from './role-card'
 import { RoomHeader } from './room-header'
+import { WerewolfActions } from './werewolf-actions'
+import { WerewolfRoleCard } from './werewolf-role-card'
 
 /**
- * The Mr. White table.
+ * The table. Mr. White or Werewolf, in the same room.
  *
  * Three hooks, one socket. `useLobby` owns the connection and membership;
  * `useGame` and `useGameChat` ride it. That sharing is not an optimisation — a
  * second socket would have a different id and therefore different lobby
  * membership, so the server would refuse its moves and never route it chat.
+ *
+ * HOW TWO GAMES SHARE ONE ROOM. Exactly one `asX` narrower returns non-null for
+ * a given payload, because each checks `view.gameId` before trusting `state`.
+ * So the two tables below are mutually exclusive by construction rather than by
+ * an `if` anyone has to maintain, and a third game would add a third narrower
+ * that is null whenever the other two are not.
+ *
+ * The furniture — banner, rail, chat — reads `TableSummary`, which both games
+ * project themselves down to. Only the ROLE CARD and the ACTION PANEL are
+ * game-specific, which is right: those two are the game.
  *
  * There is no local game logic here, not even an optimistic phase change. The
  * server is the only writer and `view` is always exactly what it last sent;
@@ -44,16 +70,55 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
   } = useLobby(lobbyId)
 
   const { view, rejection, starting, start, move } = useGame(socket, lobbyId)
-  const table = asMrWhite(view)
+
+  /**
+   * What the host will deal next.
+   *
+   * Local, and only the host's copy matters — see `game-picker.tsx` for why
+   * this is not lobby state. Werewolf is the default because it is the game
+   * this room was rebuilt for; a host who wants the other one clicks once.
+   */
+  const [chosen, setChosen] = useState<string>(LOBBY_GAMES[1]?.id ?? 'werewolf')
+
+  const mrWhite = asMrWhite(view)
+  const werewolf = asWerewolf(view)
+
+  const you = session?.sessionId ?? null
+
+  // One summary, whichever game produced it. Null-game falls back to the lobby
+  // roster, because "are we five yet" is the only question before the deal.
+  const summary = mrWhite
+    ? mrWhiteSummary(mrWhite)
+    : werewolf
+      ? werewolfSummary(werewolf)
+      : waitingSummary(members)
+
+  const alive = mrWhite
+    ? you
+      ? isAliveMrWhite(mrWhite, you)
+      : true
+    : werewolf
+      ? you
+        ? isAliveWerewolf(werewolf, you)
+        : true
+      : true
+
+  const chatOpen = mrWhite
+    ? canChatMrWhite(mrWhite, you)
+    : werewolf
+      ? canChatWerewolf(werewolf, you)
+      : true
 
   const {
     entries,
     error: chatError,
     send,
-  } = useGameChat(socket, table?.phase ?? null, table?.serverNow ?? 0)
+  } = useGameChat(socket, summary.phaseKey, summary.phaseNote, summary.serverNow)
 
-  const you = session?.sessionId ?? null
-  const alive = table && you ? isAlive(table, you) : true
+  const started = mrWhite !== null || werewolf !== null
+  const isHost = host !== null && host.sessionId === you
+  /** A running game pins the id; otherwise it is whatever the host picked. */
+  const gameId = mrWhite ? 'mr-white' : werewolf ? 'werewolf' : chosen
 
   function handleLeave() {
     leave()
@@ -88,7 +153,7 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
   if (lobbyPhase !== 'seated') {
     return (
       <div className={`${TABLE_SHELL} py-16`}>
-        <p className={EYEBROW}>mr. white · lobby</p>
+        <p className={EYEBROW}>lobby</p>
         <p className="mt-3 font-mono text-sm text-ink-soft">
           {lobbyPhase === 'connecting' ? 'Connecting…' : 'Taking a seat…'}
         </p>
@@ -112,45 +177,77 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
             what a player under a 45-second deadline is actually looking for. */}
         <div className="order-1 space-y-5 lg:order-3">
           <PhaseBanner
-            phase={table?.phase ?? null}
-            round={table?.round ?? 0}
-            phaseEndsAt={table?.phaseEndsAt ?? null}
-            serverNow={table?.serverNow ?? 0}
+            phaseLabel={summary.phaseLabel}
+            phaseSeconds={summary.phaseSeconds}
+            roundLabel={summary.roundLabel}
+            phaseEndsAt={summary.phaseEndsAt}
+            serverNow={summary.serverNow}
+            finished={summary.finished}
           />
 
-          {table && (
-            <RoleCard
-              role={table.yourRole}
-              secretWord={table.secretWord}
-              eliminated={!alive}
-              revealed={table.phase === 'finished'}
+          {/* Before the deal the host decides what this table is playing. */}
+          {!started && (
+            <GamePicker
+              chosen={chosen}
+              seated={members.length}
+              isHost={isHost}
+              hostNickname={host?.nickname ?? null}
+              onChoose={setChosen}
             />
           )}
 
-          <MrWhiteActions
-            table={table}
-            you={you}
-            seated={members.length}
-            isHost={host !== null && host.sessionId === you}
-            hostNickname={host?.nickname ?? null}
-            starting={starting}
-            onStart={() => start('mr-white')}
-            onMove={move}
-            rejection={rejection}
-          />
+          {mrWhite && (
+            <RoleCard
+              role={mrWhite.yourRole}
+              secretWord={mrWhite.secretWord}
+              eliminated={!alive}
+              revealed={mrWhite.phase === 'finished'}
+            />
+          )}
+
+          {werewolf && <WerewolfRoleCard table={werewolf} you={you} />}
+
+          {/* The action panel for whatever is running — or, before the deal,
+              for whatever the host has picked, so the start gate explains that
+              game's seat requirement rather than a generic one. */}
+          {gameId === 'mr-white' ? (
+            <MrWhiteActions
+              table={mrWhite}
+              you={you}
+              seated={members.length}
+              isHost={isHost}
+              hostNickname={host?.nickname ?? null}
+              starting={starting}
+              onStart={() => start('mr-white')}
+              onMove={move}
+              rejection={rejection}
+            />
+          ) : (
+            <WerewolfActions
+              table={werewolf}
+              you={you}
+              seated={members.length}
+              isHost={isHost}
+              hostNickname={host?.nickname ?? null}
+              starting={starting}
+              onStart={() => start('werewolf')}
+              onMove={move}
+              rejection={rejection}
+            />
+          )}
         </div>
 
         <div className="order-2 lg:order-1">
-          <PlayerRail table={table} members={members} you={you} />
+          <PlayerRail summary={summary} you={you} started={started} />
         </div>
 
         <div className="order-3 lg:order-2">
           <ChatPanel
             entries={entries}
             you={you}
-            phase={table?.phase ?? null}
-            open={canChat(table, you)}
-            deadChannel={!alive}
+            phaseLabel={summary.phaseLabel}
+            open={chatOpen}
+            deadChannel={started && !alive}
             error={chatError}
             onSend={send}
           />

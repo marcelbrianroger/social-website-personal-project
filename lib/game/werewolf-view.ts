@@ -1,3 +1,4 @@
+import type { TableSeat, TableSummary } from '@/lib/game/table-view'
 import type { GameView } from '@/lib/socket/events'
 
 /**
@@ -578,4 +579,78 @@ export function canChat(
   if (NIGHT_PHASES.includes(table.phase)) return table.yourRole === 'werewolf'
 
   return CHAT_OPEN_PHASES.includes(table.phase)
+}
+
+// --- The lobby room's furniture --------------------------------------------
+
+/**
+ * Project a Werewolf table down to the room's game-agnostic shape.
+ *
+ * WHAT EACH SEAT SAYS, and why. The note under a name is the one line the rail
+ * can carry, so it is ranked rather than concatenated: a revealed role beats a
+ * lover mark beats a pending shot, because a role is permanent information and
+ * the others are context. `votes` is whatever the server is currently willing
+ * to publish, which during `vote` itself is nothing at all.
+ *
+ * The pack's private kill tally is deliberately NOT surfaced here. It is real
+ * and a wolf can see it, but the rail is drawn from a shape three components
+ * share, and a field that is populated for two viewers out of eight is exactly
+ * the kind of thing that leaks by being forgotten about. Wolves read their
+ * tally in their own action panel, which is wolf-only by construction.
+ */
+export function werewolfSummary(table: WerewolfTable): TableSummary {
+  const tally = voteTally(table)
+
+  const seats: TableSeat[] = table.players.map((player) => {
+    const alive = isAlive(table, player.sessionId)
+    const revealed = table.revealedRoles[player.sessionId]
+
+    const note = revealed
+      ? ROLE_LABEL[revealed].toUpperCase()
+      : table.lovers.includes(player.sessionId)
+        ? 'in love'
+        : table.revengeBy === player.sessionId
+          ? 'taking aim'
+          : null
+
+    return {
+      sessionId: player.sessionId,
+      nickname: player.nickname,
+      seat: player.seat,
+      alive,
+      actor: isActor(table, player.sessionId),
+      votes: tally[player.sessionId] ?? 0,
+      note,
+      droppedUntil: reconnectingUntil(table, player.sessionId),
+    }
+  })
+
+  return {
+    phaseLabel: PHASE_LABEL[table.phase],
+    phaseSeconds: PHASE_SECONDS[table.phase],
+    // `night 0` would be a lie during Cupid's beat — it is the first night, and
+    // the counter does not start until the pack actually hunts.
+    roundLabel: table.night > 0 ? `night ${table.night}` : 'first night',
+    phaseEndsAt: table.finished ? null : table.phaseEndsAt,
+    serverNow: table.serverNow,
+    seats,
+    aliveCount: seats.filter((seat) => seat.alive).length,
+    finished: table.finished,
+    phaseNote: WEREWOLF_PHASE_LOG[table.phase],
+    phaseKey: table.phase,
+  }
+}
+
+/** The `[STATE]` line written into the transcript on entering each phase. */
+export const WEREWOLF_PHASE_LOG: Record<WerewolfPhase, string> = {
+  reveal: 'ROLES DEALT',
+  nightZero: 'THE FIRST NIGHT — CUPID IS AWAKE',
+  night: 'NIGHT FALLS',
+  witch: 'THE WITCH WAKES',
+  dawn: 'DAWN',
+  revenge: "THE HUNTER'S SHOT",
+  day: 'THE TABLE ARGUES',
+  vote: 'VOTING PHASE',
+  verdict: 'THE VERDICT',
+  finished: 'GAME OVER',
 }

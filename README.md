@@ -289,19 +289,29 @@ schema migrating.
 **Working:** region lock, anonymous sessions, socket handshake auth, Prisma
 schema and migration, Redis room registry with the Socket.io Redis adapter,
 WebRTC signalling with same-room authorisation, matchmaking, the DUDU wall with
-its 24h TTL, and a server-authoritative game engine running Tic-Tac-Toe.
+its 24h TTL, 8-seat lobbies, game chat with per-role audiences, the phase
+deadline sweeper, and a server-authoritative game engine running Tic-Tac-Toe,
+Mr. White, 36 Questions and Werewolf.
 
-**Werewolf and Mr. White are not built.** `server/src/games/registry.ts`
-registers only Tic-Tac-Toe. A design spec for Mr. White exists but is marked
-*awaiting review*, and Werewolf is explicitly out of scope pending its own spec.
-`server/src/games/types.ts` still carries the Phase 4 contract (`currentTurn`,
-`winnerSessionId`), not the generalized one the spec proposes (`actors`,
-`winnerSessionIds`, `tick`, `deadline`, `chatAudience`). There is no lobby, no
-game chat and no deadline sweeper.
+**All four games are built.** `server/src/games/registry.ts` registers
+`tic-tac-toe`, `mr-white`, `thirty-six-questions` and `werewolf`.
+`server/src/games/types.ts` carries the generalized contract — `actors`,
+`winnerSessionIds`, `tick`, `deadline`, `chatAudience`, `eliminate` and
+`viewFor` — not the Phase 4 one. Werewolf runs eight roles (Werewolf, Seer,
+Guard, Witch, Hunter, Cupid, Jester, Villager) across a nine-phase clock, with
+per-viewer redaction in `viewFor` as the anti-cheat seam.
 
-**Room capacity is the binding constraint.** It is fixed at 2 for the P2P video
-mesh, so social-deduction games cannot run until rooms and lobbies separate into
-two different primitives.
+**Rooms and lobbies are two different primitives, deliberately.**
+`ROOM_CAPACITY = 2` in `server/src/rooms.ts` is a property of the full-mesh P2P
+video call and stays there. `LOBBY_CAPACITY = 8` in `server/src/lobby.ts` is
+what the social-deduction games seat against.
+
+**36 Questions is a short game by design.** The bank in
+`thirty-six-questions-content.ts` holds all 36, but a session deals nine —
+`QUESTIONS_PER_SET = 3` from each of the three sets, drawn at random and sorted
+within the set so the ramp from small talk to confession survives the
+shortening. The question text is scoped to whoever holds the card; everything
+else in the projection is public.
 
 **The moderation filter is a heuristic placeholder,** not the AI filter
 `CLAUDE.md` calls for.
@@ -318,14 +328,15 @@ preference in matchmaking — it is purely first-come-first-served.
 
 ## Branches
 
-| Branch                            | Contains                                            |
-| --------------------------------- | --------------------------------------------------- |
-| `main`                            | Phase 1–4 platform, original scaffolding UI          |
-| `feature/phase5-social-deduction` | The above **plus** the test suite and the mading design |
+| Branch                            | Contains                                        |
+| --------------------------------- | ----------------------------------------------- |
+| `main`                            | Everything. The branch to work from.            |
+| `feature/phase5-social-deduction` | Merged into `main`. Kept for history.           |
+| `feature/disconnect-lifecycle`    | Merged into `main`. Kept for history.           |
 
-The integration tests and the design system are committed on the feature branch
-and are **not** on `main`. `git switch feature/phase5-social-deduction` to get
-them.
+Both feature branches are ancestors of `main`, so there is nothing to switch to
+— the integration tests and the design system are on `main` alongside
+everything else.
 
 ## Scripts
 

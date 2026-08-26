@@ -1,70 +1,57 @@
 'use client'
 
-import {
-  isActor,
-  isAlive,
-  reconnectingUntil,
-  voteTally,
-  type MrWhitePlayer,
-  type MrWhiteTable,
-} from '@/lib/game/mr-white-view'
+import type { TableSummary } from '@/lib/game/table-view'
 import { toSeconds, useServerNow } from '@/lib/game/use-countdown'
-import type { LobbyMember } from '@/lib/socket/events'
 
 import { DISPLAY_HEADING, EYEBROW, PANEL } from './controls'
 
 /**
  * The table: who is seated, who holds the floor, who is out.
  *
- * Renders in two situations. Before a game starts there is no `table`, only
- * lobby membership — the rail still has to show who is here, because "are we
- * four yet" is the only question anyone has at that point. Once a game is
- * running, the roster comes from the game instead, so a player who joined
- * mid-round is not shown as a seat that can be voted for.
+ * Renders in two situations. Before a game starts there is no phase, only lobby
+ * membership — the rail still has to show who is here, because "are we five
+ * yet" is the only question anyone has at that point. Once a game is running,
+ * the roster comes from the game instead, so a player who joined mid-round is
+ * not shown as a seat that can be voted for.
  *
- * Seat order is not decoration. `joinedAt` fixes it and the clue phase walks
- * it, so showing the index is what lets a player work out who speaks next.
+ * GAME-AGNOSTIC BY CONSTRUCTION. It reads `TableSummary`, which both Mr. White
+ * and Werewolf project themselves down to, so the rail has no idea which is
+ * running — see `lib/game/table-view.ts` for why that seam is a shape rather
+ * than a type parameter. Everything a seat wants to SAY about itself arrives
+ * pre-worded in `note`.
  *
- * "Greyed out" for an eliminated player is `text-ink-soft` — the palette's
- * actual grey — plus a strike and a dashed rule. Deliberately NOT `opacity`:
- * fading ink toward paper drops it under 4.5:1 and makes the roster unreadable
- * for exactly the players who most need to re-read it.
+ * Seat order is not decoration. `joinedAt` fixes it and several phases walk it,
+ * so showing the index is what lets a player work out who acts next.
+ *
+ * "Greyed out" for a dead player is `text-ink-soft` — the palette's actual grey
+ * — plus a strike and a dashed rule. Deliberately NOT `opacity`: fading ink
+ * toward paper drops it under 4.5:1 and makes the roster unreadable for exactly
+ * the players who most need to re-read it.
  */
 export function PlayerRail({
-  table,
-  members,
+  summary,
   you,
+  started,
 }: {
-  /** Null until a game starts. */
-  table: MrWhiteTable | null
-  /** Lobby membership, used for the roster before a game exists. */
-  members: LobbyMember[]
+  summary: TableSummary
   /** Your own sessionId, so "you" can be marked. Null while connecting. */
   you: string | null
+  /** False while the lobby is still filling — changes the status wording. */
+  started: boolean
 }) {
-  const seats: MrWhitePlayer[] =
-    table?.players ??
-    members.map((member, seat) => ({
-      sessionId: member.sessionId,
-      nickname: member.nickname,
-      seat,
-    }))
-
-  const tally = table ? voteTally(table) : {}
+  const { seats } = summary
 
   // One interval for the whole rail rather than one per seat: every reconnect
   // window is measured against the same server clock, so they can share it.
-  const awaiting = table ? Object.keys(table.disconnected).length > 0 : false
-  const now = useServerNow(table?.serverNow ?? 0, awaiting)
+  const awaiting = seats.some((seat) => seat.droppedUntil !== null)
+  const now = useServerNow(summary.serverNow, awaiting)
 
   return (
     <section className={`${PANEL} p-4`} aria-label="Players">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className={EYEBROW}>players</h2>
         <p className="font-mono text-[0.625rem] tabular-nums text-ink-soft">
-          {table
-            ? `${seats.filter((seat) => isAlive(table, seat.sessionId)).length} alive`
-            : `${seats.length} seated`}
+          {started ? `${summary.aliveCount} alive` : `${seats.length} seated`}
         </p>
       </div>
 
@@ -77,28 +64,23 @@ export function PlayerRail({
       {/* Two up on a narrow screen, a single rail once there is a column for
           it. The list stays one element either way, so it reads in order. */}
       <ul className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-1">
-        {seats.map((player) => {
-          const alive = table ? isAlive(table, player.sessionId) : true
-          const active = table ? alive && isActor(table, player.sessionId) : false
-          const isYou = player.sessionId === you
-          const clue = table?.clues[player.sessionId]
-          const spoke = table ? player.sessionId in table.clues : false
-          const votes = tally[player.sessionId] ?? 0
-          const revealedRole = table?.roles?.[player.sessionId]
-          const eliminatedAt = table ? reconnectingUntil(table, player.sessionId) : null
+        {seats.map((seat) => {
+          const isYou = seat.sessionId === you
           const reconnectingIn =
-            eliminatedAt === null ? null : toSeconds(Math.max(0, eliminatedAt - now))
+            seat.droppedUntil === null
+              ? null
+              : toSeconds(Math.max(0, seat.droppedUntil - now))
 
           return (
             <li
-              key={player.sessionId}
+              key={seat.sessionId}
               // ACTIVE is a flat yellow fill with ink on top — the palette's
-              // one sanctioned way to make something loud. ELIMINATED loses
-              // the solid rule instead of gaining a colour.
+              // one sanctioned way to make something loud. DEAD loses the solid
+              // rule instead of gaining a colour.
               className={`border-2 px-2.5 py-2 ${
-                !alive
+                !seat.alive
                   ? 'border-dashed border-rule bg-paper'
-                  : active
+                  : seat.actor
                     ? 'border-ink bg-yellow'
                     : 'border-ink bg-paper'
               }`}
@@ -108,16 +90,16 @@ export function PlayerRail({
                   aria-hidden="true"
                   className="font-mono text-[0.625rem] tabular-nums text-ink-soft"
                 >
-                  {player.seat + 1}
+                  {seat.seat + 1}
                 </span>
 
                 <span
                   className={`min-w-0 flex-1 truncate font-display text-[0.9375rem] leading-tight ${
-                    alive ? 'text-ink' : 'text-ink-soft line-through'
+                    seat.alive ? 'text-ink' : 'text-ink-soft line-through'
                   }`}
                   style={DISPLAY_HEADING}
                 >
-                  {player.nickname}
+                  {seat.nickname}
                 </span>
 
                 {isYou && (
@@ -128,51 +110,48 @@ export function PlayerRail({
               </div>
 
               {/* One status line per seat. Ranked: out, then gone but not yet
-                  out, then holding the floor, then the clue they gave. Never
-                  more than one.
+                  out, then holding the floor, then whatever the game wanted
+                  said about them. Never more than one.
 
                   "reconnecting" outranks "active" because a seat can be both:
                   a player who drops while holding the floor keeps it until
                   their window runs out. The yellow fill stays — the table IS
                   blocked on them — but the line has to say why. */}
               <p className="mt-1 font-mono text-[0.625rem] leading-snug text-ink-soft">
-                {!table ? (
+                {!started ? (
                   'waiting'
-                ) : !alive ? (
-                  <span className="uppercase tracking-wide">eliminated</span>
+                ) : !seat.alive ? (
+                  <span className="uppercase tracking-wide">out</span>
                 ) : reconnectingIn !== null ? (
                   <span className="uppercase tracking-wide text-ink">
                     reconnecting {reconnectingIn}s
                   </span>
-                ) : active ? (
-                  <span className="uppercase tracking-wide text-ink">
-                    {table.phase === 'vote' ? 'voting' : 'active'}
-                  </span>
-                ) : clue ? (
-                  <>said &ldquo;{clue}&rdquo;</>
-                ) : spoke ? (
-                  'timed out'
+                ) : seat.actor ? (
+                  <span className="uppercase tracking-wide text-ink">active</span>
                 ) : (
                   'waiting'
                 )}
               </p>
 
-              {/* Votes are only ever non-zero from `reveal-vote` onward — the
-                  server sends an empty map during the vote itself. */}
-              {votes > 0 && (
+              {/* Votes are only ever non-zero once the game publishes the
+                  tally, which neither game does during its own vote. */}
+              {seat.votes > 0 && (
                 <p className="mt-1 font-mono text-[0.625rem] text-ink">
                   <span className="bg-yellow px-1 tabular-nums">
-                    {votes} vote{votes === 1 ? '' : 's'}
+                    {seat.votes} vote{seat.votes === 1 ? '' : 's'}
                   </span>
                 </p>
               )}
 
-              {revealedRole && (
+              {/* Already in words, and already ranked, by the game's own
+                  adapter. A clue, a revealed role, a mark — the rail does not
+                  need to know which. */}
+              {seat.note && (
                 <p
-                  className="mt-1 font-display text-[0.8125rem] leading-none text-ink"
+                  className="mt-1 break-words font-display text-[0.8125rem] leading-snug text-ink"
                   style={DISPLAY_HEADING}
                 >
-                  {revealedRole === 'mr-white' ? 'was Mr. White' : 'civilian'}
+                  {seat.note}
                 </p>
               )}
             </li>

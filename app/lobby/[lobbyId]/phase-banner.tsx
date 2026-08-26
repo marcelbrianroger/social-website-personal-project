@@ -1,10 +1,5 @@
 'use client'
 
-import {
-  PHASE_LABEL,
-  PHASE_SECONDS,
-  type MrWhitePhase,
-} from '@/lib/game/mr-white-view'
 import { toSeconds, useCountdown } from '@/lib/game/use-countdown'
 
 import { DISPLAY_HEADING, EYEBROW } from './controls'
@@ -22,20 +17,32 @@ import { DISPLAY_HEADING, EYEBROW } from './controls'
  * in the ink discipline. Yellow fill with ink on top clears 9.3:1.
  */
 export function PhaseBanner({
-  phase,
-  round,
+  phaseLabel,
+  phaseSeconds,
+  roundLabel,
   phaseEndsAt,
   serverNow,
+  finished = false,
 }: {
-  /** Null before a game starts — the lobby is simply waiting. */
-  phase: MrWhitePhase | null
-  round: number
+  /**
+   * Already in words. Null before a game starts — the lobby is simply waiting.
+   *
+   * A LABEL RATHER THAN A PHASE KEY, so this component serves every game in the
+   * room without knowing any of them. See `lib/game/table-view.ts`.
+   */
+  phaseLabel: string | null
+  /** Nominal length of this phase, the denominator for the depleting rule. */
+  phaseSeconds: number | null
+  /** The eyebrow: `round 2`, `night 3`, or `lobby`. */
+  roundLabel: string
   phaseEndsAt: number | null
   serverNow: number
+  /** Changes only the no-clock footnote. */
+  finished?: boolean
 }) {
   const remaining = useCountdown(phaseEndsAt, serverNow)
   const seconds = toSeconds(remaining)
-  const total = phase ? PHASE_SECONDS[phase] : null
+  const total = phaseSeconds
 
   const urgent = seconds !== null && seconds <= 10
   const elapsed =
@@ -52,12 +59,12 @@ export function PhaseBanner({
         {/* The phase change is the news worth announcing. The ticking digits
             below are not, which is why only this half is a live region. */}
         <p aria-live="polite" className="min-w-0">
-          <span className={EYEBROW}>{phase ? `round ${round}` : 'lobby'}</span>
+          <span className={EYEBROW}>{roundLabel}</span>
           <span
             className="mt-1 block truncate font-display text-lg leading-none"
             style={DISPLAY_HEADING}
           >
-            {phase ? PHASE_LABEL[phase] : 'Waiting to start'}
+            {phaseLabel ?? 'Waiting to start'}
           </span>
         </p>
 
@@ -94,7 +101,7 @@ export function PhaseBanner({
 
       {seconds === null && (
         <p className="mt-2 font-mono text-[0.6875rem] text-ink-soft">
-          {phase === 'finished'
+          {finished
             ? 'no clock: the table is done'
             : 'no clock until the game starts'}
         </p>

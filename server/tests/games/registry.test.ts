@@ -65,11 +65,11 @@ describe('listing games', () => {
     }
   })
 
-  it('offers Tic-Tac-Toe, Mr. White and 36 Questions', () => {
+  it('offers Tic-Tac-Toe, Mr. White, 36 Questions and Werewolf', () => {
     assert.deepEqual(
       listGames().map((entry) => entry.id),
-      ['tic-tac-toe', 'mr-white', 'thirty-six-questions'],
-      'Werewolf is still out of scope pending its own spec',
+      ['tic-tac-toe', 'mr-white', 'thirty-six-questions', 'werewolf'],
+      'the lobby offers exactly what the registry lists, in registry order',
     )
   })
 })

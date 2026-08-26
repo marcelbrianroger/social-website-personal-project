@@ -101,9 +101,12 @@ function vetoed(state = opening()): ThirtySixQuestionsState {
 }
 
 describe('the content', () => {
-  it('carries the full set of questions', () => {
-    assert.equal(QUESTIONS.length, TOTAL_QUESTIONS)
-    assert.equal(TOTAL_QUESTIONS, 36)
+  it('carries a full bank, and deals a short game out of it', () => {
+    // THESE ARE TWO DIFFERENT NUMBERS ON PURPOSE. `QUESTIONS` is the source
+    // material; `TOTAL_QUESTIONS` is the length of one session. A session deals
+    // three from each of the three sets, so the ramp survives the shortening.
+    assert.equal(QUESTIONS.length, 36, 'the bank is the original 36')
+    assert.equal(TOTAL_QUESTIONS, 9, 'a session plays nine of them')
   })
 
   it('has no blank or duplicated questions', () => {
@@ -167,10 +170,15 @@ describe('the opening position', () => {
   })
 
   it('publishes the first question text, not just its index', () => {
-    const view = projection(opening())
+    const state = opening()
+    // Alice holds seat 0, so she holds the first card and is the one told what
+    // it says. Reading the text out of the DEALT DECK, never `QUESTIONS[0]` —
+    // the deal is a random draw per set, so the first card is not the first
+    // question in the bank.
+    const view = projection(state, alice.sessionId)
 
     assert.equal(view.questionIndex, 0)
-    assert.equal(view.question, QUESTIONS[0])
+    assert.equal(view.question, QUESTIONS[state.deck[0] ?? -1])
     assert.equal(view.set, 1, 'the first of three escalating sets')
   })
 })
@@ -180,18 +188,30 @@ describe('advancing through the set', () => {
     const state = play(opening(), alice.sessionId, { type: 'next' })
 
     assert.equal(state.questionIndex, 1)
-    assert.equal(projection(state).question, QUESTIONS[1])
+    // The card passes with the question, so Bob is the one who can now read it.
+    assert.equal(
+      projection(state, bob.sessionId).question,
+      QUESTIONS[state.deck[1] ?? -1],
+    )
   })
 
-  it('lets either player advance', () => {
-    assert.equal(play(opening(), bob.sessionId, { type: 'next' }).questionIndex, 1)
+  it('lets only the player holding the card advance', () => {
+    // Alice holds card 0. Advancing is hers alone — the partner reading along
+    // cannot move the deck on, or the person mid-answer gets cut off.
     assert.equal(play(opening(), alice.sessionId, { type: 'next' }).questionIndex, 1)
+    assert.equal(
+      refusal(opening(), bob.sessionId, { type: 'next' }),
+      'not-your-card',
+    )
   })
 
   it('walks all three sets', () => {
-    assert.equal(projection(advance(opening(), 11)).set, 1, 'question 12 is still set one')
-    assert.equal(projection(advance(opening(), 12)).set, 2)
-    assert.equal(projection(advance(opening(), 24)).set, 3)
+    // Nine cards, three per set: positions 0-2 are set one, 3-5 set two, 6-8
+    // set three. `set` reports where a card CAME FROM in the bank, so it is
+    // readable by either player and not gated on whose turn it is.
+    assert.equal(projection(advance(opening(), 2)).set, 1, 'card three is still set one')
+    assert.equal(projection(advance(opening(), 3)).set, 2)
+    assert.equal(projection(advance(opening(), 6)).set, 3)
   })
 
   it('finishes once the last question is done', () => {
@@ -356,10 +376,9 @@ describe('while a dare is owed', () => {
 
     assert.equal(state.activeDare, null)
     assert.equal(state.questionIndex, 3, 'the refused question is behind them now')
-    assert.deepEqual(thirtySixQuestions.actors(state).sort(), [
-      alice.sessionId,
-      bob.sessionId,
-    ].sort())
+    // Bob alone: he holds card 3, and he is also the only one with a veto left
+    // — Alice spent hers to land here. Both routes into `actors` point at him.
+    assert.deepEqual(thirtySixQuestions.actors(state), [bob.sessionId])
   })
 
   it('projects the dare so the UI can render it', () => {
@@ -513,11 +532,36 @@ describe('walking out', () => {
 })
 
 describe('viewFor', () => {
-  it('shows both players the same thing, because nothing is secret', () => {
+  it('shows the question only to whoever is holding the card', () => {
+    const state = opening()
+
+    assert.equal(
+      projection(state, alice.sessionId).question,
+      QUESTIONS[state.deck[0] ?? -1],
+      'Alice holds seat 0, so she reads card 0 out loud',
+    )
+    assert.equal(
+      projection(state, bob.sessionId).question,
+      null,
+      'the partner answers the question, they do not read ahead',
+    )
+    assert.equal(
+      projection(state, null).question,
+      null,
+      'and an observer is not in the conversation at all',
+    )
+  })
+
+  it('shows everything BUT the question text to both alike', () => {
     const state = vetoed(advance(opening(), 7))
 
-    assert.deepEqual(projection(state, alice.sessionId), projection(state, bob.sessionId))
-    assert.deepEqual(projection(state, null), projection(state, alice.sessionId))
+    // The card is the only scoped field. The dare, the veto tally, the set
+    // number and the clock are all public — a partner who could not see the
+    // dare could not confirm it.
+    assert.deepEqual(
+      { ...projection(state, alice.sessionId), question: null },
+      { ...projection(state, bob.sessionId), question: null },
+    )
   })
 
   it('does not publish the seat order, which the UI never needs', () => {
