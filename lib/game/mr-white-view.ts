@@ -182,9 +182,15 @@ export const PHASE_SECONDS: Record<MrWhitePhase, number | null> = {
 
 /**
  * `lobby` is the pre-game and post-game channel; `table` is the living players
- * mid-game; `dead` only ever reaches eliminated players.
+ * mid-game; `dead` only ever reaches eliminated players; `pack` is Werewolf's
+ * private wolf line at night.
+ *
+ * `pack` lives in this module with the others because the transcript is shared
+ * furniture — the panel styles every channel any game can produce, and a wolf
+ * conferring at night looking identical to ordinary table talk was a real way
+ * to say the wrong thing to the wrong room.
  */
-export type ChatChannel = 'lobby' | 'table' | 'dead'
+export type ChatChannel = 'lobby' | 'table' | 'dead' | 'pack'
 
 export interface ChatEntryMessage {
   kind: 'message'
@@ -313,6 +319,30 @@ export function canChat(
   if (sessionId && !isAlive(table, sessionId)) return true
 
   return CHAT_OPEN_PHASES.includes(table.phase)
+}
+
+/**
+ * Who will hear the next thing you type, in words.
+ *
+ * Null whenever the field is shut. Written against the same branches as
+ * `canChat` immediately above, so the two cannot disagree about whether there
+ * is an audience at all — and mirroring the server's `chatAudience`, which is
+ * the thing that actually decides.
+ *
+ * Worth showing because it is invisible otherwise: eliminated players carry on
+ * typing into a room only other eliminated players can read, and nothing on the
+ * old panel said so until somebody noticed nobody had replied.
+ */
+export function chatAudienceLabel(
+  table: MrWhiteTable | null,
+  sessionId: string | null,
+): string | null {
+  if (!table) return 'everyone in the room'
+  if (table.finished) return 'everyone in the room'
+  if (sessionId && !isPlaying(table, sessionId)) return null
+  if (sessionId && !isAlive(table, sessionId)) return 'the others who are out'
+
+  return CHAT_OPEN_PHASES.includes(table.phase) ? 'the table' : null
 }
 
 // --- The lobby room's furniture --------------------------------------------

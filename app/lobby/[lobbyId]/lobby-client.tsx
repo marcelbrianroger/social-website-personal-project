@@ -7,6 +7,7 @@ import { SHELL, SystemNote } from '@/components/site-chrome'
 import {
   asMrWhite,
   canChat as canChatMrWhite,
+  chatAudienceLabel as audienceMrWhite,
   isAlive as isAliveMrWhite,
   isPlaying as isPlayingMrWhite,
   mrWhiteSummary,
@@ -17,6 +18,7 @@ import { useGameChat } from '@/lib/game/use-game-chat'
 import {
   asWerewolf,
   canChat as canChatWerewolf,
+  chatAudienceLabel as audienceWerewolf,
   isAlive as isAliveWerewolf,
   isPlaying as isPlayingWerewolf,
   werewolfSummary,
@@ -145,6 +147,19 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
       ? canChatWerewolf(werewolf, you)
       : true
 
+  /**
+   * Who hears the next thing you type.
+   *
+   * Comes from the game rather than being inferred from `chatOpen`, because the
+   * interesting case is the one an open field cannot express: a wolf at night
+   * is talking to two people, not to the village.
+   */
+  const chatAudience = mrWhite
+    ? audienceMrWhite(mrWhite, you)
+    : werewolf
+      ? audienceWerewolf(werewolf, you)
+      : 'everyone in the room'
+
   const {
     entries,
     error: chatError,
@@ -213,15 +228,21 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
         Three panes, placed rather than ordered, because the reading order has
         to change twice on the way up.
 
-          phone   the table (clock on top of it), then your hand, then the talk.
+          phone   the table (clock on top of it), then the talk, then your hand.
           lg      the table with the talk under it; your hand pinned right.
-          xl      the talk moves out to its own column and the table centres.
+          xl      the talk takes its own column beside the board.
 
         Explicit `col-start` / `row-start` rather than `order`: the board wants
         the widest column at every width, and expressing that as a reshuffle of
         a single flow is how it ends up 260px wide on a 1024 screen.
+
+        THE TALK IS WIDER THAN THE HAND, and that is the point. Half of Werewolf
+        is an argument; the role card is a thing you read once and check twice.
+        Sizing them the same is what made the transcript read as a side panel.
+        On a phone it comes second, directly under the board, for the same
+        reason — it used to be last, below a role card nobody re-reads.
       */}
-      <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_19rem] xl:grid-cols-[19rem_minmax(0,1fr)_19rem]">
+      <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_19rem] xl:grid-cols-[24rem_minmax(0,1fr)_17rem]">
         <div className="space-y-5 lg:col-start-1 lg:row-start-1 xl:col-start-2 xl:row-span-2 xl:row-start-1">
           {gameId === 'mr-white' ? (
             <MrWhiteActions
@@ -256,6 +277,21 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
           )}
         </div>
 
+        <div className="lg:col-start-1 lg:row-start-2 xl:col-start-1 xl:row-span-2 xl:row-start-1">
+          <ChatPanel
+            entries={entries}
+            you={you}
+            seats={summary.seats}
+            phaseLabel={summary.phaseLabel}
+            open={chatOpen}
+            audience={chatAudience}
+            deadChannel={started && playing && !alive}
+            waiting={started && !playing}
+            error={chatError}
+            onSend={send}
+          />
+        </div>
+
         <div className="space-y-5 self-start lg:col-start-2 lg:row-span-2 lg:row-start-1 xl:col-start-3">
           {/* Before the deal the host decides what this table is playing. */}
           {!started && (
@@ -281,19 +317,6 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
           {werewolf && (
             <WerewolfRoleCard table={werewolf} you={you} waiting={!playing} />
           )}
-        </div>
-
-        <div className="lg:col-start-1 lg:row-start-2 xl:col-start-1 xl:row-span-2 xl:row-start-1">
-          <ChatPanel
-            entries={entries}
-            you={you}
-            phaseLabel={summary.phaseLabel}
-            open={chatOpen}
-            deadChannel={started && playing && !alive}
-            waiting={started && !playing}
-            error={chatError}
-            onSend={send}
-          />
         </div>
       </div>
     </div>

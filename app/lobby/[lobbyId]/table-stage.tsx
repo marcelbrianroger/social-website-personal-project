@@ -202,6 +202,20 @@ export function TableStage({
         preserveAspectRatio="none"
         className="pointer-events-none absolute inset-0 hidden size-full lg:block"
       >
+        {/* Screened, at the size a cheap duplicator actually prints at. The
+            transcript carries the same halftone, which is what makes the two
+            read as one surface rather than a drawing next to a text box. */}
+        <defs>
+          <pattern
+            id="table-halftone"
+            width={2.4}
+            height={2.4}
+            patternUnits="userSpaceOnUse"
+          >
+            <circle cx={0.6} cy={0.6} r={0.42} className="fill-ink" opacity={0.09} />
+          </pattern>
+        </defs>
+
         <path
           d={TABLE_PATH}
           className="fill-stock stroke-ink"
@@ -209,6 +223,8 @@ export function TableStage({
           strokeLinejoin="round"
           vectorEffect="non-scaling-stroke"
         />
+
+        <path d={TABLE_PATH} fill="url(#table-halftone)" stroke="none" />
 
         {/* The edge of the table is printed pink for as long as there is time
             left on it, and drops back to ink as that runs out. */}

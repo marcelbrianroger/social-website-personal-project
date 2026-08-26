@@ -386,6 +386,52 @@ body {
  * outermost card flush with the board's edge at every size rather than
  * escaping it on a narrow column.
  */
+/*
+ * Halftone.
+ *
+ * The one riso artifact the wall never needed and the table does: a printed
+ * surface, at the size a cheap duplicator actually screens at. It gives the
+ * transcript a ground, so the gaps between slips read as the table they are
+ * lying on rather than as an empty box.
+ *
+ * The alpha is baked into the SVG rather than applied as `opacity`, which would
+ * fade every slip sitting on top of it. Generated rather than an image file,
+ * for the same reason the grain is: nothing external loads.
+ */
+.halftone {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='7'%3E%3Ccircle cx='1.6' cy='1.6' r='1.1' fill='%2316284b' fill-opacity='0.075'/%3E%3C/svg%3E");
+  background-size: 7px 7px;
+}
+
+/*
+ * A line laid down on the table.
+ *
+ * Paper arriving, not a message appearing: it comes in a shade over-rotated and
+ * settles onto its resting tilt. `--tilt` is set per slip and the keyframe ends
+ * on exactly that transform, because `both` fill leaves the last frame in force
+ * forever — a keyframe ending at `rotate(0)` would straighten every slip in the
+ * transcript the moment it finished.
+ */
+@keyframes lay-down {
+  from {
+    opacity: 0;
+    transform: rotate(calc(var(--tilt, 0deg) - 3.5deg)) translateY(-9px);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(var(--tilt, 0deg)) translateY(0);
+  }
+}
+
+/*
+ * Safe to run on mount for every slip, because the transcript starts empty and
+ * only grows — chat is never persisted or replayed, so a slip mounting IS a
+ * slip arriving. See `lib/game/use-game-chat.ts`.
+ */
+.animate-lay-down {
+  animation: lay-down 260ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
 .table-board {
   container-type: inline-size;
 }
@@ -419,6 +465,11 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-deal,
   .animate-tap {
+    animation: none;
+  }
+
+  /* The tilt is the resting state, not the flourish — it has to survive. */
+  .animate-lay-down {
     animation: none;
   }
 

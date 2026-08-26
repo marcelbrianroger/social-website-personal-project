@@ -607,6 +607,34 @@ export function canChat(
   return CHAT_OPEN_PHASES.includes(table.phase)
 }
 
+/**
+ * Who will hear the next thing you type, in words.
+ *
+ * Null whenever the field is shut. Written against the same branches as
+ * `canChat` immediately above, so the two cannot disagree about whether there
+ * is an audience at all — and mirroring the server's `chatAudience`, which is
+ * the thing that actually decides.
+ *
+ * THIS MATTERS MOST FOR THE PACK. A wolf typing at night is on a private line
+ * to the other wolves, and nothing on the old panel distinguished that from
+ * talking to the whole village. Getting that wrong once loses the game.
+ */
+export function chatAudienceLabel(
+  table: WerewolfTable | null,
+  sessionId: string | null,
+): string | null {
+  if (!table) return 'everyone in the room'
+  if (table.finished) return 'everyone in the room'
+  if (sessionId && !isPlaying(table, sessionId)) return null
+  if (sessionId && !isAlive(table, sessionId)) return 'the others who are out'
+
+  if (NIGHT_PHASES.includes(table.phase)) {
+    return table.yourRole === 'werewolf' ? 'your pack only' : null
+  }
+
+  return CHAT_OPEN_PHASES.includes(table.phase) ? 'the living' : null
+}
+
 // --- The lobby room's furniture --------------------------------------------
 
 /**
