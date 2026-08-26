@@ -147,36 +147,7 @@ export default async function Home() {
           The button's paper-coloured edge around a yellow fill is a mock
           mis-registration — the small imperfection a real print run has when
           two plates do not land in exactly the same place. */}
-      <section className="border-t-2 border-ink bg-ink py-14 text-paper sm:py-18">
-        <div className={SHELL}>
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-16">
-            <div>
-              <p className="font-mono text-xs lowercase tracking-wide text-paper/55">
-                no roles, no rounds
-              </p>
-              <h2
-                className="mt-4 font-display text-[clamp(1.875rem,5vw,3.25rem)] leading-[1.02] tracking-[-0.02em]"
-                style={{ fontVariationSettings: "'wght' 800, 'wdth' 92" }}
-              >
-                Or just show your face.
-              </h2>
-              <p className={`${READING} mt-5 text-[1.0625rem] leading-relaxed text-paper/90`}>
-                Two people per room. Press once and wait until somebody else is
-                waiting too, or type in a room ID if you already arranged it.
-                Video goes straight from browser to browser, never through our
-                server — on our side there is nothing to record.
-              </p>
-            </div>
-
-            <Link
-              href="/rooms"
-              className="inline-flex shrink-0 items-center justify-center border-2 border-paper bg-yellow px-9 py-4 font-mono text-base text-ink transition-colors hover:bg-pink"
-            >
-              Open a room
-            </Link>
-          </div>
-        </div>
-      </section>
+      
 
       {/* ------------------------------------------------- games: the news */}
       <section className="border-t-2 border-ink py-14 sm:py-18">
@@ -242,6 +213,37 @@ export default async function Home() {
                 </Link>
               </article>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t-2 border-ink bg-ink py-14 text-paper sm:py-18">
+        <div className={SHELL}>
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-16">
+            <div>
+              <p className="font-mono text-xs lowercase tracking-wide text-paper/55">
+                no roles, no rounds
+              </p>
+              <h2
+                className="mt-4 font-display text-[clamp(1.875rem,5vw,3.25rem)] leading-[1.02] tracking-[-0.02em]"
+                style={{ fontVariationSettings: "'wght' 800, 'wdth' 92" }}
+              >
+                Or just show your face.
+              </h2>
+              <p className={`${READING} mt-5 text-[1.0625rem] leading-relaxed text-paper/90`}>
+                Two people per room. Press once and wait until somebody else is
+                waiting too, or type in a room ID if you already arranged it.
+                Video goes straight from browser to browser, never through our
+                server — on our side there is nothing to record.
+              </p>
+            </div>
+
+            <Link
+              href="/rooms"
+              className="inline-flex shrink-0 items-center justify-center border-2 border-paper bg-yellow px-9 py-4 font-mono text-base text-ink transition-colors hover:bg-pink"
+            >
+              Open a room
+            </Link>
           </div>
         </div>
       </section>
