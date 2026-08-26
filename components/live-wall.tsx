@@ -3,16 +3,16 @@
 import Link from 'next/link'
 import { useState } from 'react'
 
-import { MARKED, SystemNote } from '@/app/chrome'
-import { BOARD, WallSlip } from '@/app/wall-slip'
-import { useDuduWall } from '@/lib/dudu/use-dudu-wall'
+import { MARKED, SystemNote } from '@/components/site-chrome'
+import { BOARD, WallSlip } from '@/components/wall-slip'
+import { useWall } from '@/lib/wall/use-wall'
 
 /**
  * The board on the home page — the real one.
  *
  * This used to be a written-out mock-up, which made the most prominent thing on
  * the site the only thing on it that was not true. It now holds the same
- * messages /wall holds: the same socket, the same history, the same 24 hours.
+ * messages /wall holds: the same socket, the same history, the same 48 hours.
  * If nobody has posted, the home page says so rather than inventing company.
  *
  * WHY THE NEWEST, NOT THE OLDEST: the server hands back the newest first, and a
@@ -28,7 +28,7 @@ import { useDuduWall } from '@/lib/dudu/use-dudu-wall'
 const VISIBLE = 6
 
 export function LiveWall() {
-  const { messages, connected, error } = useDuduWall()
+  const { messages, connected, error } = useWall()
 
   /**
    * Anything written after this moment went up while the visitor was watching,

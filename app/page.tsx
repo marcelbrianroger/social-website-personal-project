@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-import { READING, SHELL } from "@/app/chrome";
-import { LiveWall } from "@/app/live-wall";
-import { GAMES } from "@/lib/games/catalogue";
+import { READING, SHELL } from "@/components/site-chrome";
+import { LiveWall } from "@/components/live-wall";
+import { GAMES } from "@/lib/game/catalogue";
 import { getCurrentSession } from "@/lib/session/current-session";
 
 /**
@@ -13,9 +13,9 @@ import { getCurrentSession } from "@/lib/session/current-session";
  * how the people this is for genuinely talk, and it is doing more work than any
  * amount of styling to say who the site belongs to.
  *
- * Every claim is checked against the code: the 24 hours come from
+ * Every claim is checked against the code: the 48 hours come from
  * DUDU_TTL_SECONDS, the two-per-room from ROOM_CAPACITY, and the seat ranges
- * from the game registry by way of `lib/games/catalogue.ts`.
+ * from the game registry by way of `lib/game/catalogue.ts`.
  *
  * The page runs at board width. It used to be a 64rem column centred in a
  * 1600px window, which fought the thing the whole site is drawn from: a mading
@@ -70,7 +70,7 @@ export default async function Home() {
             beats one narrow column with everything stacked in it. */}
         <div className="mt-12 grid gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-16">
           <p className={`${READING} text-[1.1875rem] leading-relaxed text-ink`}>
-            Write anything on the wall and it deletes itself after 24 hours. Go
+            Write anything on the wall and it deletes itself after 48 hours. Go
             straight into a video call with whoever is online. Or sit down at a
             table and play something with five other people. No introductions
             first, no sign-up.
@@ -113,7 +113,7 @@ export default async function Home() {
                 className="mt-4 font-display text-[clamp(1.875rem,5vw,3.25rem)] leading-[1.02] tracking-[-0.02em]"
                 style={{ fontVariationSettings: "'wght' 800, 'wdth' 92" }}
               >
-                Everything is gone after 24 hours.
+                Everything is gone after 48 hours.
               </h2>
             </div>
 
@@ -234,7 +234,7 @@ export default async function Home() {
                 Two people per room. Press once and wait until somebody else is
                 waiting too, or type in a room ID if you already arranged it.
                 Video goes straight from browser to browser, never through our
-                server — on our side there is nothing to record.
+                server, on our side there is nothing to record.
               </p>
             </div>
 
@@ -271,7 +271,7 @@ export default async function Home() {
                 Nothing is kept
               </dt>
               <dd className="mt-2.5 text-[0.9375rem] leading-relaxed text-ink">
-                The wall holds a note for 24 hours and then throws it away.
+                The wall holds a note for 48 hours and then throws it away.
                 Games are deleted the moment the room empties. Video is never
                 recorded, because it never reaches us in the first place.
               </dd>

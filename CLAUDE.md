@@ -1,42 +1,80 @@
 @AGENTS.md
 
-# Development Guidelines
-- **CRITICAL: SKIP TESTS.** Do NOT write, generate, update, or run any test files (`.test.ts`, `.spec.ts`, etc.) unless explicitly asked. Focus strictly on backend core logic, state management, and frontend UI components. This is to conserve token usage.
-
 # Project Overview
-A web-based multiplayer gaming and real-time communication platform. Features include P2P video calls (WebRTC), automated matchmaking, a 24-hour ephemeral public message board (DUDU Wall), and bot-driven board games. 
+
+An anonymous, ephemeral social platform for Indonesian students in Aachen. Four
+features: the **DUDU wall** (48h-TTL public board), **P2P video rooms**, FIFO
+**matchmaking**, and server-authoritative **multiplayer games** (Tic-Tac-Toe,
+Mr. White, 36 Questions, Werewolf).
+
+Read `README.md` first — it is the source of truth for architecture, and it
+explains *why* each piece is shaped the way it is. This file only carries the
+rules that are not obvious from reading the code.
 
 # Architecture & Tech Stack
-- **Frontend:** Next.js (App Router), React, TailwindCSS.
-- **Backend:** Node.js, Express, Socket.io (for signaling and game state).
-- **Database:** PostgreSQL (via Prisma ORM).
-- **Caching & State:** Redis (for Socket.io adapter, matchmaking queue, and DUDU wall TTL).
-- **Infrastructure:** Local Docker Engine (`docker-compose` for Postgres and Redis).
-- **Security:** Anonymous JWT sessions (UUID/nickname), strict Region Lock (MaxMind GeoIP targeting Germany).
+
+- **Frontend:** Next.js 16 (App Router), React 19, Tailwind 4 — at the repo root.
+- **Realtime:** Node.js + Socket.io, in `server/`. Its own package and tsconfig.
+  No Express — Socket.io attaches to a bare `node:http` server.
+- **Database:** PostgreSQL 18 via Prisma 7. Native install, not Docker.
+- **Cache & bus:** Redis — Socket.io adapter, matchmaking queue, room registry,
+  game state, DUDU wall TTL. `docker-compose` provides Redis only.
+- **Security:** Anonymous JWT sessions (UUID + generated nickname), region lock
+  via MaxMind GeoIP / `x-vercel-ip-country`.
 
 # Development Rules
 
-## 1. Codebase Structure
-- Maintain a strict separation between `frontend/` (Next.js) and `server/` (Node.js). 
-- Do not mix React server components with Express logic.
-- Ensure the JWT contract remains synchronized between `frontend/` and `server/`.
+## 1. Codebase structure
 
-## 2. Real-Time & WebRTC
-- Use Socket.io strictly for signaling (offer, answer, ice-candidate), matchmaking, and text/game state. 
-- Video/Audio streaming MUST remain Peer-to-Peer (WebRTC) to minimize server bandwidth.
-- WebRTC rooms are limited to 2 users (full mesh not required for now).
-- State management for Socket.io rooms must utilize `@socket.io/redis-adapter` to ensure scalability across multiple nodes.
+- The Next.js app is at the **repo root** (`app/`, `components/`, `lib/`); the
+  realtime backend is in `server/`. There is no `frontend/` directory.
+- `app/` holds only App Router conventions — routes, `layout.tsx`, `page.tsx`.
+  Shared client components live in `components/`, shared logic in `lib/`.
+- The two packages **cannot import each other**. The wire protocol is mirrored
+  by hand in `lib/socket/events.ts` and `server/src/events.ts` — adding or
+  renaming an event means editing both.
+- The JWT contract is likewise mirrored between `lib/session/session.ts` and
+  `server/src/session.ts`. Issuer, audience, algorithm and claim names are
+  verified byte-for-byte; changing one side breaks every socket handshake.
 
-## 3. Database & Caching
-- **PostgreSQL:** Used exclusively for persistent data (user stats, persistent settings). 
-- **Redis:** Used for all ephemeral data. The "DUDU Wall" must rely entirely on Redis with a strict 24-hour TTL (Time-To-Live). Do not store DUDU Wall posts in PostgreSQL.
+## 2. Real-time & WebRTC
 
-## 4. Security & Access
-- Never blindly trust client payloads. Validate all WebRTC signaling events against shared room membership on the server.
-- The Region Lock middleware defaults to `GEO_FALLBACK=allow` during local development without the `.mmdb` database. Do not enforce strict rejection until the database is present.
-- Environment variables containing credentials MUST NOT have `NEXT_PUBLIC_` prefixes unless strictly required by the frontend.
+- Socket.io carries signalling (offer, answer, ice-candidate), matchmaking, chat
+  and game state. Audio and video stay **peer-to-peer** and never reach the server.
+- `ROOM_CAPACITY = 2` (video rooms) and `LOBBY_CAPACITY = 8` (game tables) are
+  deliberately different primitives. Do not collapse them.
+- Room membership lives in **Redis, not `socket.data`** — matchmaking can make a
+  socket on another node join a room, and local state would not record it.
+- Capacity and pair-popping are enforced in **Lua**, not in application code. Two
+  nodes checking separately would both see room and both insert.
 
-## 5. Execution Protocol
-- Focus on robust error handling, especially for WebRTC connection drops and Socket.io reconnections.
-- Before suggesting complex architectural overhauls, prioritize lightweight, local-first solutions suitable for a Home Server environment.
-- Write concise, production-ready TypeScript code. Avoid overly verbose comments unless explaining complex WebRTC SDP negotiation logic.
+## 3. Database & caching
+
+- **PostgreSQL:** persistent data only. Currently schema + migrations; the
+  realtime server does not write to it yet.
+- **Redis:** all ephemeral state. The DUDU wall is Redis-only with a strict 48h
+  TTL — never persist wall posts to Postgres.
+
+## 4. Security & access
+
+- Never trust client payloads. Validate every signalling event against shared
+  room membership **on the server**.
+- Clients submit game *intent* ("cell 4"), never state. Moves are validated
+  against stored state before anything is applied.
+- `viewFor` is the anti-cheat seam: project state per viewer before it goes on
+  the wire. Hidden-role games depend on this entirely.
+- The region lock defaults to `GEO_FALLBACK=allow` in local development without
+  the `.mmdb`. Do not enforce strict rejection until the database is present.
+- Credentials in environment variables MUST NOT carry a `NEXT_PUBLIC_` prefix.
+
+## 5. Execution protocol
+
+- Run `npm run verify` before calling work done — typecheck, lint, build, server
+  typecheck, integration tests and the web smoke, in one command.
+- Integration tests in `server/tests/` run against **real Redis on database 15**.
+  The harness refuses any other database because it calls `flushdb`.
+- Handle WebRTC connection drops and Socket.io reconnection explicitly.
+- Prefer lightweight, local-first solutions suitable for a home-server
+  deployment over architectural overhauls.
+- Comments explain *why*, not *what*. The existing codebase sets the standard —
+  match its density rather than stripping or padding it.

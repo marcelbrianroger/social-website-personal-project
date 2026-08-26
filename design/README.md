@@ -1,7 +1,8 @@
 # Design references
 
-Drop things in here and tell Claude "look at `design/`". Images, photos, PDFs,
-screenshots — anything.
+Source material for the visual direction — images, photos, PDFs, screenshots.
+The direction itself is documented under "Design" in the root `README.md`; this
+directory holds the raw input behind it.
 
 ```
 design/

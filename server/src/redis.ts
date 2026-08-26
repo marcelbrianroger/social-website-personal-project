@@ -102,7 +102,7 @@ export const keys = {
    */
   gameDisconnects: 'games:disconnects',
 
-  /** STRING of DuduMessage JSON, carrying its own 24h TTL. */
+  /** STRING of DuduMessage JSON, carrying its own 48h TTL. */
   duduMessage: (id: string) => `dudu:message:${id}`,
   /** ZSET of message ids scored by epoch-ms post time. */
   duduWall: 'dudu:wall',
@@ -154,8 +154,8 @@ export const disconnectEntry = {
   },
 } as const
 
-/** DUDU messages auto-delete exactly 24 hours after posting. */
-export const DUDU_TTL_SECONDS = 24 * 60 * 60
+/** DUDU messages auto-delete exactly 48 hours after posting. */
+export const DUDU_TTL_SECONDS = 48 * 60 * 60
 
 /**
  * Room keys expire as a safety net. If a node dies without running its

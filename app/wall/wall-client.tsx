@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 
-import { ConnectionStatus, SHELL, SystemNote } from "@/app/chrome";
-import { BOARD, WallSlip } from "@/app/wall-slip";
-import { useDuduWall } from "@/lib/dudu/use-dudu-wall";
+import { ConnectionStatus, SHELL, SystemNote } from "@/components/site-chrome";
+import { BOARD, WallSlip } from "@/components/wall-slip";
+import { useWall } from "@/lib/wall/use-wall";
 import { MAX_MESSAGE_LENGTH } from "@/lib/socket/events";
 
 export function WallClient() {
   const { messages, session, connected, error, posting, post, clearError } =
-    useDuduWall();
+    useWall();
   const [draft, setDraft] = useState("");
 
   const remaining = MAX_MESSAGE_LENGTH - draft.length;
@@ -27,7 +27,7 @@ export function WallClient() {
             className="mt-3 font-display text-[clamp(1.875rem,5vw,3rem)] leading-[1.02] tracking-[-0.02em]"
             style={{ fontVariationSettings: "'wght' 800, 'wdth' 92" }}
           >
-            Everything is gone after 24 hours.
+            Everything is gone after 48 hours.
           </h1>
         </div>
 

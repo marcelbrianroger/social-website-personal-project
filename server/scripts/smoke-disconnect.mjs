@@ -3,7 +3,7 @@
  * given up on.
  *
  * Source of truth:
- * docs/superpowers/specs/2026-08-04-disconnect-lifecycle-design.md
+ * docs/specs/2026-08-04-disconnect-lifecycle.md
  *
  * The unit suite covers the rules (`eliminate`) and the engine (the reconnect
  * window in Redis). What only real sockets can show is the wiring between them:

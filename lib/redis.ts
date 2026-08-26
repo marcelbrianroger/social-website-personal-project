@@ -59,7 +59,7 @@ export function createRedisSubscriber(): Redis {
 export const redisKeys = {
   /** Sorted set of approved DUDU message ids, scored by epoch-ms post time. */
   duduWall: 'dudu:wall',
-  /** Individual message payload; carries its own 24h TTL. */
+  /** Individual message payload; carries its own 48h TTL. */
   duduMessage: (id: string) => `dudu:message:${id}`,
   /** Pub/sub channel that fans approved messages out to every socket node. */
   duduChannel: 'dudu:broadcast',
@@ -67,5 +67,5 @@ export const redisKeys = {
   rateLimit: (sessionId: string) => `ratelimit:dudu:${sessionId}`,
 } as const
 
-/** The DUDU wall's fixed lifetime: messages auto-delete exactly 24h after posting. */
-export const DUDU_TTL_SECONDS = 24 * 60 * 60
+/** The DUDU wall's fixed lifetime: messages auto-delete exactly 48h after posting. */
+export const DUDU_TTL_SECONDS = 48 * 60 * 60

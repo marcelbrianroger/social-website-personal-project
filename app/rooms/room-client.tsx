@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { ConnectionStatus, SHELL, SystemNote, WIDE } from '@/app/chrome'
+import { ConnectionStatus, SHELL, SystemNote, WIDE } from '@/components/site-chrome'
 import { useP2PRoom } from '@/lib/webrtc/use-p2p-room'
 
 import { GameBoard } from './game-board'

@@ -17,7 +17,7 @@ import {
 } from '@/lib/socket/connect'
 
 /**
- * The DUDU wall: a global anonymous feed where posts vanish 24 hours after
+ * The DUDU wall: a global anonymous feed where posts vanish 48 hours after
  * being written.
  *
  * Expiry is enforced by Redis on the server. This hook also drops expired
@@ -34,7 +34,7 @@ function stillAlive(message: DuduBroadcast): boolean {
   return new Date(message.expiresAt).getTime() > Date.now()
 }
 
-export function useDuduWall() {
+export function useWall() {
   const [messages, setMessages] = useState<DuduBroadcast[]>([])
   const [session, setSession] = useState<AnonymousSession | null>(null)
   const [connected, setConnected] = useState(false)
@@ -109,7 +109,7 @@ export function useDuduWall() {
     }
   }, [addMessage])
 
-  // Drop messages that have aged past their 24h window.
+  // Drop messages that have aged past their 48h window.
   useEffect(() => {
     const timer = setInterval(() => {
       setMessages((current) => {

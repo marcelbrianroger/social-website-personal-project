@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { SHELL, SystemNote } from '@/app/chrome'
+import { SHELL, SystemNote } from '@/components/site-chrome'
 import {
   asMrWhite,
   canChat as canChatMrWhite,

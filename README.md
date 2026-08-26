@@ -5,7 +5,7 @@ An anonymous, ephemeral social platform for Indonesian students in Aachen.
 Four things live here:
 
 - **DUDU wall** — a shared board. Anyone online can post; every note deletes
-  itself 24 hours later. No archive, no undo.
+  itself 48 hours later. No archive, no undo.
 - **Video rooms** — two people per room, peer-to-peer. Audio and video never
   reach the server.
 - **Matchmaking** — press once, wait, and get paired with whoever else is
@@ -23,6 +23,10 @@ cookie. Access is restricted to visitors in Germany.
 > `dudu_redis` container, the `dududb` database. Those are load-bearing: the JWT
 > issuer in particular is verified byte-for-byte by `server/src/session.ts`, and
 > renaming it breaks every socket handshake.
+>
+> **File names are not.** Nothing on the wire reads a path, so the modules are
+> named for what they do — `lib/wall/`, `server/src/wall.ts` — and the DUDU
+> identifiers stay put inside them.
 
 ## Stack
 
@@ -194,7 +198,7 @@ empties.
 
 ### DUDU wall
 
-Redis only, never Postgres. Messages carry a 24-hour TTL (`DUDU_TTL_SECONDS`), a
+Redis only, never Postgres. Messages carry a 48-hour TTL (`DUDU_TTL_SECONDS`), a
 sorted set indexes them by post time, and a pub/sub channel fans approved
 messages to every node. Posts are rate limited per session and pass a moderation
 filter before broadcast.
@@ -261,9 +265,11 @@ wipe another's fixtures mid-assertion.
 | `matchmaking.test.ts`             | FIFO, dedupe, cancel, atomic pair pop under concurrency       |
 | `game-engine.test.ts`             | Atomic start, compare-and-set, forfeit, TTL, `buildView`      |
 | `rooms.test.ts`                   | Atomic capacity, join order, relay authorisation              |
+| `disconnect.test.ts`              | Leave, rejoin and forfeit across the disconnect lifecycle     |
 | `games/tic-tac-toe.test.ts`       | Rules over hostile input, `applyMove` purity                  |
+| `games/mr-white.test.ts`          | Roles, redaction, the phase clock, win conditions             |
+| `games/thirty-six-questions.test.ts` | Card scoping, set ramp, dare handling                      |
 | `games/registry.test.ts`          | Lookup, plus contract checks applied to **every** game        |
-| `games/mr-white.pending.test.ts`  | Skipped. The Phase 5 spec as a red baseline                   |
 
 The contract block in `games/registry.test.ts` iterates `listGames()`, so a game
 added later inherits those checks with no edit.
@@ -289,7 +295,7 @@ schema migrating.
 **Working:** region lock, anonymous sessions, socket handshake auth, Prisma
 schema and migration, Redis room registry with the Socket.io Redis adapter,
 WebRTC signalling with same-room authorisation, matchmaking, the DUDU wall with
-its 24h TTL, 8-seat lobbies, game chat with per-role audiences, the phase
+its 48h TTL, 8-seat lobbies, game chat with per-role audiences, the phase
 deadline sweeper, and a server-authoritative game engine running Tic-Tac-Toe,
 Mr. White, 36 Questions and Werewolf.
 
@@ -357,14 +363,28 @@ everything else.
 ## Repo map
 
 ```
-app/            Next.js App Router — pages and client components
-lib/            Frontend logic: session, geo, socket contract, WebRTC, hooks
-server/         Socket.io backend, its own package
-  src/games/    Game rules. Add a definition, register it, done
-  tests/        Integration tests against real Redis
-  scripts/      Socket smoke scripts
-prisma/         Schema and migrations
-design/         Design references and notes
-docs/           Specs
-proxy.ts        Request gate — region lock and session issue
+proxy.ts          Request gate — region lock, then session issue or refresh
+app/              Next.js App Router. Routes only — nothing else lives here
+  api/            Route handlers: ICE credentials, nickname, socket ticket
+  lobby/          Game tables, 8 seats — [lobbyId] holds the in-game UI
+  rooms/          Two-person P2P video room
+  wall/           The full DUDU wall
+components/       Shared client components used by more than one route
+lib/              Frontend logic, one directory per concern
+  session/        Anonymous identity — JWT contract, nickname generator
+  geo/            Region lock and MaxMind lookup
+  socket/         Wire protocol, mirrored by hand from server/src/events.ts
+  game/           Per-game view models, hooks, and the game catalogue
+  webrtc/         Peer connection and ICE configuration
+  wall/           Wall hook — history, live arrivals, posting
+server/           Socket.io backend — its own package.json and tsconfig
+  src/            Rooms, matchmaking, lobby, wall, moderation, game engine
+  src/games/      Game rules. Add a definition, register it, done
+  tests/          Integration tests against real Redis (db 15)
+  scripts/        Socket smoke scripts, run against a live server
+prisma/           Schema and migrations
+scripts/          HTTP smoke script for the Next.js app
+data/             GeoLite2 database goes here — licensed, not committed
+design/           Design references and notes
+docs/             Deployment guide and feature specs
 ```

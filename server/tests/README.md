@@ -64,7 +64,7 @@ updates, capacity races. The two are complementary — neither replaces the othe
 ## Phase 5
 
 `games/mr-white.test.ts` encodes the rules in
-`docs/superpowers/specs/2026-08-03-phase5-social-deduction-design.md`. It was
+`docs/specs/2026-08-03-social-deduction.md`. It was
 written as 39 skipped tests before any implementation existed; the
 implementation landed, the skip came off, and all of it now runs.
 
@@ -93,7 +93,7 @@ its own spec, so there is nothing to encode yet.
 
 `disconnect.test.ts` and the `Mr. White — auto-elimination` block in
 `games/mr-white.test.ts` encode
-`docs/superpowers/specs/2026-08-04-disconnect-lifecycle-design.md`.
+`docs/specs/2026-08-04-disconnect-lifecycle.md`.
 
 The split follows the same seam as everything else here: the *rules* for giving
 up on an absent player are pure functions in `games/mr-white.test.ts`, and the

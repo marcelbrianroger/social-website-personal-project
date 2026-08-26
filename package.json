@@ -19,7 +19,7 @@
     "server:build": "npm --prefix server run build",
     "test": "npm --prefix server run test",
     "smoke:web": "node scripts/smoke-web.mjs",
-    "smoke:socket": "npm --prefix server run smoke:handshake && npm --prefix server run smoke:rooms && npm --prefix server run smoke:matchmaking && npm --prefix server run smoke:dudu && npm --prefix server run smoke:game && npm --prefix server run smoke:lobby && npm --prefix server run smoke:disconnect",
+    "smoke:socket": "npm --prefix server run smoke:handshake && npm --prefix server run smoke:rooms && npm --prefix server run smoke:matchmaking && npm --prefix server run smoke:wall && npm --prefix server run smoke:game && npm --prefix server run smoke:lobby && npm --prefix server run smoke:disconnect",
     "verify": "npm run typecheck && npm run lint && npm run build && npm --prefix server run typecheck && npm --prefix server run typecheck:tests && npm run test && npm run smoke:web"
   },
   "dependencies": {

@@ -8,11 +8,11 @@ import { DUDU_TTL_SECONDS, keys, redis } from './redis.js'
  * The DUDU wall: a global, ephemeral, anonymous feed.
  *
  * STORAGE SHAPE
- *   dudu:message:{id}  STRING  the payload, carrying a native 24h TTL
+ *   dudu:message:{id}  STRING  the payload, carrying a native 48h TTL
  *   dudu:wall          ZSET    message ids scored by epoch-ms post time
  *
  * Redis expires the payloads on its own, which is what makes "auto-delete
- * exactly 24 hours after posting" true without a sweeper. ZSET members do NOT
+ * exactly 48 hours after posting" true without a sweeper. ZSET members do NOT
  * expire though, so the index would grow forever — every read prunes entries
  * older than the TTL, which keeps it self-healing without a cron job.
  *

@@ -3,8 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
-import { READING, SHELL } from '@/app/chrome'
-import { GAMES } from '@/lib/games/catalogue'
+import { READING, SHELL } from '@/components/site-chrome'
+import { GAMES } from '@/lib/game/catalogue'
 import { useOpenLobbies } from '@/lib/lobby/use-open-lobbies'
 
 /**

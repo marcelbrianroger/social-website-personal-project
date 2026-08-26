@@ -3,7 +3,7 @@ import { createServer } from 'node:http'
 import { createAdapter } from '@socket.io/redis-adapter'
 import { Server, type Socket } from 'socket.io'
 
-import { getWall, postMessage, wallSize } from './dudu.js'
+import { getWall, postMessage, wallSize } from './wall.js'
 import { env } from './env.js'
 import { composeChat } from './game-chat.js'
 import {

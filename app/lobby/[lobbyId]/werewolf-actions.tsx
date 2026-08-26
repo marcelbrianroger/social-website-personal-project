@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { SystemNote } from '@/app/chrome'
+import { SystemNote } from '@/components/site-chrome'
 import {
   canBond,
   canPoison,

@@ -1,6 +1,6 @@
 'use client'
 
-import { SystemNote } from '@/app/chrome'
+import { SystemNote } from '@/components/site-chrome'
 import { useCountdown, toSeconds } from '@/lib/game/use-countdown'
 import { useGame } from '@/lib/game/use-game'
 import {

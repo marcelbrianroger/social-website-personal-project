@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -49,3 +49,11 @@ next-env.d.ts
 
 # MaxMind GeoLite2 database — licensed, download separately
 /data/*.mmdb
+
+# AI coding-assistant workspaces. Vendored tool documentation and per-machine
+# permission settings — neither is project source. The instructions that DO
+# belong to the project live in AGENTS.md and CLAUDE.md at the repo root.
+.agents/
+.claude/
+.windsurf/
+skills-lock.json

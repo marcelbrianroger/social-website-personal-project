@@ -1,6 +1,6 @@
 'use client'
 
-import { GAMES } from '@/lib/games/catalogue'
+import { GAMES } from '@/lib/game/catalogue'
 
 import { DISPLAY_HEADING, EYEBROW, PANEL } from './controls'
 

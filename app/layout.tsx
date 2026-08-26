@@ -3,7 +3,7 @@ import { Bricolage_Grotesque, Courier_Prime, Karla } from "next/font/google";
 
 import { getCurrentSession } from "@/lib/session/current-session";
 
-import { SiteFooter, SiteHeader } from "./chrome";
+import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import "./globals.css";
 
 /*
@@ -40,7 +40,7 @@ const courier = Courier_Prime({
 export const metadata: Metadata = {
   title: "Social Aachen Website: someone is still awake",
   description:
-    "An anonymous noticeboard for Indonesians in Aachen. Write anything; it deletes itself after 24 hours. Video call whoever is online. No sign-up.",
+    "An anonymous noticeboard for Indonesians in Aachen. Write anything; it deletes itself after 48 hours. Video call whoever is online. No sign-up.",
 };
 
 /**

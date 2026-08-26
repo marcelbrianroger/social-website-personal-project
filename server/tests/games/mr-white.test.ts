@@ -7,7 +7,7 @@ import { teardownRedis } from '../helpers/harness.js'
 /**
  * Mr. White — the Phase 5 spec suite, now live.
  *
- * Source of truth: docs/superpowers/specs/2026-08-03-phase5-social-deduction-design.md
+ * Source of truth: docs/specs/2026-08-03-social-deduction.md
  *
  * These were written as a skipped red baseline before any implementation
  * existed. The implementation landed, so the skip is gone and every assertion
@@ -738,7 +738,7 @@ describe('Mr. White — chat audience', () => {
  * Auto-elimination — what happens when a dropped player never comes back.
  *
  * Source of truth:
- * docs/superpowers/specs/2026-08-04-disconnect-lifecycle-design.md
+ * docs/specs/2026-08-04-disconnect-lifecycle.md
  *
  * The half of this that is easy to get wrong is not the removal, it is the
  * REPAIR. Marking someone absent and stopping there leaves the table deadlocked:

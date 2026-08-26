@@ -42,7 +42,7 @@ enum RoomStatus {
 
 /// A post on the global ephemeral wall.
 ///
-/// `expiresAt` is always createdAt + 24h. Postgres does not expire rows on its
+/// `expiresAt` is always createdAt + 48h. Postgres does not expire rows on its
 /// own, so deletion is driven by the sweeper; Redis holds a parallel copy with a
 /// native TTL so the read path self-expires even if the sweeper is down.
 model DuduMessage {

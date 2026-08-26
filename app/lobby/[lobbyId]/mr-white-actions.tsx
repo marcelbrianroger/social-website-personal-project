@@ -281,7 +281,7 @@ export function MrWhiteActions({
         )}
       </div>
 
-      {/* Written out rather than reusing chrome.tsx's SystemNote, which fills
+      {/* Written out rather than reusing site-chrome.tsx's SystemNote, which fills
           itself bg-stock and would disappear into this panel. */}
       {rejection && (
         <p

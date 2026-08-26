@@ -27,7 +27,7 @@ import {
  * Connection lifecycle — the reconnect window and what happens when it expires.
  *
  * Source of truth:
- * docs/superpowers/specs/2026-08-04-disconnect-lifecycle-design.md
+ * docs/specs/2026-08-04-disconnect-lifecycle.md
  *
  * Seam: the presence functions of src/game-engine.ts plus src/lobby.ts, against
  * real Redis. The RULES for auto-elimination are covered as pure functions in

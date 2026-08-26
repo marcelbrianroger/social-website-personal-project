@@ -18,7 +18,7 @@
     "smoke:handshake": "node scripts/smoke-handshake.mjs",
     "smoke:rooms": "node scripts/smoke-rooms.mjs",
     "smoke:matchmaking": "node scripts/smoke-matchmaking.mjs",
-    "smoke:dudu": "node scripts/smoke-dudu.mjs",
+    "smoke:wall": "node scripts/smoke-wall.mjs",
     "smoke:game": "node scripts/smoke-game.mjs",
     "smoke:lobby": "node scripts/smoke-lobby.mjs",
     "smoke:werewolf": "node scripts/smoke-werewolf.mjs",

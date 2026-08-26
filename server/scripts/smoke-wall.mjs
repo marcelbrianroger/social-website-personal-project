@@ -1,7 +1,7 @@
 /**
  * Smoke test for the DUDU wall: moderation gate, 24h TTL, broadcast, rate limit.
  *
- * Usage: start the server (`npm run dev`), then `npm run smoke:dudu`.
+ * Usage: start the server (`npm run dev`), then `npm run smoke:wall`.
  */
 
 import path from 'node:path'

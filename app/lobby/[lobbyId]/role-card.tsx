@@ -79,7 +79,7 @@ export function RoleCard({
 
       {/* ---------------------------------------------------------- briefing */}
       {/* The pink rule is the site's "the system is telling you something"
-          stamp, borrowed from chrome.tsx's SystemNote. Written out rather than
+          stamp, borrowed from site-chrome.tsx's SystemNote. Written out rather than
           imported because SystemNote fills itself `bg-stock`, and this panel is
           already stock — the note would vanish into it. */}
       <p className="mt-4 border-l-4 border-pink bg-paper px-3 py-2.5 font-mono text-[0.75rem] leading-relaxed text-ink">
