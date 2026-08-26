@@ -17,17 +17,26 @@ import { getCurrentSession } from "@/lib/session/current-session";
  * DUDU_TTL_SECONDS, the two-per-room from ROOM_CAPACITY, and the seat ranges
  * from the game registry by way of `lib/games/catalogue.ts`.
  *
- * TWO THINGS CHANGED IN THIS PASS.
- *
- * The page runs at board width now. It used to be a 64rem column centred in a
+ * The page runs at board width. It used to be a 64rem column centred in a
  * 1600px window, which fought the thing the whole site is drawn from: a mading
  * is pinned across a wall, not printed down the middle of one. Prose still sits
  * at a readable measure inside it — wide layout, narrow text.
  *
- * And the games are on it. Werewolf shipped complete and this page had never
- * heard of it, so a visitor could only find it by knowing the URL. Both games
- * are now the second thing you see, with the seat count that decides whether
- * you can play tonight.
+ * FOUR SECTIONS, IN THE ORDER THE HERO PROMISES THEM: the wall, then a video
+ * room, then the two games, then the rules. The hero's three buttons and the
+ * three sections below are the same three things in the same order on
+ * purpose — a visitor should never have to guess where a button on this page
+ * leads.
+ *
+ * THE VIDEO SECTION IS A DIFFERENT PLATE, not another card. A riso job is a
+ * stack of flat spot inks, and a video room is a different kind of thing from
+ * a game — two people and a camera, no roles, no rounds — so it prints on the
+ * dark plate instead of the paper one, full-bleed, rather than sitting in a
+ * card that would read as a third, lesser game.
+ *
+ * Both games are on the page rather than one: Werewolf shipped complete and
+ * this page had only ever heard of Mr. White, so a visitor could find the
+ * second game only by knowing its URL.
  *
  * The board below is the wall itself, not a picture of it — the same socket,
  * history and expiry /wall runs on. Nothing on this page is written by us.
@@ -67,6 +76,8 @@ export default async function Home() {
             first, no sign-up.
           </p>
 
+          {/* Three doors, in the order the page argues for them below: the
+              wall, then a face, then a table. */}
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/wall"
@@ -75,10 +86,93 @@ export default async function Home() {
               Open the wall
             </Link>
             <Link
+              href="/rooms"
+              className="border-2 border-ink px-6 py-3 font-mono text-sm text-ink transition-colors hover:bg-yellow"
+            >
+              Open a room
+            </Link>
+            <Link
               href="/lobby"
               className="border-2 border-ink px-6 py-3 font-mono text-sm text-ink transition-colors hover:bg-yellow"
             >
               Sit down at a table
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* -------------------------------------------- the board: signature */}
+      <section className="border-t-2 border-ink py-14 sm:py-18">
+        <div className={SHELL}>
+          <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
+            <div>
+              <p className="font-mono text-xs lowercase tracking-wide text-ink-soft">
+                the wall
+              </p>
+              <h2
+                className="mt-4 font-display text-[clamp(1.875rem,5vw,3.25rem)] leading-[1.02] tracking-[-0.02em]"
+                style={{ fontVariationSettings: "'wght' 800, 'wdth' 92" }}
+              >
+                Everything is gone after 24 hours.
+              </h2>
+            </div>
+
+            <Link
+              href="/wall"
+              className={`${MARKER} py-0.5 text-sm hover:underline`}
+            >
+              pin something up
+            </Link>
+          </div>
+
+          <p className={`${READING} mt-6 text-[1.0625rem] leading-relaxed text-ink`}>
+            Anyone who is online can pin something up. No archive, no undo,
+            nothing you can ask back. Below is what is on it right now, written
+            by whoever was here before you.
+          </p>
+
+          <div className="mt-10">
+            <LiveWall />
+          </div>
+        </div>
+      </section>
+
+      {/* -------------------------------------------------- video: the plate
+          A different KIND of thing from the games below — two people and a
+          camera, no roles, no rounds — so it gets a different MATERIAL rather
+          than another card in the same stock. A riso job is a stack of flat
+          spot inks; this is the section printed in the dark plate instead of
+          on the paper, full-bleed, so it reads as a different sheet the
+          instant you land here rather than a card that forgot its border.
+          The button's paper-coloured edge around a yellow fill is a mock
+          mis-registration — the small imperfection a real print run has when
+          two plates do not land in exactly the same place. */}
+      <section className="border-t-2 border-ink bg-ink py-14 text-paper sm:py-18">
+        <div className={SHELL}>
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-16">
+            <div>
+              <p className="font-mono text-xs lowercase tracking-wide text-paper/55">
+                no roles, no rounds
+              </p>
+              <h2
+                className="mt-4 font-display text-[clamp(1.875rem,5vw,3.25rem)] leading-[1.02] tracking-[-0.02em]"
+                style={{ fontVariationSettings: "'wght' 800, 'wdth' 92" }}
+              >
+                Or just show your face.
+              </h2>
+              <p className={`${READING} mt-5 text-[1.0625rem] leading-relaxed text-paper/90`}>
+                Two people per room. Press once and wait until somebody else is
+                waiting too, or type in a room ID if you already arranged it.
+                Video goes straight from browser to browser, never through our
+                server — on our side there is nothing to record.
+              </p>
+            </div>
+
+            <Link
+              href="/rooms"
+              className="inline-flex shrink-0 items-center justify-center border-2 border-paper bg-yellow px-9 py-4 font-mono text-base text-ink transition-colors hover:bg-pink"
+            >
+              Open a room
             </Link>
           </div>
         </div>
@@ -148,66 +242,6 @@ export default async function Home() {
                 </Link>
               </article>
             ))}
-          </div>
-
-          {/* Video rooms are a different KIND of thing — two people, a camera,
-              no roles — so they get a band rather than a third equal card that
-              would imply a set of three. */}
-          <article className="mt-6 flex flex-wrap items-baseline justify-between gap-x-10 gap-y-4 border-2 border-ink px-6 py-5">
-            <div>
-              <h3 className="font-display text-xl leading-tight" style={DISPLAY}>
-                Video rooms
-              </h3>
-              <p className={`${READING} mt-2 text-[0.9375rem] leading-relaxed text-ink`}>
-                Two people per room. Press once and wait until somebody else is
-                waiting too, or type in a room ID if you already arranged it.
-                Video goes straight from browser to browser, never through our
-                server, so on our side there is nothing to record.
-              </p>
-            </div>
-
-            <Link
-              href="/rooms"
-              className={`${MARKER} shrink-0 py-0.5 text-sm hover:underline`}
-            >
-              Open a room
-            </Link>
-          </article>
-        </div>
-      </section>
-
-      {/* -------------------------------------------- the board: signature */}
-      <section className="border-t-2 border-ink py-14 sm:py-18">
-        <div className={SHELL}>
-          <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
-            <div>
-              <p className="font-mono text-xs lowercase tracking-wide text-ink-soft">
-                the wall
-              </p>
-              <h2
-                className="mt-4 font-display text-[clamp(1.875rem,5vw,3.25rem)] leading-[1.02] tracking-[-0.02em]"
-                style={{ fontVariationSettings: "'wght' 800, 'wdth' 92" }}
-              >
-                Everything is gone after 24 hours.
-              </h2>
-            </div>
-
-            <Link
-              href="/wall"
-              className={`${MARKER} py-0.5 text-sm hover:underline`}
-            >
-              pin something up
-            </Link>
-          </div>
-
-          <p className={`${READING} mt-6 text-[1.0625rem] leading-relaxed text-ink`}>
-            Anyone who is online can pin something up. No archive, no undo,
-            nothing you can ask back. Below is what is on it right now, written
-            by whoever was here before you.
-          </p>
-
-          <div className="mt-10">
-            <LiveWall />
           </div>
         </div>
       </section>
