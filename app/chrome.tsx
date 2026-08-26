@@ -83,7 +83,7 @@ export function SiteHeader({ session }: { session: AnonymousSession | null }) {
             wall
           </Link>
           <Link href="/rooms" className="hover:bg-yellow">
-            rooms
+            video room
           </Link>
           <Link href="/lobby" className="hover:bg-yellow">
             play

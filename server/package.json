@@ -21,6 +21,7 @@
     "smoke:dudu": "node scripts/smoke-dudu.mjs",
     "smoke:game": "node scripts/smoke-game.mjs",
     "smoke:lobby": "node scripts/smoke-lobby.mjs",
+    "smoke:werewolf": "node scripts/smoke-werewolf.mjs",
     "smoke:disconnect": "node scripts/smoke-disconnect.mjs"
   },
   "dependencies": {

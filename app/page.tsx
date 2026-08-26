@@ -89,13 +89,13 @@ export default async function Home() {
               href="/rooms"
               className="border-2 border-ink px-6 py-3 font-mono text-sm text-ink transition-colors hover:bg-yellow"
             >
-              Open a room
+              Meet someone face to face
             </Link>
             <Link
               href="/lobby"
               className="border-2 border-ink px-6 py-3 font-mono text-sm text-ink transition-colors hover:bg-yellow"
             >
-              Sit down at a table
+              Play a game
             </Link>
           </div>
         </div>
