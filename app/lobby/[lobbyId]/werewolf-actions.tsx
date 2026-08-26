@@ -3,6 +3,7 @@
 import { useState } from 'react'
 
 import { SystemNote } from '@/components/site-chrome'
+import type { TableSummary } from '@/lib/game/table-view'
 import {
   canBond,
   canPoison,
@@ -18,38 +19,51 @@ import {
   readyThreshold,
   witchOptions,
   type WerewolfPhase,
-  type WerewolfPlayer,
   type WerewolfTable,
 } from '@/lib/game/werewolf-view'
 
 import { DISPLAY_HEADING, EYEBROW, PANEL, PRIMARY, SECONDARY } from './controls'
+import { TableStage, type SeatTargeting } from './table-stage'
 
 /** Werewolf's own limits, mirrored from `server/src/games/werewolf.ts`. */
 const MIN_PLAYERS = 5
 const MAX_PLAYERS = 8
 
 /**
- * The one control that changes with the phase — all nine of them.
+ * Werewolf's side of the table: the board it asks you to point at, and the
+ * caption under it that changes with the phase — all nine of them.
  *
- * EVERY BRANCH RENDERS SOMETHING. A player who cannot act is told who they are
- * waiting for, because an empty panel reads as a broken UI: in a timed game a
- * player staring at a blank box assumes the connection dropped rather than that
- * they are asleep. Werewolf leans on this harder than Mr. White does — a plain
- * villager has no night action at all, three nights running.
+ * WHY THE GAME RENDERS THE BOARD. `TableStage` is furniture and reads only
+ * `TableSummary`, but which chairs are live tonight, why one of them is greyed
+ * out and what a click on it means are all Werewolf's business. Handing the
+ * board a descriptor from here keeps that knowledge in one file instead of
+ * mirroring the night rules into the room shell.
+ *
+ * SO EVERY TARGETING PANEL IS GONE. Choosing a person happens on the board;
+ * this panel is left with the things that are not people — heal, pass, ready,
+ * start, and the narration. POINT AT PEOPLE, PRESS THINGS IN YOUR HAND.
+ *
+ * EVERY BRANCH STILL RENDERS SOMETHING. A player who cannot act is told who
+ * they are waiting for, because an empty panel reads as a broken UI: in a timed
+ * game a player staring at a blank box assumes the connection dropped rather
+ * than that they are asleep. Werewolf leans on this harder than Mr. White does
+ * — a plain villager has no night action at all, three nights running.
  *
  * NOTHING HERE DECIDES LEGALITY. `onMove` sends intent and the server judges.
- * Disabling a control is a hint to the player, never enforcement, because
- * anything enforced in the browser can be undone from devtools. The `canX`
- * helpers mirror the server's rules precisely so the hint is usually right, and
- * the server is still the only thing that is always right.
+ * Grey on a chair is a hint to the player, never enforcement, because anything
+ * enforced in the browser can be undone from devtools. The `canX` helpers
+ * mirror the server's rules precisely so the hint is usually right, and the
+ * server is still the only thing that is always right.
  *
- * TWO PANELS BREAK THE "ONE CLICK, ONE MOVE" SHAPE. Cupid's bond needs two
- * names and the server refuses half of one, so the pair is collected locally
+ * TWO CHOICES BREAK THE "ONE CLICK, ONE MOVE" SHAPE. Cupid's bond needs two
+ * names and the server refuses half of one, so the pair is collected here
  * before anything is sent. The Witch has two independent potions and may spend
  * both in a night, so her panel stays open until she says she is done.
  */
 export function WerewolfActions({
   table,
+  summary,
+  capacity,
   you,
   seated,
   isHost,
@@ -61,6 +75,10 @@ export function WerewolfActions({
 }: {
   /** Null until a game starts. */
   table: WerewolfTable | null
+  /** The game-agnostic projection the board draws itself from. */
+  summary: TableSummary
+  /** `LOBBY_CAPACITY`, for the empty chairs before the deal. */
+  capacity: number
   you: string | null
   /** How many people are in the lobby, for the start gate. */
   seated: number
@@ -75,13 +93,21 @@ export function WerewolfActions({
   rejection?: string | null
 }) {
   /**
-   * The day vote you cast, so the panel can say so.
+   * The day vote you cast, so the board can show it.
    *
    * NOT an optimistic game update — `votes` stays `{}` through the whole vote
    * phase by design, so your own choice is the one thing the server will not
    * echo back. Night choices need no equivalent: those ARE echoed.
    */
   const [sent, setSent] = useState<string | null>(null)
+  /**
+   * Cupid's half-finished pair.
+   *
+   * A one-sided bond is not a state the rules have, so the first name lives
+   * here and never as a move. It sits at the top of the component rather than
+   * inside the night-zero panel because the board is what collects it.
+   */
+  const [bond, setBond] = useState<string[]>([])
   const [seenPhase, setSeenPhase] = useState<WerewolfPhase | null>(null)
 
   const phase = table?.phase ?? null
@@ -92,6 +118,121 @@ export function WerewolfActions({
   if (seenPhase !== phase) {
     setSeenPhase(phase)
     setSent(null)
+    setBond([])
+  }
+
+  const dead = table !== null && you !== null && table.dead.includes(you)
+
+  function bondWith(id: string) {
+    if (bond.includes(id)) {
+      setBond(bond.filter((pick) => pick !== id))
+      return
+    }
+
+    // The second name commits the pair. No confirm step: the choice IS the two
+    // names, and an "are you sure" after them adds a click, not a decision.
+    const next = [...bond, id]
+    setBond(next)
+    if (next.length === 2) onMove({ type: 'bond', targets: next })
+  }
+
+  /**
+   * What the board is asking for right now, or null when it is asking nothing.
+   *
+   * One switch, so "which chairs are live" has a single answer per phase rather
+   * than one per panel that could drift from its neighbour.
+   */
+  function targeting(): SeatTargeting | null {
+    if (!table || table.finished) return null
+
+    const living = livingPlayers(table).map((player) => player.sessionId)
+
+    switch (table.phase) {
+      case 'nightZero':
+        if (!canBond(table, you)) return null
+        return {
+          label: 'Tie two people together',
+          targets: living,
+          chosen: bond,
+          blockedFor: (id) =>
+            bond.length >= 2 && !bond.includes(id) ? 'bond made' : null,
+          onPick: bondWith,
+        }
+
+      case 'night': {
+        const action = nightAction(table, you)
+        if (!action) return null
+
+        const choice = nightChoice(table, you)
+
+        return {
+          label: `${NIGHT_VERB[action]} who`,
+          targets: living,
+          chosen: choice ? [choice] : [],
+          blockedFor: (id) =>
+            canTargetTonight(table, you, id)
+              ? null
+              : id === you
+                ? 'yourself'
+                : action === 'kill'
+                  ? 'your pack'
+                  : action === 'inspect'
+                    ? 'already read'
+                    : 'covered',
+          onPick: (target) => onMove({ type: action, target }),
+        }
+      }
+
+      case 'witch':
+        if (
+          table.yourRole !== 'witch' ||
+          dead ||
+          table.witchPoison ||
+          table.poisonUsed
+        ) {
+          return null
+        }
+        return {
+          label: 'Poison who',
+          targets: living,
+          chosen: [],
+          blockedFor: (id) =>
+            canPoison(table, you, id)
+              ? null
+              : id === you
+                ? 'yourself'
+                : 'not tonight',
+          onPick: (target) => onMove({ type: 'poison', target }),
+        }
+
+      case 'revenge':
+        if (!isRevenger(table, you)) return null
+        return {
+          label: 'Shoot who',
+          targets: living,
+          chosen: [],
+          blockedFor: () => null,
+          onPick: (target) => onMove({ type: 'shoot', target }),
+        }
+
+      case 'vote':
+        if (dead) return null
+        return {
+          label: 'Vote for who',
+          targets: living,
+          chosen: sent ? [sent] : [],
+          // Voting for yourself is legal — the server accepts it, and for a
+          // Jester it is the entire strategy.
+          blockedFor: () => null,
+          onPick: (target) => {
+            onMove({ type: 'vote', target })
+            setSent(target)
+          },
+        }
+
+      default:
+        return null
+    }
   }
 
   const body = () => {
@@ -121,10 +262,10 @@ export function WerewolfActions({
         )
 
       case 'nightZero':
-        return <NightZero table={table} you={you} onMove={onMove} />
+        return <NightZero table={table} you={you} bond={bond} />
 
       case 'night':
-        return <Night table={table} you={you} onMove={onMove} />
+        return <Night table={table} you={you} />
 
       case 'witch':
         return <Witch table={table} you={you} onMove={onMove} />
@@ -133,13 +274,13 @@ export function WerewolfActions({
         return <Dawn table={table} />
 
       case 'revenge':
-        return <Revenge table={table} you={you} onMove={onMove} />
+        return <Revenge table={table} you={you} />
 
       case 'day':
         return <Day table={table} you={you} onMove={onMove} />
 
       case 'vote':
-        return <Vote table={table} you={you} sent={sent} onPick={setSent} onMove={onMove} />
+        return <Vote table={table} you={you} sent={sent} />
 
       case 'verdict':
         return <Verdict table={table} />
@@ -150,20 +291,30 @@ export function WerewolfActions({
   }
 
   return (
-    <section className={`${PANEL} p-4`} aria-label="Your move">
-      {/* The shot happened BETWEEN phases — `revenge` closes the instant the
-          trigger is pulled, so the phase that would have narrated it never
-          opens. Without this the victim just turns up dead in the rail. */}
-      {table && <ShotNote table={table} />}
+    <>
+      <TableStage
+        summary={summary}
+        you={you}
+        capacity={capacity}
+        started={table !== null}
+        targeting={targeting()}
+      />
 
-      {body()}
+      <section className={`${PANEL} p-4`} aria-label="Your move">
+        {/* The shot happened BETWEEN phases — `revenge` closes the instant the
+            trigger is pulled, so the phase that would have narrated it never
+            opens. Without this the victim just turns up dead on the board. */}
+        {table && <ShotNote table={table} />}
 
-      {rejection && (
-        <SystemNote alert className="mt-4">
-          {rejection}
-        </SystemNote>
-      )}
-    </section>
+        {body()}
+
+        {rejection && (
+          <SystemNote alert className="mt-4">
+            {rejection}
+          </SystemNote>
+        )}
+      </section>
+    </>
   )
 }
 
@@ -185,59 +336,17 @@ function Lede({ children }: { children: React.ReactNode }) {
   )
 }
 
-/** A pickable list of players. Shared by every targeting panel in the game. */
-function TargetList({
-  targets,
-  chosen,
-  disabledFor,
-  onPick,
-  label,
-}: {
-  targets: WerewolfPlayer[]
-  /** The current pick, or several — Cupid picks two at once. */
-  chosen: string | readonly string[] | null
-  /** Why this target is not pickable, or null when it is. A hint, not a gate. */
-  disabledFor: (sessionId: string) => string | null
-  onPick: (sessionId: string) => void
-  label: string
-}) {
-  const picks = chosen === null ? [] : typeof chosen === 'string' ? [chosen] : chosen
-
+/**
+ * The line that sends you to the board.
+ *
+ * Every phase that wants a person says it the same way and in the same place,
+ * so a player learns once that names are picked out there rather than in here.
+ */
+function AtTheTable({ children }: { children: React.ReactNode }) {
   return (
-    <ul className="mt-3 space-y-1.5" aria-label={label}>
-      {targets.map((player) => {
-        const blocked = disabledFor(player.sessionId)
-        const picked = picks.includes(player.sessionId)
-
-        return (
-          <li key={player.sessionId}>
-            <button
-              type="button"
-              aria-pressed={picked}
-              disabled={blocked !== null}
-              onClick={() => onPick(player.sessionId)}
-              title={blocked ?? undefined}
-              className={`flex w-full items-baseline gap-2 border-2 border-ink px-2.5 py-1.5 text-left font-mono text-[0.75rem] text-ink transition-colors disabled:opacity-40 ${
-                picked ? 'bg-yellow' : 'bg-paper enabled:hover:bg-yellow'
-              }`}
-            >
-              <span className="min-w-0 flex-1 truncate">{player.nickname}</span>
-
-              {blocked && (
-                <span className="shrink-0 text-[0.5625rem] uppercase tracking-wide text-ink-soft">
-                  {blocked}
-                </span>
-              )}
-              {picked && (
-                <span className="shrink-0 text-[0.5625rem] uppercase tracking-wide">
-                  picked
-                </span>
-              )}
-            </button>
-          </li>
-        )
-      })}
-    </ul>
+    <p className="mt-3 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-[0.6875rem] leading-relaxed text-ink">
+      {children}
+    </p>
   )
 }
 
@@ -301,24 +410,17 @@ function StartGate({
 
 // --- Night zero ------------------------------------------------------------
 
-/**
- * Cupid, once, and nobody else ever.
- *
- * COLLECTS BOTH NAMES BEFORE SENDING ANYTHING. A one-sided bond is not a state
- * the rules have, so the half-finished selection lives here in local state and
- * never as a move. Toggling a name off is free right up until the second lands.
- */
+/** Cupid, once, and nobody else ever. */
 function NightZero({
   table,
   you,
-  onMove,
+  bond,
 }: {
   table: WerewolfTable
   you: string | null
-  onMove: (intent: unknown) => void
+  /** Cupid's picks so far, held by the parent because the board collects them. */
+  bond: string[]
 }) {
-  const [picks, setPicks] = useState<string[]>([])
-
   if (!canBond(table, you)) {
     return (
       <Waiting>
@@ -329,37 +431,20 @@ function NightZero({
     )
   }
 
-  const toggle = (id: string) => {
-    if (picks.includes(id)) {
-      setPicks(picks.filter((pick) => pick !== id))
-      return
-    }
-
-    // The second name commits the pair. No confirm step: the choice IS the two
-    // names, and an "are you sure" after them adds a click, not a decision.
-    const next = [...picks, id]
-    setPicks(next)
-    if (next.length === 2) onMove({ type: 'bond', targets: next })
-  }
-
   return (
     <div>
       <p className={EYEBROW}>tie two people together</p>
       <Lede>
-        {picks.length === 0
+        {bond.length === 0
           ? 'From tonight they live and die as one. You may tie yourself in.'
-          : `${nicknameOf(table, picks[0] ?? '') ?? 'Somebody'} is chosen. Pick the second and the bond is made.`}
+          : `${nicknameOf(table, bond[0] ?? '') ?? 'Somebody'} is chosen. The second name makes the bond.`}
       </Lede>
 
-      <TargetList
-        label="Tie together"
-        targets={livingPlayers(table)}
-        chosen={picks}
-        disabledFor={(id) =>
-          picks.length >= 2 && !picks.includes(id) ? 'bond made' : null
-        }
-        onPick={toggle}
-      />
+      <AtTheTable>
+        {bond.length === 0
+          ? 'Click two chairs at the table. Either one comes back off until the pair is complete.'
+          : 'Click the second chair. Or click the first again to take it back.'}
+      </AtTheTable>
     </div>
   )
 }
@@ -372,15 +457,7 @@ const NIGHT_VERB = {
   protect: 'Cover',
 } as const
 
-function Night({
-  table,
-  you,
-  onMove,
-}: {
-  table: WerewolfTable
-  you: string | null
-  onMove: (intent: unknown) => void
-}) {
+function Night({ table, you }: { table: WerewolfTable; you: string | null }) {
   const action = nightAction(table, you)
   const chosen = nightChoice(table, you)
   const pack = packTally(table)
@@ -406,29 +483,21 @@ function Night({
   return (
     <div>
       <p className={EYEBROW}>{NIGHT_VERB[action].toLowerCase()} who</p>
-      <Lede>
-        {chosen
-          ? `Picked ${nicknameOf(table, chosen) ?? '-'}. You can still change it until the night is over.`
-          : hint}
-      </Lede>
+      <Lede>{hint}</Lede>
 
-      <TargetList
-        label={`${NIGHT_VERB[action]} who`}
-        targets={livingPlayers(table)}
-        chosen={chosen}
-        disabledFor={(id) =>
-          canTargetTonight(table, you, id)
-            ? null
-            : id === you
-              ? 'yourself'
-              : action === 'kill'
-                ? 'your pack'
-                : action === 'inspect'
-                  ? 'already read'
-                  : 'covered last night'
-        }
-        onPick={(target) => onMove({ type: action, target })}
-      />
+      <AtTheTable>
+        {chosen ? (
+          <>
+            You picked{' '}
+            <span className="bg-yellow px-1 font-semibold">
+              {nicknameOf(table, chosen) ?? '-'}
+            </span>
+            . Click another chair to change it, any time before the night ends.
+          </>
+        ) : (
+          'Click their chair at the table.'
+        )}
+      </AtTheTable>
 
       {/* Wolves only: `wolfVotes` is `{}` in everyone else's payload, so this
           is empty for them rather than something hidden in the UI. */}
@@ -531,15 +600,9 @@ function Witch({
         ) : (
           <>
             <Waiting>Kill one person, once in the whole game.</Waiting>
-            <TargetList
-              label="Poison who"
-              targets={livingPlayers(table)}
-              chosen={null}
-              disabledFor={(id) =>
-                canPoison(table, you, id) ? null : id === you ? 'yourself' : 'not tonight'
-              }
-              onPick={(target) => onMove({ type: 'poison', target })}
-            />
+            <AtTheTable>
+              Click their chair at the table. There is no way to take it back.
+            </AtTheTable>
           </>
         )}
       </div>
@@ -558,21 +621,13 @@ function Witch({
 // --- The Hunter ------------------------------------------------------------
 
 /**
- * The one panel a dead player drives.
+ * The one choice a dead player drives.
  *
  * Everywhere else dying ends your turn, so this asks `isRevenger` rather than
  * whether you are alive — the usual question would lock the Hunter out of the
  * only phase that exists for them.
  */
-function Revenge({
-  table,
-  you,
-  onMove,
-}: {
-  table: WerewolfTable
-  you: string | null
-  onMove: (intent: unknown) => void
-}) {
+function Revenge({ table, you }: { table: WerewolfTable; you: string | null }) {
   const hunter = nicknameOf(table, table.revengeBy) ?? 'The Hunter'
 
   if (!isRevenger(table, you)) {
@@ -593,13 +648,7 @@ function Revenge({
         you.
       </Lede>
 
-      <TargetList
-        label="Shoot who"
-        targets={livingPlayers(table)}
-        chosen={null}
-        disabledFor={() => null}
-        onPick={(target) => onMove({ type: 'shoot', target })}
-      />
+      <AtTheTable>Click the chair of whoever it is for.</AtTheTable>
     </div>
   )
 }
@@ -640,8 +689,8 @@ function Day({
         type="button"
         aria-pressed={youAreReady}
         onClick={() => onMove({ type: 'ready' })}
-        className={`mt-3 w-full border-2 border-ink px-4 py-2 font-mono text-[0.75rem] text-ink transition-colors ${
-          youAreReady ? 'bg-yellow' : 'bg-paper hover:bg-yellow'
+        className={`reg mt-3 w-full border-2 border-ink px-4 py-2 font-mono text-[0.75rem] text-ink ${
+          youAreReady ? 'reg-set bg-yellow' : 'bg-paper hover:bg-yellow'
         }`}
       >
         {youAreReady ? 'Ready — press to take it back' : 'Ready to vote'}
@@ -667,17 +716,17 @@ function Vote({
   table,
   you,
   sent,
-  onPick,
-  onMove,
 }: {
   table: WerewolfTable
   you: string | null
   sent: string | null
-  onPick: (target: string) => void
-  onMove: (intent: unknown) => void
 }) {
   if (you !== null && table.dead.includes(you)) {
-    return <Waiting>You are dead. The living are voting. You are not part of it.</Waiting>
+    return (
+      <Waiting>
+        You are dead. The living are voting. You are not part of it.
+      </Waiting>
+    )
   }
 
   return (
@@ -689,18 +738,19 @@ function Vote({
           : 'Point at whoever you suspect. Votes stay hidden until then, and a tie hangs nobody.'}
       </Lede>
 
-      <TargetList
-        label="Vote for who"
-        targets={livingPlayers(table)}
-        chosen={sent}
-        // Voting for yourself is legal — the server accepts it, and for a
-        // Jester it is the entire strategy.
-        disabledFor={() => null}
-        onPick={(target) => {
-          onMove({ type: 'vote', target })
-          onPick(target)
-        }}
-      />
+      <AtTheTable>
+        {sent ? (
+          <>
+            You voted for{' '}
+            <span className="bg-yellow px-1 font-semibold">
+              {nicknameOf(table, sent) ?? 'somebody'}
+            </span>
+            . Click another chair to move it.
+          </>
+        ) : (
+          'Click their chair at the table. Your own counts, if it comes to that.'
+        )}
+      </AtTheTable>
     </div>
   )
 }
@@ -875,7 +925,7 @@ function Finished({
       {table.result && (
         <p className="mt-3 font-mono text-[0.6875rem] leading-relaxed text-ink-soft">
           {won ? 'You were on the winning side.' : 'You were not on the winning side.'}{' '}
-          Every role is open in the rail.
+          Every role is open at the table.
         </p>
       )}
 

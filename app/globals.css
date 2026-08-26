@@ -257,3 +257,157 @@ body {
     stroke-dasharray: none;
   }
 }
+
+/*
+ * ===========================================================================
+ * THE TABLE — app/lobby/[lobbyId]
+ * ===========================================================================
+ *
+ * A game room is a physical object in a way the wall is not. People sit AROUND
+ * something, pieces get pushed across it, and you can tell whose turn it is
+ * from the far side of the room. None of that survives being drawn as a list.
+ *
+ * The grammar is still riso, and the artifact doing the work is the one this
+ * stylesheet had not spent yet: REGISTRATION. A riso pulls each ink on its own
+ * pass and the passes never line up — the pink sits a millimetre off the ink.
+ * So everything on this table you can act on is printed slightly OUT of
+ * register, and committing to it snaps it IN: the pink pass slides home under
+ * the ink and the thing sits flush. Press a button, pick a name — that is the
+ * whole feedback language, and it costs no new colour.
+ *
+ * This is deliberately not the drop shadow the rest of this file bans. A drop
+ * shadow is soft, grey, and pretends the element is hovering above the paper.
+ * This is a hard-edged offset block of a spot ink — zero blur, zero opacity,
+ * full pink — which reads as a second impression rather than as elevation.
+ *
+ * The offset is rationed: only things you can act on, plus the one seat the
+ * table is waiting for. A board where everything is out of register is just a
+ * badly printed board.
+ */
+
+/*
+ * `transition` here lists the colours too. This rule is unlayered and Tailwind's
+ * utilities are not, so an unlayered `transition` wins outright — a control also
+ * wearing `transition-colors` would silently lose its hover fade otherwise.
+ */
+.reg {
+  box-shadow: 3px 3px 0 0 var(--color-pink);
+  transition:
+    box-shadow 90ms ease-out,
+    transform 90ms ease-out,
+    background-color 90ms ease-out,
+    color 90ms ease-out;
+}
+
+/* Hover and press are scoped to things that actually take a press — the dial in
+   the middle of the table wears the same offset and is not one of them. */
+:is(button, a).reg:hover:not(:disabled) {
+  box-shadow: 5px 5px 0 0 var(--color-pink);
+}
+
+/* In register. Pressed, and held there. */
+:is(button, a).reg:active:not(:disabled) {
+  box-shadow: 0 0 0 0 var(--color-pink);
+  transform: translate(3px, 3px);
+}
+
+.reg:disabled {
+  box-shadow: none;
+}
+
+/*
+ * Your choice, standing. Doubled specificity so hover cannot pull a committed
+ * pick back out of register — the whole point is that it stays put.
+ */
+.reg.reg-set,
+:is(button, a).reg.reg-set:hover {
+  box-shadow: 0 0 0 0 var(--color-pink);
+  transform: translate(3px, 3px);
+}
+
+/*
+ * The seat the table is waiting on.
+ *
+ * Applied only when exactly ONE player may act — during a general vote every
+ * living seat is an actor, and eight breathing cards is noise rather than a
+ * signal. Slow, because it has to survive being looked at for forty seconds.
+ */
+@keyframes tap {
+  0%,
+  100% {
+    box-shadow: 3px 3px 0 0 var(--color-pink);
+  }
+  50% {
+    box-shadow: 6px 6px 0 0 var(--color-pink);
+  }
+}
+
+.animate-tap {
+  animation: tap 1.8s ease-in-out infinite;
+}
+
+/*
+ * Dealing in.
+ *
+ * Cards arrive; they do not fade up. Staggered by seat from the caller, so the
+ * deal goes round the table once rather than everything landing at once.
+ *
+ * Lives on a wrapper INSIDE the seat, never on the seat itself: the seat owns a
+ * translate(-50%, -50%) that puts it on the ellipse, and a keyframe with `both`
+ * fill would overwrite that transform permanently and drop every card back to
+ * the top-left of where it belongs.
+ */
+@keyframes deal {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) rotate(-4deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+.animate-deal {
+  animation: deal 320ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+/*
+ * Seats around the rim.
+ *
+ * Absolute placement is a WIDE-SCREEN LAYOUT ONLY. Below `lg` the same list
+ * renders as a two-column grid — a ring of eight cards on a phone is six
+ * illegible cards and two off the edge. The inline left/top the component sets
+ * are simply ignored while the seat is statically positioned, so one list
+ * serves both layouts and nothing is rendered twice.
+ *
+ * Width is in container units so the whole board scales as one object: the
+ * ellipse radius is 39cqw and a card is 22cqw wide, which is what keeps the
+ * outermost card flush with the board's edge at every size rather than
+ * escaping it on a narrow column.
+ */
+.table-board {
+  container-type: inline-size;
+}
+
+@media (min-width: 64rem) {
+  .table-seat {
+    position: absolute;
+    width: 22cqw;
+    min-width: 6.5rem;
+    max-width: 9.5rem;
+    transform: translate(-50%, -50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-deal,
+  .animate-tap {
+    animation: none;
+  }
+
+  /* The states still have to land — instantly, rather than not at all. */
+  .reg {
+    transition: none;
+  }
+}

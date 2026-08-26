@@ -15,11 +15,17 @@ import { DISPLAY_HEADING, EYEBROW, SECONDARY } from './controls'
  */
 export function RoomHeader({
   lobbyId,
+  gameLabel,
   seated,
   capacity,
   onLeave,
 }: {
   lobbyId: string
+  /**
+   * The game running, or the one the host has picked — the eyebrow used to be
+   * the string "mr. white" whatever was actually on the table.
+   */
+  gameLabel: string | null
   /** Players currently in the lobby, including you. */
   seated: number
   /** `LOBBY_CAPACITY` — 8, per the Phase 5 design. */
@@ -29,7 +35,9 @@ export function RoomHeader({
   return (
     <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 border-b-2 border-ink pb-5">
       <div>
-        <p className={EYEBROW}>mr. white · lobby</p>
+        <p className={EYEBROW}>
+          {gameLabel ? `${gameLabel.toLowerCase()} · table` : 'table'}
+        </p>
 
         <h1
           className="mt-2 font-display text-[clamp(1.75rem,4.5vw,2.5rem)] leading-none tracking-[-0.02em]"

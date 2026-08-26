@@ -25,8 +25,6 @@ import { ChatPanel } from './chat-panel'
 import { EYEBROW } from './controls'
 import { GamePicker, LOBBY_GAMES } from './game-picker'
 import { MrWhiteActions } from './mr-white-actions'
-import { PhaseBanner } from './phase-banner'
-import { PlayerRail } from './player-rail'
 import { RoleCard } from './role-card'
 import { RoomHeader } from './room-header'
 import { WerewolfActions } from './werewolf-actions'
@@ -46,9 +44,21 @@ import { WerewolfRoleCard } from './werewolf-role-card'
  * an `if` anyone has to maintain, and a third game would add a third narrower
  * that is null whenever the other two are not.
  *
- * The furniture — banner, rail, chat — reads `TableSummary`, which both games
- * project themselves down to. Only the ROLE CARD and the ACTION PANEL are
- * game-specific, which is right: those two are the game.
+ * The furniture — the board, the clock, the chat — reads `TableSummary`, which
+ * both games project themselves down to. Only the ROLE CARD and the MOVE PANEL
+ * are game-specific, which is right: those two are the game.
+ *
+ * THE ROOM IS THREE PLACES, and the split is the thing to keep.
+ *
+ *   the table   the board, everyone at it, and the clock. You POINT here: every
+ *               choice aimed at a person is made by clicking their chair.
+ *   your hand   the role card and what it privately carries. Yours alone.
+ *   the talk    chat, which for half of Werewolf is the entire game.
+ *
+ * The move panel sits under the board rather than beside it because it is the
+ * caption to what the board is asking, not a separate control surface — and
+ * each game renders its own board, since only the game knows which chairs are
+ * live and what a click on one means. See `table-stage.tsx`.
  *
  * There is no local game logic here, not even an optimistic phase change. The
  * server is the only writer and `view` is always exactly what it last sent;
@@ -142,7 +152,7 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
         <button
           type="button"
           onClick={() => router.push('/')}
-          className="mt-6 border-2 border-ink px-5 py-2.5 font-mono text-sm text-ink transition-colors hover:bg-yellow"
+          className="reg mt-6 border-2 border-ink bg-paper px-5 py-2.5 font-mono text-sm text-ink hover:bg-yellow"
         >
           Back to the start
         </button>
@@ -167,24 +177,58 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
     <div className={`${SHELL} py-10 sm:py-14`}>
       <RoomHeader
         lobbyId={lobbyId}
+        gameLabel={LOBBY_GAMES.find((game) => game.id === gameId)?.label ?? null}
         seated={members.length}
         capacity={capacity}
         onLeave={handleLeave}
       />
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-[15rem_minmax(0,1fr)_19rem]">
-        {/* On a narrow screen the clock and your own move come first — they are
-            what a player under a 45-second deadline is actually looking for. */}
-        <div className="order-1 space-y-5 lg:order-3">
-          <PhaseBanner
-            phaseLabel={summary.phaseLabel}
-            phaseSeconds={summary.phaseSeconds}
-            roundLabel={summary.roundLabel}
-            phaseEndsAt={summary.phaseEndsAt}
-            serverNow={summary.serverNow}
-            finished={summary.finished}
-          />
+      {/*
+        Three panes, placed rather than ordered, because the reading order has
+        to change twice on the way up.
 
+          phone   the table (clock on top of it), then your hand, then the talk.
+          lg      the table with the talk under it; your hand pinned right.
+          xl      the talk moves out to its own column and the table centres.
+
+        Explicit `col-start` / `row-start` rather than `order`: the board wants
+        the widest column at every width, and expressing that as a reshuffle of
+        a single flow is how it ends up 260px wide on a 1024 screen.
+      */}
+      <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_19rem] xl:grid-cols-[19rem_minmax(0,1fr)_19rem]">
+        <div className="space-y-5 lg:col-start-1 lg:row-start-1 xl:col-start-2 xl:row-span-2 xl:row-start-1">
+          {gameId === 'mr-white' ? (
+            <MrWhiteActions
+              table={mrWhite}
+              summary={summary}
+              capacity={capacity}
+              you={you}
+              seated={members.length}
+              isHost={isHost}
+              hostNickname={host?.nickname ?? null}
+              starting={starting}
+              onStart={() => start('mr-white')}
+              onMove={move}
+              rejection={rejection}
+            />
+          ) : (
+            <WerewolfActions
+              table={werewolf}
+              summary={summary}
+              capacity={capacity}
+              you={you}
+              seated={members.length}
+              isHost={isHost}
+              hostNickname={host?.nickname ?? null}
+              starting={starting}
+              onStart={() => start('werewolf')}
+              onMove={move}
+              rejection={rejection}
+            />
+          )}
+        </div>
+
+        <div className="space-y-5 self-start lg:col-start-2 lg:row-span-2 lg:row-start-1 xl:col-start-3">
           {/* Before the deal the host decides what this table is playing. */}
           {!started && (
             <GamePicker
@@ -206,42 +250,9 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
           )}
 
           {werewolf && <WerewolfRoleCard table={werewolf} you={you} />}
-
-          {/* The action panel for whatever is running — or, before the deal,
-              for whatever the host has picked, so the start gate explains that
-              game's seat requirement rather than a generic one. */}
-          {gameId === 'mr-white' ? (
-            <MrWhiteActions
-              table={mrWhite}
-              you={you}
-              seated={members.length}
-              isHost={isHost}
-              hostNickname={host?.nickname ?? null}
-              starting={starting}
-              onStart={() => start('mr-white')}
-              onMove={move}
-              rejection={rejection}
-            />
-          ) : (
-            <WerewolfActions
-              table={werewolf}
-              you={you}
-              seated={members.length}
-              isHost={isHost}
-              hostNickname={host?.nickname ?? null}
-              starting={starting}
-              onStart={() => start('werewolf')}
-              onMove={move}
-              rejection={rejection}
-            />
-          )}
         </div>
 
-        <div className="order-2 lg:order-1">
-          <PlayerRail summary={summary} you={you} started={started} />
-        </div>
-
-        <div className="order-3 lg:order-2">
+        <div className="lg:col-start-1 lg:row-start-2 xl:col-start-1 xl:row-span-2 xl:row-start-1">
           <ChatPanel
             entries={entries}
             you={you}
@@ -256,5 +267,3 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
     </div>
   )
 }
-
-

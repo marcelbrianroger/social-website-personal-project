@@ -15,15 +15,21 @@ import { useSyncExternalStore } from 'react'
  *     a noticeboard looks like, and it clears 9.3:1.
  *   - `pink` is rules and marks only. At 2.1:1 on paper it fails AA even at
  *     display sizes, so it never carries a letterform in this tree.
+ *
+ * Both buttons carry `reg`, the out-of-register offset defined in `globals.css`
+ * — a hard block of pink behind the control that snaps flush when pressed. It
+ * is what makes the room feel like objects rather than fields, and it is a
+ * printing artifact rather than the drop shadow this design bans: no blur, no
+ * grey, no pretence of floating.
  */
 
 /** Filled control. One per view, at most. */
 export const PRIMARY =
-  'border-2 border-ink bg-ink px-6 py-2.5 font-mono text-sm text-paper transition-colors hover:bg-pink hover:text-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-paper'
+  'reg border-2 border-ink bg-ink px-6 py-2.5 font-mono text-sm text-paper transition-colors hover:bg-pink hover:text-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-paper'
 
 /** Outline control, for everything that is not the main action. */
 export const SECONDARY =
-  'border-2 border-ink px-5 py-2.5 font-mono text-sm text-ink transition-colors hover:bg-yellow disabled:opacity-40 disabled:hover:bg-transparent'
+  'reg border-2 border-ink bg-paper px-5 py-2.5 font-mono text-sm text-ink transition-colors hover:bg-yellow disabled:opacity-40 disabled:hover:bg-paper'
 
 /** Text entry. Square, typed, no focus ring of its own — `:focus-visible` is global. */
 export const FIELD =
