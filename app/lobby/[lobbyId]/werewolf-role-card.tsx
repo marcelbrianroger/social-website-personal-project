@@ -28,9 +28,17 @@ import { DISPLAY_HEADING, EYEBROW, PANEL } from './controls'
 export function WerewolfRoleCard({
   table,
   you,
+  waiting = false,
 }: {
   table: WerewolfTable
   you: string | null
+  /**
+   * True when you are in the room but arrived after the deal.
+   *
+   * The same empty card as any other observer, worded differently: you are not
+   * a bystander, you are next.
+   */
+  waiting?: boolean
 }) {
   const role = table.yourRole
   const dead = you !== null && table.dead.includes(you)
@@ -51,12 +59,14 @@ export function WerewolfRoleCard({
         className="mt-1.5 font-display text-2xl leading-none"
         style={DISPLAY_HEADING}
       >
-        {role === null ? 'Watching' : ROLE_LABEL[role]}
+        {role === null ? (waiting ? 'In next round' : 'Watching') : ROLE_LABEL[role]}
       </p>
 
       <p className="mt-3 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-[0.6875rem] leading-relaxed text-ink">
         {role === null
-          ? 'You are not playing at this table. You see exactly what the room sees, and nothing more.'
+          ? waiting
+            ? 'You sat down after the roles were dealt, so this round runs without you. The next deal takes everyone at the table.'
+            : 'You are not playing at this table. You see exactly what the room sees, and nothing more.'
           : ROLE_BRIEF[role]}
       </p>
 

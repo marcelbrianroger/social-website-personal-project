@@ -8,15 +8,17 @@ import {
   asMrWhite,
   canChat as canChatMrWhite,
   isAlive as isAliveMrWhite,
+  isPlaying as isPlayingMrWhite,
   mrWhiteSummary,
 } from '@/lib/game/mr-white-view'
-import { waitingSummary } from '@/lib/game/table-view'
+import { waitingFor, waitingSummary } from '@/lib/game/table-view'
 import { useGame } from '@/lib/game/use-game'
 import { useGameChat } from '@/lib/game/use-game-chat'
 import {
   asWerewolf,
   canChat as canChatWerewolf,
   isAlive as isAliveWerewolf,
+  isPlaying as isPlayingWerewolf,
   werewolfSummary,
 } from '@/lib/game/werewolf-view'
 import { useLobby } from '@/lib/lobby/use-lobby'
@@ -102,6 +104,30 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
     : werewolf
       ? werewolfSummary(werewolf)
       : waitingSummary(members)
+
+  /**
+   * Everyone in the room who is not in the round being played.
+   *
+   * The lobby keeps taking people while a game runs and the roster is fixed at
+   * the deal, so this is real and routinely non-empty. They are dealt in by the
+   * next `game:start`, which reads lobby membership rather than the old roster
+   * — the waiting is the whole of what they have to do.
+   */
+  const waiting = waitingFor(members, summary)
+
+  /**
+   * Whether YOU are in this round.
+   *
+   * Not the same question as `alive`, and the difference is load-bearing: a
+   * mid-game arrival is in nobody's dead list, so every check written against
+   * `isAlive` reads them as a living player and offers them controls the server
+   * refuses. See `isPlaying` in either view module.
+   */
+  const playing = mrWhite
+    ? isPlayingMrWhite(mrWhite, you)
+    : werewolf
+      ? isPlayingWerewolf(werewolf, you)
+      : true
 
   const alive = mrWhite
     ? you
@@ -201,6 +227,7 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
             <MrWhiteActions
               table={mrWhite}
               summary={summary}
+              waiting={waiting}
               capacity={capacity}
               you={you}
               seated={members.length}
@@ -215,6 +242,7 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
             <WerewolfActions
               table={werewolf}
               summary={summary}
+              waiting={waiting}
               capacity={capacity}
               you={you}
               seated={members.length}
@@ -246,10 +274,13 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
               secretWord={mrWhite.secretWord}
               eliminated={!alive}
               revealed={mrWhite.phase === 'finished'}
+              waiting={!playing}
             />
           )}
 
-          {werewolf && <WerewolfRoleCard table={werewolf} you={you} />}
+          {werewolf && (
+            <WerewolfRoleCard table={werewolf} you={you} waiting={!playing} />
+          )}
         </div>
 
         <div className="lg:col-start-1 lg:row-start-2 xl:col-start-1 xl:row-span-2 xl:row-start-1">
@@ -258,7 +289,8 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
             you={you}
             phaseLabel={summary.phaseLabel}
             open={chatOpen}
-            deadChannel={started && !alive}
+            deadChannel={started && playing && !alive}
+            waiting={started && !playing}
             error={chatError}
             onSend={send}
           />

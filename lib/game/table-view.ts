@@ -95,6 +95,28 @@ export function seatsFromMembers(members: LobbyMember[]): TableSeat[] {
   }))
 }
 
+/**
+ * Everyone in the room who is not in the current round.
+ *
+ * A lobby takes people while a game runs, but the roster is fixed at the deal —
+ * so between those two moments a person is genuinely seated and genuinely not
+ * playing, and the room has to be able to draw them. They are dealt in by the
+ * next `game:start`, which reads lobby membership rather than the old roster.
+ *
+ * Empty whenever no game is running, because `waitingSummary` seats everybody.
+ * The reverse case — a seat in the game whose player has since left the lobby —
+ * deliberately does not appear here: they are still in the round, and the
+ * engine holds their seat open for the reconnect window.
+ */
+export function waitingFor(
+  members: LobbyMember[],
+  summary: TableSummary,
+): LobbyMember[] {
+  const dealtIn = new Set(summary.seats.map((seat) => seat.sessionId))
+
+  return members.filter((member) => !dealtIn.has(member.sessionId))
+}
+
 /** The summary for a lobby with no game running. */
 export function waitingSummary(members: LobbyMember[]): TableSummary {
   const seats = seatsFromMembers(members)

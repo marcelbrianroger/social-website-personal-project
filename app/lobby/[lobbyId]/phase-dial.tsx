@@ -58,12 +58,16 @@ export function PhaseDial({
       <p aria-live="polite">
         <span className={EYEBROW}>{roundLabel}</span>
         <span
-          className="mt-1 block truncate font-display text-lg leading-none"
+          className="mt-1 block truncate font-display text-[1.0625rem] leading-tight tracking-[-0.01em]"
           style={DISPLAY_HEADING}
         >
           {phaseLabel ?? 'Waiting to start'}
         </span>
       </p>
+
+      {/* Hairline between the name and the number: they are two readings, and
+          without it the digits look like part of the phase title. */}
+      <hr className="mx-auto mt-2.5 w-8 border-0 border-t border-ink-soft/50" />
 
       {seconds !== null ? (
         <p
@@ -72,14 +76,16 @@ export function PhaseDial({
           // with a screen reader, and the phase name already carries the state
           // change that matters.
           aria-live="off"
-          className="mt-2 font-display text-[2.75rem] leading-none tabular-nums"
+          className="mt-2 font-display text-[clamp(2.5rem,7cqw,3.5rem)] leading-[0.85] tabular-nums"
           style={DISPLAY_HEADING}
         >
           {seconds}
-          <span className="ml-0.5 font-mono text-[0.625rem] text-ink-soft">s</span>
+          <span className="align-top font-mono text-[0.5625rem] lowercase tracking-widest text-ink-soft">
+            s
+          </span>
         </p>
       ) : (
-        <p className="mt-2 font-mono text-[0.6875rem] leading-snug text-ink-soft">
+        <p className="mt-2.5 font-mono text-[0.6875rem] leading-snug text-ink-soft">
           {finished
             ? 'no clock: the table is done'
             : 'no clock until the game starts'}

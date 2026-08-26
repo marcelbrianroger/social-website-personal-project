@@ -390,6 +390,22 @@ body {
   container-type: inline-size;
 }
 
+/*
+ * The clock, sweeping.
+ *
+ * The board re-renders on a 250ms tick, which without this walks the rim round
+ * the table in four visible jerks a second. The transition is a touch longer
+ * than the tick so one leg is always still running when the next value lands
+ * and the edge never stalls; linear, because a countdown that eases is lying
+ * about how fast time is passing.
+ *
+ * A new phase resets the offset and this runs backwards over it, which is the
+ * right picture: the clock winding back up.
+ */
+.clock-sweep {
+  transition: stroke-dashoffset 260ms linear;
+}
+
 @media (min-width: 64rem) {
   .table-seat {
     position: absolute;
@@ -408,6 +424,12 @@ body {
 
   /* The states still have to land — instantly, rather than not at all. */
   .reg {
+    transition: none;
+  }
+
+  /* The clock still has to move, or it stops being a clock. It steps with the
+     tick instead of sweeping between them. */
+  .clock-sweep {
     transition: none;
   }
 }

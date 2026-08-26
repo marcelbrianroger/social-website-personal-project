@@ -31,6 +31,7 @@ export function ChatPanel({
   phaseLabel,
   open,
   deadChannel = false,
+  waiting = false,
   error,
   onSend,
 }: {
@@ -48,6 +49,14 @@ export function ChatPanel({
   open: boolean
   /** True once you are eliminated — you are on the `dead` channel from then on. */
   deadChannel?: boolean
+  /**
+   * True when you are in the room but not in this round.
+   *
+   * The server answers `not-a-player` to anything a non-player sends, so the
+   * field is shut either way — this only decides whether the closed field
+   * explains itself as a phase rule or as your own situation.
+   */
+  waiting?: boolean
   /** Server's reason for refusing the last message, already in words. */
   error?: string | null
   onSend: (body: string) => void
@@ -79,11 +88,15 @@ export function ChatPanel({
     >
       <div className="flex items-baseline justify-between gap-3 border-b-2 border-ink px-4 py-3">
         <h2 className={EYEBROW}>table chat</h2>
-        {deadChannel && (
+        {deadChannel ? (
           <p className="border border-rule px-1.5 font-mono text-[0.5625rem] uppercase tracking-wide text-ink-soft">
             dead channel
           </p>
-        )}
+        ) : waiting ? (
+          <p className="border border-rule px-1.5 font-mono text-[0.5625rem] uppercase tracking-wide text-ink-soft">
+            watching
+          </p>
+        ) : null}
       </div>
 
       {/* -------------------------------------------------------- transcript */}
@@ -171,7 +184,9 @@ export function ChatPanel({
                   : phaseLabel
                     ? 'say something'
                     : 'say something while you wait'
-                : `chat is closed during ${(phaseLabel ?? 'this phase').toLowerCase()}`
+                : waiting
+                  ? 'chat opens when you are dealt in'
+                  : `chat is closed during ${(phaseLabel ?? 'this phase').toLowerCase()}`
             }
             className={FIELD}
           />

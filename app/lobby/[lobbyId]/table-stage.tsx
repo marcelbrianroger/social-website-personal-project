@@ -2,6 +2,7 @@
 
 import type { TableSeat, TableSummary } from '@/lib/game/table-view'
 import { toSeconds, useServerNow } from '@/lib/game/use-countdown'
+import type { LobbyMember } from '@/lib/socket/events'
 
 import { DISPLAY_HEADING } from './controls'
 import { PhaseDial } from './phase-dial'
@@ -49,21 +50,48 @@ const SEAT_RX = 39
 const SEAT_RY = 38
 
 /**
- * The table top: a regular octagon, rotated so its edges are flat at the top,
- * bottom and sides rather than standing on a point.
+ * The table top, and the clock printed round its edge.
  *
- * Drawn small enough that the chairs straddle its rim, which is what makes them
+ * The viewBox is 120×100 and the board box is 6/5, so the two match exactly and
+ * `preserveAspectRatio="none"` scales without distorting. That is not tidiness:
+ * `pathLength` normalises the countdown over the path's length in USER units,
+ * so under a non-uniform scale the sweep would cross the stretched edges faster
+ * than the others and the clock would visibly speed up and slow down.
+ *
+ * The shape is an octagon on an ellipse — a table is wider than it is deep —
+ * drawn small enough that the chairs straddle its rim, which is what makes them
  * read as people sitting AT it rather than as counters lying ON it.
+ *
+ * IT STARTS AT TWELVE. The path opens at the midpoint of the top edge and runs
+ * clockwise, so the remaining time is drawn from twelve round to wherever it
+ * has got to, and retreats back to twelve as it runs out. Starting at a vertex
+ * — the default for a polygon — drained the rim from the lower right, which
+ * looks like an accident rather than a clock.
  */
-const TABLE_R = 34
+const BOARD_W = 120
+const BOARD_H = 100
+const TABLE_RX = 40.8
+const TABLE_RY = 34
 
-const OCTAGON = Array.from({ length: 8 }, (_, corner) => {
-  const angle = Math.PI / 8 + (corner * Math.PI) / 4
-  const x = 50 + TABLE_R * Math.cos(angle)
-  const y = 50 + TABLE_R * Math.sin(angle)
+const TABLE_PATH = (() => {
+  const cx = BOARD_W / 2
+  const cy = BOARD_H / 2
 
-  return `${x.toFixed(2)},${y.toFixed(2)}`
-}).join(' ')
+  const corner = (index: number) => {
+    const angle = Math.PI / 8 + (index * Math.PI) / 4
+
+    return `${(cx + TABLE_RX * Math.cos(angle)).toFixed(2)},${(
+      cy +
+      TABLE_RY * Math.sin(angle)
+    ).toFixed(2)}`
+  }
+
+  // Twelve o'clock, then every corner clockwise from the one just right of it.
+  const noon = `${cx},${(cy - TABLE_RY * Math.cos(Math.PI / 8)).toFixed(2)}`
+  const clockwise = [6, 7, 0, 1, 2, 3, 4, 5].map(corner)
+
+  return `M${noon}L${clockwise.join('L')}Z`
+})()
 
 /** Where chair `index` of `total` sits. Index 0 is bottom-centre, then clockwise. */
 function chairAt(index: number, total: number) {
@@ -75,14 +103,38 @@ function chairAt(index: number, total: number) {
   }
 }
 
+/**
+ * One place at the table.
+ *
+ * Three kinds, because a chair genuinely means three different things: someone
+ * in this round, someone in the room who is not (they arrived after the deal),
+ * and a place nobody has taken.
+ */
+type ChairSlot =
+  | { kind: 'seat'; seat: TableSeat }
+  | { kind: 'waiting'; member: LobbyMember }
+  | { kind: 'empty' }
+
+function occupantOf(slot: ChairSlot): string | null {
+  if (slot.kind === 'seat') return slot.seat.sessionId
+  if (slot.kind === 'waiting') return slot.member.sessionId
+  return null
+}
+
 export function TableStage({
   summary,
+  waiting,
   you,
   capacity,
   started,
   targeting = null,
 }: {
   summary: TableSummary
+  /**
+   * In the room, not in this round — see `waitingFor` in `table-view.ts`.
+   * Empty before the deal, when everybody seated is a player.
+   */
+  waiting: readonly LobbyMember[]
   /** Your sessionId, so your chair goes to the near edge. Null while connecting. */
   you: string | null
   /** `LOBBY_CAPACITY` — how many chairs to draw before the deal. */
@@ -108,14 +160,23 @@ export function TableStage({
 
   /**
    * Fraction of the phase still to run, or null when nothing is being timed.
-   * Drives the rim; the digits in the dial are the accessible copy.
+   *
+   * Taken from the raw milliseconds rather than the rounded seconds: the rim
+   * moves continuously and would otherwise step a whole second at a time even
+   * with the transition smoothing it. The dial reads the rounded value, which
+   * is what a person counting down out loud actually says.
    */
   const left =
-    seconds !== null && summary.phaseSeconds
-      ? Math.min(1, Math.max(0, seconds / summary.phaseSeconds))
+    remainingMs !== null && summary.phaseSeconds
+      ? Math.min(1, Math.max(0, remainingMs / (summary.phaseSeconds * 1000)))
       : null
 
-  const ordered = rotateToYou(seats, you)
+  const filled: ChairSlot[] = [
+    ...seats.map((seat) => ({ kind: 'seat' as const, seat })),
+    ...waiting.map((member) => ({ kind: 'waiting' as const, member })),
+  ]
+
+  const ordered = rotateToYou(filled, you)
   const chairs = started ? ordered.length : Math.max(ordered.length, capacity)
 
   /**
@@ -137,25 +198,28 @@ export function TableStage({
           only restates the countdown the dial reads out in digits. */}
       <svg
         aria-hidden="true"
-        viewBox="0 0 100 100"
+        viewBox={`0 0 ${BOARD_W} ${BOARD_H}`}
         preserveAspectRatio="none"
         className="pointer-events-none absolute inset-0 hidden size-full lg:block"
       >
-        <polygon
-          points={OCTAGON}
+        <path
+          d={TABLE_PATH}
           className="fill-stock stroke-ink"
           strokeWidth={2}
+          strokeLinejoin="round"
           vectorEffect="non-scaling-stroke"
         />
 
-        {/* The clock, printed round the edge of the table. `pathLength` is
-            normalised so one dash length works whatever shape this becomes. */}
+        {/* The edge of the table is printed pink for as long as there is time
+            left on it, and drops back to ink as that runs out. */}
         {left !== null && (
-          <polygon
-            points={OCTAGON}
+          <path
+            d={TABLE_PATH}
             fill="none"
-            className="stroke-pink"
+            className="clock-sweep stroke-pink"
             strokeWidth={4}
+            strokeLinecap="round"
+            strokeLinejoin="round"
             pathLength={1}
             strokeDasharray={1}
             strokeDashoffset={1 - left}
@@ -186,11 +250,12 @@ export function TableStage({
         className="grid grid-cols-2 gap-2 lg:block"
       >
         {Array.from({ length: chairs }, (_, index) => {
-          const seat = ordered[index]
+          const slot = ordered[index] ?? { kind: 'empty' as const }
+          const occupant = occupantOf(slot)
 
           return (
             <li
-              key={seat?.sessionId ?? `empty-${index}`}
+              key={occupant ?? `empty-${index}`}
               className="table-seat"
               style={chairAt(index, chairs)}
             >
@@ -198,14 +263,19 @@ export function TableStage({
                 className="animate-deal"
                 style={{ animationDelay: `${index * 55}ms` }}
               >
-                {seat ? (
+                {slot.kind === 'seat' ? (
                   <Chair
-                    seat={seat}
-                    isYou={seat.sessionId === you}
+                    seat={slot.seat}
+                    isYou={slot.seat.sessionId === you}
                     started={started}
                     now={now}
-                    knocking={seat.sessionId === soleActor}
+                    knocking={slot.seat.sessionId === soleActor}
                     targeting={targeting}
+                  />
+                ) : slot.kind === 'waiting' ? (
+                  <WaitingChair
+                    member={slot.member}
+                    isYou={slot.member.sessionId === you}
                   />
                 ) : (
                   <EmptyChair />
@@ -226,12 +296,12 @@ export function TableStage({
  * other, so "whoever is next clockwise" stays true on the board for the phases
  * that walk the table in order.
  */
-function rotateToYou(seats: TableSeat[], you: string | null): TableSeat[] {
+function rotateToYou(slots: ChairSlot[], you: string | null): ChairSlot[] {
   const mine =
-    you === null ? -1 : seats.findIndex((seat) => seat.sessionId === you)
-  if (mine <= 0) return seats
+    you === null ? -1 : slots.findIndex((slot) => occupantOf(slot) === you)
+  if (mine <= 0) return slots
 
-  return [...seats.slice(mine), ...seats.slice(0, mine)]
+  return [...slots.slice(mine), ...slots.slice(0, mine)]
 }
 
 /** A chair nobody has taken. Reads as a place to fill, not as a missing thing. */
@@ -240,6 +310,52 @@ function EmptyChair() {
     <p className="grid h-[3.25rem] place-items-center border-2 border-dashed border-rule font-mono text-[0.625rem] lowercase tracking-[0.2em] text-ink-soft">
       empty
     </p>
+  )
+}
+
+/**
+ * Someone in the room who is not in this round.
+ *
+ * They pulled a chair up after the cards were dealt, so the game does not know
+ * them — but the room does, and the next deal takes everyone seated. Drawn as a
+ * real chair with a dashed rule rather than left off the board entirely: a
+ * person who cannot see themselves at the table assumes they failed to join.
+ */
+function WaitingChair({
+  member,
+  isYou,
+}: {
+  member: LobbyMember
+  isYou: boolean
+}) {
+  return (
+    <div className="w-full border-2 border-dashed border-ink bg-paper px-2.5 py-2">
+      <span className="flex items-baseline gap-1.5">
+        <span
+          aria-hidden="true"
+          className="font-mono text-[0.625rem] text-ink-soft"
+        >
+          ·
+        </span>
+
+        <span
+          className="min-w-0 flex-1 truncate font-display text-[0.9375rem] leading-tight text-ink"
+          style={DISPLAY_HEADING}
+        >
+          {member.nickname}
+        </span>
+
+        {isYou && (
+          <span className="shrink-0 font-mono text-[0.5625rem] uppercase tracking-wide text-ink-soft">
+            you
+          </span>
+        )}
+      </span>
+
+      <span className="mt-1 block font-mono text-[0.625rem] uppercase leading-snug tracking-wide text-ink-soft">
+        next round
+      </span>
+    </div>
   )
 }
 

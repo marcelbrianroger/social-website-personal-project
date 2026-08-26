@@ -4,11 +4,13 @@ import { useState } from 'react'
 
 import { SystemNote } from '@/components/site-chrome'
 import type { TableSummary } from '@/lib/game/table-view'
+import type { LobbyMember } from '@/lib/socket/events'
 import {
   canBond,
   canPoison,
   canTargetTonight,
   collateralOf,
+  isPlaying,
   isRevenger,
   livingPlayers,
   nicknameOf,
@@ -63,6 +65,7 @@ const MAX_PLAYERS = 8
 export function WerewolfActions({
   table,
   summary,
+  waiting,
   capacity,
   you,
   seated,
@@ -77,6 +80,8 @@ export function WerewolfActions({
   table: WerewolfTable | null
   /** The game-agnostic projection the board draws itself from. */
   summary: TableSummary
+  /** In the room, not in this round. Drawn as chairs, and dealt in next start. */
+  waiting: readonly LobbyMember[]
   /** `LOBBY_CAPACITY`, for the empty chairs before the deal. */
   capacity: number
   you: string | null
@@ -123,6 +128,15 @@ export function WerewolfActions({
 
   const dead = table !== null && you !== null && table.dead.includes(you)
 
+  /**
+   * Whether you are in this round at all.
+   *
+   * Asked before `dead` everywhere below, because a mid-game arrival is in
+   * nobody's dead list and would otherwise be handed a live board and a ready
+   * button that the server answers `not-a-player` to.
+   */
+  const playing = table === null || isPlaying(table, you)
+
   function bondWith(id: string) {
     if (bond.includes(id)) {
       setBond(bond.filter((pick) => pick !== id))
@@ -143,7 +157,7 @@ export function WerewolfActions({
    * than one per panel that could drift from its neighbour.
    */
   function targeting(): SeatTargeting | null {
-    if (!table || table.finished) return null
+    if (!table || table.finished || !playing) return null
 
     const living = livingPlayers(table).map((player) => player.sessionId)
 
@@ -249,7 +263,35 @@ export function WerewolfActions({
     }
 
     if (table.finished) {
-      return <Finished table={table} you={you} onStart={onStart} isHost={isHost} />
+      return (
+        <Finished
+          table={table}
+          you={you}
+          playing={playing}
+          waiting={waiting.length}
+          onStart={onStart}
+          isHost={isHost}
+        />
+      )
+    }
+
+    /**
+     * You are in the room, but this round was dealt without you.
+     *
+     * The narration phases still render — they are the story of the game and
+     * carry no controls, which is the whole of what there is to watch. Every
+     * other phase would be offering a move nobody will accept, so it says what
+     * is actually happening instead.
+     */
+    if (!playing) {
+      switch (table.phase) {
+        case 'dawn':
+          return <Dawn table={table} />
+        case 'verdict':
+          return <Verdict table={table} />
+        default:
+          return <NotInThisRound />
+      }
     }
 
     switch (table.phase) {
@@ -294,6 +336,7 @@ export function WerewolfActions({
     <>
       <TableStage
         summary={summary}
+        waiting={waiting}
         you={you}
         capacity={capacity}
         started={table !== null}
@@ -347,6 +390,38 @@ function AtTheTable({ children }: { children: React.ReactNode }) {
     <p className="mt-3 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-[0.6875rem] leading-relaxed text-ink">
       {children}
     </p>
+  )
+}
+
+/**
+ * Seated, and not in this round.
+ *
+ * Says the one thing that is actually true and actionable — you are in on the
+ * next deal — rather than leaving somebody to work out from an inert board
+ * whether they joined at all. Your chair is drawn on the table for the same
+ * reason.
+ */
+function NotInThisRound() {
+  return (
+    <div>
+      <p className={EYEBROW}>watching</p>
+      <p
+        className="mt-1 font-display text-lg leading-tight"
+        style={DISPLAY_HEADING}
+      >
+        You are in from the next round
+      </p>
+
+      <p className="mt-2 font-mono text-[0.6875rem] leading-relaxed text-ink-soft">
+        This one was dealt before you sat down, so it runs without you. The next
+        deal takes everyone at the table, and your chair is already there.
+      </p>
+
+      <p className="mt-3 font-mono text-[0.625rem] leading-relaxed text-ink-soft">
+        Chat is shut until then — watching players cannot talk to a table
+        mid-game.
+      </p>
+    </div>
   )
 }
 
@@ -899,11 +974,17 @@ function outcomeLabel(table: WerewolfTable): string {
 function Finished({
   table,
   you,
+  playing,
+  waiting,
   isHost,
   onStart,
 }: {
   table: WerewolfTable
   you: string | null
+  /** False if this round was dealt before you sat down. */
+  playing: boolean
+  /** How many people are waiting on the next deal. */
+  waiting: number
   isHost: boolean
   onStart: () => void
 }) {
@@ -924,8 +1005,23 @@ function Finished({
 
       {table.result && (
         <p className="mt-3 font-mono text-[0.6875rem] leading-relaxed text-ink-soft">
-          {won ? 'You were on the winning side.' : 'You were not on the winning side.'}{' '}
+          {!playing
+            ? 'You watched this one.'
+            : won
+              ? 'You were on the winning side.'
+              : 'You were not on the winning side.'}{' '}
           Every role is open at the table.
+        </p>
+      )}
+
+      {/* The host is about to press deal, and the roster they are dealing is
+          bigger than the one they just played. Worth saying before, not after. */}
+      {waiting > 0 && (
+        <p className="mt-2 font-mono text-[0.625rem] leading-relaxed text-ink">
+          <span className="bg-yellow px-1">
+            {waiting} more {waiting === 1 ? 'person' : 'people'}
+          </span>{' '}
+          sat down while you played. The next deal takes them too.
         </p>
       )}
 

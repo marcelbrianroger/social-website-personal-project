@@ -217,6 +217,29 @@ export const CHAT_OPEN_PHASES: readonly MrWhitePhase[] = ['discussion', 'vote']
 
 // --- Derivations -----------------------------------------------------------
 
+/**
+ * Whether you are in THIS round at all.
+ *
+ * A lobby accepts people while a game is running, and the roster is fixed when
+ * the cards are dealt — so somebody can be sitting in the room, watching, and
+ * dealt in only on the next start. Mirrors the server's own gate, which refuses
+ * their moves and their chat with `not-a-player`.
+ *
+ * `isAlive` DOES NOT ANSWER THIS. It asks whether you are in `eliminated`, and
+ * a person who was never dealt a word is not — so a mid-game arrival reads as a
+ * living player to every check written against it, and gets offered controls
+ * the server will refuse. Ask this first, always.
+ */
+export function isPlaying(
+  table: MrWhiteTable,
+  sessionId: string | null,
+): boolean {
+  return (
+    sessionId !== null &&
+    table.players.some((player) => player.sessionId === sessionId)
+  )
+}
+
 export function isAlive(table: MrWhiteTable, sessionId: string): boolean {
   return !table.eliminated.includes(sessionId)
 }
@@ -284,6 +307,9 @@ export function canChat(
 ): boolean {
   if (!table) return true
   if (table.finished) return true
+  // Watching, not playing. The server answers `not-a-player` to anything they
+  // send, so an open field here would only earn them an error per message.
+  if (sessionId && !isPlaying(table, sessionId)) return false
   if (sessionId && !isAlive(table, sessionId)) return true
 
   return CHAT_OPEN_PHASES.includes(table.phase)

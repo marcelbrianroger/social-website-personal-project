@@ -6,11 +6,13 @@ import type { TableSummary } from '@/lib/game/table-view'
 import {
   isActor,
   isAlive,
+  isPlaying,
   livingPlayers,
   readyThreshold,
   type MrWhitePhase,
   type MrWhiteTable,
 } from '@/lib/game/mr-white-view'
+import type { LobbyMember } from '@/lib/socket/events'
 
 import {
   DISPLAY_HEADING,
@@ -50,6 +52,7 @@ const MAX_PLAYERS = 8
 export function MrWhiteActions({
   table,
   summary,
+  waiting,
   capacity,
   you,
   seated,
@@ -64,6 +67,8 @@ export function MrWhiteActions({
   table: MrWhiteTable | null
   /** The game-agnostic projection the board draws itself from. */
   summary: TableSummary
+  /** In the room, not in this round. Drawn as chairs, and dealt in next start. */
+  waiting: readonly LobbyMember[]
   /** `LOBBY_CAPACITY`, for the empty chairs before the deal. */
   capacity: number
   you: string | null
@@ -103,6 +108,15 @@ export function MrWhiteActions({
     setSent(null)
   }
 
+  /**
+   * Whether you are in this round at all.
+   *
+   * Asked before `alive` everywhere below, because a mid-game arrival is in
+   * nobody's eliminated list and would otherwise be handed a live board and a
+   * ready button that the server answers `not-a-player` to.
+   */
+  const playing = table === null || isPlaying(table, you)
+
   const alive = table !== null && you !== null && isAlive(table, you)
   const yourTurn = table !== null && you !== null && isActor(table, you)
 
@@ -120,7 +134,7 @@ export function MrWhiteActions({
    * is making a real choice, so the board must not quietly remove it.
    */
   const targeting: SeatTargeting | null =
-    table?.phase === 'vote' && alive
+    table?.phase === 'vote' && playing && alive
       ? {
           label: 'Accuse who',
           targets: livingPlayers(table).map((player) => player.sessionId),
@@ -134,6 +148,7 @@ export function MrWhiteActions({
     <>
       <TableStage
         summary={summary}
+        waiting={waiting}
         you={you}
         capacity={capacity}
         started={table !== null}
@@ -175,135 +190,162 @@ export function MrWhiteActions({
             </div>
           )}
 
-          {table?.phase === 'reveal' && (
-            <Waiting>
-              Roles are being dealt. Memorise what you were given: it is not
-              shown again until the game ends.
-            </Waiting>
+          {/* Seated after the deal. Everything below would be offering a move
+              the server will not accept, so it says what is happening instead.
+              The result screen still shows, because watching a game and then
+              being told nothing about how it ended is worse than useless. */}
+          {table && !playing && table.phase !== 'finished' && (
+            <NotInThisRound />
           )}
 
-          {table?.phase === 'clue' &&
-            (yourTurn ? (
-              <WordForm
-                label="One word, out loud"
-                hint="Exactly one word, no spaces. Prove you know the secret without handing it over."
-                placeholder="one word"
-                action="Give clue"
-                value={draft}
-                onChange={setDraft}
-                onSubmit={(word) => send({ type: 'clue', word }, word)}
-                sent={sent}
-                sentLabel="Clue sent"
-              />
-            ) : (
-              <Waiting>
-                {nicknameOf(table, table.actors[0]) ?? 'Someone'} is giving a
-                clue. Watch for it on their chair.
-                {alive && ' You are next in seat order.'}
-              </Waiting>
-            ))}
-
-          {table?.phase === 'discussion' &&
-            (alive ? (
-              <ReadyToVote
-                table={table}
-                you={you}
-                onToggle={() => onMove({ type: 'ready' })}
-              />
-            ) : (
-              <Waiting>
-                You are out. The living are arguing; you can still talk to the
-                other eliminated players.
-              </Waiting>
-            ))}
-
-          {table?.phase === 'vote' &&
-            (alive ? (
-              <div>
-                <p className="font-mono text-[0.75rem] leading-relaxed text-ink-soft">
-                  {sent
-                    ? 'Vote cast. Others are still deciding. Nobody sees a tally until the phase ends.'
-                    : 'Accuse one player of being Mr. White. Votes stay hidden until everyone has cast.'}
-                </p>
-
-                <p className="mt-3 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-[0.6875rem] leading-relaxed text-ink">
-                  {sent ? (
-                    <>
-                      You accused{' '}
-                      <span className="bg-yellow px-1 font-semibold">
-                        {nicknameOf(table, sent) ?? 'somebody'}
-                      </span>
-                      . Click another chair to move it.
-                    </>
-                  ) : (
-                    'Click their chair at the table. Your own counts, if it comes to that.'
-                  )}
-                </p>
-              </div>
-            ) : (
-              <Waiting>
-                You are out. The living are voting; you can still talk to the
-                other eliminated players.
-              </Waiting>
-            ))}
-
-          {table?.phase === 'reveal-vote' && (
-            <Waiting>
-              Votes are on the table. The tallies are next to the names.
-            </Waiting>
-          )}
-
-          {table?.phase === 'guess' &&
-            (yourTurn ? (
-              <WordForm
-                label="Name the word"
-                hint="You were voted out. Get it right and you take the game anyway."
-                placeholder="the secret word"
-                action="Guess"
-                value={draft}
-                onChange={setDraft}
-                onSubmit={(word) => send({ type: 'guess', word }, word)}
-                sent={sent}
-                sentLabel="Guess submitted"
-              />
-            ) : (
-              <Waiting>
-                Mr. White was caught and is naming the word. A correct guess
-                steals the game.
-              </Waiting>
-            ))}
-
-          {table?.phase === 'finished' && (
-            <div>
-              <p
-                className="font-display text-xl leading-tight"
-                style={DISPLAY_HEADING}
-              >
-                <span className="bg-yellow box-decoration-clone px-2">
-                  {outcomeLabel(table)}
-                </span>
-              </p>
-
-              {table.result && (
-                <p className="mt-3 font-mono text-[0.75rem] leading-relaxed text-ink-soft">
-                  {you !== null && table.result.winnerSessionIds.includes(you)
-                    ? 'You were on the winning side.'
-                    : 'You were not.'}
-                  {table.guess && ` The guess was “${table.guess}”.`}
-                </p>
+          {table && (playing || table.phase === 'finished') && (
+            <>
+              {table.phase === 'reveal' && (
+                <Waiting>
+                  Roles are being dealt. Memorise what you were given: it is not
+                  shown again until the game ends.
+                </Waiting>
               )}
 
-              <button
-                type="button"
-                onClick={onStart}
-                disabled={
-                  starting || seated < MIN_PLAYERS || seated > MAX_PLAYERS
-                }
-                className={`${SECONDARY} mt-4 w-full`}
-              >
-                {starting ? 'Dealing…' : 'Play again'}
-              </button>
-            </div>
+              {table.phase === 'clue' &&
+                (yourTurn ? (
+                  <WordForm
+                    label="One word, out loud"
+                    hint="Exactly one word, no spaces. Prove you know the secret without handing it over."
+                    placeholder="one word"
+                    action="Give clue"
+                    value={draft}
+                    onChange={setDraft}
+                    onSubmit={(word) => send({ type: 'clue', word }, word)}
+                    sent={sent}
+                    sentLabel="Clue sent"
+                  />
+                ) : (
+                  <Waiting>
+                    {nicknameOf(table, table.actors[0]) ?? 'Someone'} is giving
+                    a clue. Watch for it on their chair.
+                    {alive && ' You are next in seat order.'}
+                  </Waiting>
+                ))}
+
+              {table.phase === 'discussion' &&
+                (alive ? (
+                  <ReadyToVote
+                    table={table}
+                    you={you}
+                    onToggle={() => onMove({ type: 'ready' })}
+                  />
+                ) : (
+                  <Waiting>
+                    You are out. The living are arguing; you can still talk to
+                    the other eliminated players.
+                  </Waiting>
+                ))}
+
+              {table.phase === 'vote' &&
+                (alive ? (
+                  <div>
+                    <p className="font-mono text-[0.75rem] leading-relaxed text-ink-soft">
+                      {sent
+                        ? 'Vote cast. Others are still deciding. Nobody sees a tally until the phase ends.'
+                        : 'Accuse one player of being Mr. White. Votes stay hidden until everyone has cast.'}
+                    </p>
+
+                    <p className="mt-3 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-[0.6875rem] leading-relaxed text-ink">
+                      {sent ? (
+                        <>
+                          You accused{' '}
+                          <span className="bg-yellow px-1 font-semibold">
+                            {nicknameOf(table, sent) ?? 'somebody'}
+                          </span>
+                          . Click another chair to move it.
+                        </>
+                      ) : (
+                        'Click their chair at the table. Your own counts, if it comes to that.'
+                      )}
+                    </p>
+                  </div>
+                ) : (
+                  <Waiting>
+                    You are out. The living are voting; you can still talk to
+                    the other eliminated players.
+                  </Waiting>
+                ))}
+
+              {table.phase === 'reveal-vote' && (
+                <Waiting>
+                  Votes are on the table. The tallies are next to the names.
+                </Waiting>
+              )}
+
+              {table.phase === 'guess' &&
+                (yourTurn ? (
+                  <WordForm
+                    label="Name the word"
+                    hint="You were voted out. Get it right and you take the game anyway."
+                    placeholder="the secret word"
+                    action="Guess"
+                    value={draft}
+                    onChange={setDraft}
+                    onSubmit={(word) => send({ type: 'guess', word }, word)}
+                    sent={sent}
+                    sentLabel="Guess submitted"
+                  />
+                ) : (
+                  <Waiting>
+                    Mr. White was caught and is naming the word. A correct guess
+                    steals the game.
+                  </Waiting>
+                ))}
+
+              {table.phase === 'finished' && (
+                <div>
+                  <p
+                    className="font-display text-xl leading-tight"
+                    style={DISPLAY_HEADING}
+                  >
+                    <span className="bg-yellow box-decoration-clone px-2">
+                      {outcomeLabel(table)}
+                    </span>
+                  </p>
+
+                  {table.result && (
+                    <p className="mt-3 font-mono text-[0.75rem] leading-relaxed text-ink-soft">
+                      {!playing
+                        ? 'You watched this one.'
+                        : you !== null &&
+                            table.result.winnerSessionIds.includes(you)
+                          ? 'You were on the winning side.'
+                          : 'You were not.'}
+                      {table.guess && ` The guess was “${table.guess}”.`}
+                    </p>
+                  )}
+
+                  {/* Said before the next deal, not after: the roster is about to
+                  be bigger than the one that just played. */}
+                  {waiting.length > 0 && (
+                    <p className="mt-2 font-mono text-[0.6875rem] leading-relaxed text-ink">
+                      <span className="bg-yellow px-1">
+                        {waiting.length} more{' '}
+                        {waiting.length === 1 ? 'person' : 'people'}
+                      </span>{' '}
+                      sat down while you played. The next deal takes them too.
+                    </p>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={onStart}
+                    disabled={
+                      starting || seated < MIN_PLAYERS || seated > MAX_PLAYERS
+                    }
+                    className={`${SECONDARY} mt-4 w-full`}
+                  >
+                    {starting ? 'Dealing…' : 'Play again'}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -352,8 +394,8 @@ function ReadyToVote({
   return (
     <div>
       <p className="font-mono text-[0.75rem] leading-relaxed text-ink-soft">
-        Argue it out in chat. No moves this phase, though you do not have to
-        sit out the clock.
+        Argue it out in chat. No moves this phase, though you do not have to sit
+        out the clock.
       </p>
 
       <button
@@ -388,6 +430,38 @@ function Waiting({ children }: { children: React.ReactNode }) {
     <p className="font-mono text-[0.75rem] leading-relaxed text-ink-soft">
       {children}
     </p>
+  )
+}
+
+/**
+ * Seated, and not in this round.
+ *
+ * Says the one thing that is actually true and actionable — you are in on the
+ * next deal — rather than leaving somebody to work out from an inert board
+ * whether they joined at all. Your chair is drawn on the table for the same
+ * reason.
+ */
+function NotInThisRound() {
+  return (
+    <div>
+      <p className={EYEBROW}>watching</p>
+      <p
+        className="mt-1 font-display text-lg leading-tight"
+        style={DISPLAY_HEADING}
+      >
+        You are in from the next round
+      </p>
+
+      <p className="mt-2 font-mono text-[0.75rem] leading-relaxed text-ink-soft">
+        This one was dealt before you sat down, so it runs without you. The next
+        deal takes everyone at the table, and your chair is already there.
+      </p>
+
+      <p className="mt-3 font-mono text-[0.6875rem] leading-relaxed text-ink-soft">
+        Chat is shut until then — watching players cannot talk to a table
+        mid-game.
+      </p>
+    </div>
   )
 }
 

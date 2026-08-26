@@ -20,6 +20,7 @@ export function RoleCard({
   secretWord,
   eliminated,
   revealed = false,
+  waiting = false,
 }: {
   /** `null` for an observer, who is told nothing. */
   role: MrWhiteRole | null
@@ -28,6 +29,13 @@ export function RoleCard({
   eliminated: boolean
   /** True once `phase === 'finished'` — the word is public from then on. */
   revealed?: boolean
+  /**
+   * True when you are in the room but arrived after the deal.
+   *
+   * The same blank card as any other observer, worded differently: you are not
+   * a bystander, you are next.
+   */
+  waiting?: boolean
 }) {
   const isImpostor = role === 'mr-white'
 
@@ -47,7 +55,13 @@ export function RoleCard({
         className="mt-1.5 font-display text-2xl leading-none"
         style={DISPLAY_HEADING}
       >
-        {role === null ? 'Watching' : isImpostor ? 'Mr. White' : 'Civilian'}
+        {role === null
+          ? waiting
+            ? 'In next round'
+            : 'Watching'
+          : isImpostor
+            ? 'Mr. White'
+            : 'Civilian'}
       </p>
 
       {/* ------------------------------------------------------------- word */}
@@ -84,7 +98,9 @@ export function RoleCard({
           already stock — the note would vanish into it. */}
       <p className="mt-4 border-l-4 border-pink bg-paper px-3 py-2.5 font-mono text-[0.75rem] leading-relaxed text-ink">
         {role === null
-          ? 'You are not seated at this table. You see what the room sees and nothing more.'
+          ? waiting
+            ? 'You sat down after the words were handed out, so this round runs without you. The next deal takes everyone at the table.'
+            : 'You are not seated at this table. You see what the room sees and nothing more.'
           : isImpostor
             ? 'Everyone else shares a word. Read their clues, work out what it is, and give one of your own that does not give you away.'
             : 'Everyone but one of you has this word. Give a clue that proves you know it, without handing it to the one who does not.'}

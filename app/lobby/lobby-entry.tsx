@@ -260,10 +260,11 @@ export function LobbyEntry() {
                         {lobby.seated}/{lobby.capacity}
                       </span>
                       {lobby.host && ` · opened by ${lobby.host}`}
-                      {/* Joining mid-game is allowed and lands you as a
-                          spectator — the roster is fixed when cards are dealt,
-                          so saying "playing" here would be a lie. */}
-                      {lobby.inProgress && ' · in progress'}
+                      {/* Joining mid-game is allowed, and the roster is fixed
+                          when the cards are dealt — so you sit out the round in
+                          progress and the next deal takes you. Saying only "in
+                          progress" left people assuming the table was shut. */}
+                      {lobby.inProgress && ' · mid-round, you play the next one'}
                     </p>
                   </div>
 
@@ -273,7 +274,7 @@ export function LobbyEntry() {
                     disabled={full}
                     className="shrink-0 border-2 border-ink px-5 py-2 font-mono text-sm text-ink transition-colors hover:bg-yellow disabled:opacity-40 disabled:hover:bg-transparent"
                   >
-                    {full ? 'Full' : lobby.inProgress ? 'Watch' : 'Sit down'}
+                    {full ? 'Full' : 'Sit down'}
                   </button>
                 </li>
               )
