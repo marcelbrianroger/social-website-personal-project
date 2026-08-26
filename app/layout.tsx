@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Courier_Prime, Karla } from "next/font/google";
 
+import { getCurrentSession } from "@/lib/session/current-session";
+
 import { SiteFooter, SiteHeader } from "./chrome";
 import "./globals.css";
 
@@ -41,11 +43,20 @@ export const metadata: Metadata = {
     "An anonymous noticeboard for Indonesians in Aachen. Write anything; it deletes itself after 24 hours. Video call whoever is online. No sign-up.",
 };
 
-export default function RootLayout({
+/**
+ * Async so the masthead can greet you by name on every route.
+ *
+ * Reading the session here rather than per page is what makes the identity chip
+ * possible at all — it is chrome, and chrome cannot ask each page to fetch its
+ * own copy. The read is a cookie parse, not a query.
+ */
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getCurrentSession();
+
   return (
     <html
       lang="en"
@@ -58,7 +69,7 @@ export default function RootLayout({
           className="grain pointer-events-none fixed inset-0 z-50"
         />
 
-        <SiteHeader />
+        <SiteHeader session={session} />
         <main className="flex-1">{children}</main>
         <SiteFooter />
       </body>

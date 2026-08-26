@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { SystemNote } from '@/app/chrome'
+import { SHELL, SystemNote } from '@/app/chrome'
 import {
   asMrWhite,
   canChat as canChatMrWhite,
@@ -78,7 +78,7 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
    * this is not lobby state. Werewolf is the default because it is the game
    * this room was rebuilt for; a host who wants the other one clicks once.
    */
-  const [chosen, setChosen] = useState<string>(LOBBY_GAMES[1]?.id ?? 'werewolf')
+  const [chosen, setChosen] = useState<string>(LOBBY_GAMES[0]?.id ?? 'werewolf')
 
   const mrWhite = asMrWhite(view)
   const werewolf = asWerewolf(view)
@@ -129,7 +129,7 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
 
   if (lobbyPhase === 'error') {
     return (
-      <div className={`${TABLE_SHELL} py-16`}>
+      <div className={`${SHELL} py-16`}>
         <h1
           className="font-display text-2xl leading-tight"
           style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
@@ -152,7 +152,7 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
 
   if (lobbyPhase !== 'seated') {
     return (
-      <div className={`${TABLE_SHELL} py-16`}>
+      <div className={`${SHELL} py-16`}>
         <p className={EYEBROW}>lobby</p>
         <p className="mt-3 font-mono text-sm text-ink-soft">
           {lobbyPhase === 'connecting' ? 'Connecting…' : 'Taking a seat…'}
@@ -164,7 +164,7 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
   // ---------------------------------------------------------------- table
 
   return (
-    <div className={`${TABLE_SHELL} py-10 sm:py-14`}>
+    <div className={`${SHELL} py-10 sm:py-14`}>
       <RoomHeader
         lobbyId={lobbyId}
         seated={members.length}
@@ -257,12 +257,4 @@ export function LobbyClient({ lobbyId }: { lobbyId: string }) {
   )
 }
 
-/**
- * Wider than `chrome.tsx`'s `SHELL`.
- *
- * `max-w-5xl` is right for reading and wrong for three live panes — at 64rem
- * the roster and the controls both fall under 15rem and the chat stops being
- * usable. The gutter is kept identical so this page still measures from the
- * same edge as every other route.
- */
-const TABLE_SHELL = 'mx-auto w-full max-w-7xl px-5 sm:px-8'
+

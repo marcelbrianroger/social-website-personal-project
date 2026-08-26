@@ -1,5 +1,7 @@
 'use client'
 
+import { GAMES } from '@/lib/games/catalogue'
+
 import { DISPLAY_HEADING, EYEBROW, PANEL } from './controls'
 
 /**
@@ -17,38 +19,14 @@ import { DISPLAY_HEADING, EYEBROW, PANEL } from './controls'
  * the running game IS the answer, and the host can deal again when it ends.
  */
 
-export interface GameChoice {
-  id: string
-  label: string
-  minPlayers: number
-  maxPlayers: number
-  /** One line on what the table is in for. */
-  blurb: string
-}
-
 /**
- * Mirrored from `server/src/games/registry.ts`.
+ * The picker's list is the site's list.
  *
- * The seat ranges are the server's, repeated here so the picker can grey out a
- * game the table cannot currently seat. As everywhere else that is a HINT — the
- * server refuses the start regardless, and this only saves the host a rejection.
+ * Re-exported rather than redeclared: a host choosing between two games and a
+ * visitor reading about them on the home page must never be looking at two
+ * different sets of facts.
  */
-export const LOBBY_GAMES: readonly GameChoice[] = [
-  {
-    id: 'mr-white',
-    label: 'Mr. White',
-    minPlayers: 4,
-    maxPlayers: 8,
-    blurb: 'Everyone gets a word. One of you gets a blank, and has to bluff.',
-  },
-  {
-    id: 'werewolf',
-    label: 'Werewolf',
-    minPlayers: 5,
-    maxPlayers: 8,
-    blurb: 'A pack eats one of you each night. Eight roles, and nobody admits theirs.',
-  },
-]
+export const LOBBY_GAMES = GAMES
 
 export function GamePicker({
   chosen,
@@ -121,7 +99,7 @@ export function GamePicker({
                 </span>
 
                 <span className="mt-1 block font-mono text-[0.625rem] leading-relaxed text-ink-soft">
-                  {game.blurb}
+                  {game.pitch}
                 </span>
               </button>
             </li>

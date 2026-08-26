@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { ConnectionStatus, SHELL, SystemNote } from '@/app/chrome'
+import { ConnectionStatus, SHELL, SystemNote, WIDE } from '@/app/chrome'
 import { useP2PRoom } from '@/lib/webrtc/use-p2p-room'
 
 import { GameBoard } from './game-board'
@@ -31,7 +31,7 @@ const SECONDARY =
  * because two faces side by side is the one thing here that genuinely wants
  * the whole screen.
  */
-const STAGE_SHELL = 'mx-auto w-full max-w-[110rem] px-3 sm:px-5'
+const STAGE_SHELL = WIDE
 
 /**
  * Height of the stage.

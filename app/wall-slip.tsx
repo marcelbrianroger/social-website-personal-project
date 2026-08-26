@@ -11,9 +11,16 @@ import type { DuduBroadcast } from '@/lib/socket/events'
  * live here, so changing the paper is a change in one place.
  */
 
-/** Grid the slips are pinned to. `board` isolates the multiply blend. */
+/**
+ * Grid the slips are pinned to. `board` isolates the multiply blend.
+ *
+ * Four across at the top end, because the page shell went from 64rem to 88rem
+ * and three columns in that much width stretches a slip past the newspaper
+ * measure it is meant to hold — a note you can read in one glance is the whole
+ * unit here.
+ */
 export const BOARD =
-  'board grid grid-cols-1 items-start p-3 sm:grid-cols-2 lg:grid-cols-3'
+  'board grid grid-cols-1 items-start p-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
 
 /**
  * Deterministic per slot rather than random, so the server and the first client

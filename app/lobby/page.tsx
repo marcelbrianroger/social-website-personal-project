@@ -3,13 +3,17 @@ import type { Metadata } from 'next'
 import { LobbyEntry } from './lobby-entry'
 
 export const metadata: Metadata = {
-  title: 'Mr. White · DUDU',
+  title: 'Play · Social Aachen Website',
   description:
-    'Social deduction for four to eight players. Everyone shares a secret word except one.',
+    'Werewolf and Mr. White, for four to eight players. Open a table, share the ID, pick the game once everyone is seated.',
 }
 
 /**
- * Entry point for Mr. White.
+ * Entry point for the tables.
+ *
+ * Names both games rather than one: the metadata used to say "Mr. White",
+ * which was the only place a search result or a shared link could have
+ * mentioned Werewolf and did not.
  *
  * Purely presentational — no session is read here. The socket handshake
  * authenticates with the same HttpOnly cookie once a table is actually

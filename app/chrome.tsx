@@ -1,6 +1,9 @@
 import Link from 'next/link'
 
+import type { AnonymousSession } from '@/lib/session/session'
+
 import { Clocks } from './clocks'
+import { IdentityChip } from './identity-chip'
 
 /**
  * Shared site chrome.
@@ -10,8 +13,29 @@ import { Clocks } from './clocks'
  * server-only, so client components may use it.
  */
 
-/** Page shell width. Every route measures from the same gutter. */
-export const SHELL = 'mx-auto w-full max-w-5xl px-5 sm:px-8'
+/**
+ * THE WIDTH SCALE. Three values, and every route measures from one of them.
+ *
+ * This used to be a single `SHELL` at 64rem, and it had already lost: the video
+ * stage had privately grown a 110rem shell and the game table an 80rem one,
+ * because 64rem genuinely cannot hold three live panes. Three widths defined in
+ * three files is the drift this module exists to prevent, so they are named
+ * here instead and the pages import them.
+ *
+ * The widening is not a taste call. A mading — the pinned-up wall magazine this
+ * whole site is drawn from — is a BOARD, not a column: edge to edge, several
+ * things across, read by a crowd standing in front of it. A 64rem strip floating
+ * in the middle of a 1600px screen was arguing with its own metaphor.
+ */
+
+/** Prose. Long text stays at a readable measure whatever it sits inside. */
+export const READING = 'max-w-[68ch]'
+
+/** The standard page. Wide enough to be a board, gutters that hold at 1280. */
+export const SHELL = 'mx-auto w-full max-w-[88rem] px-5 sm:px-8 lg:px-10'
+
+/** Full stage: the video grid, and anything that wants the whole wall. */
+export const WIDE = 'mx-auto w-full max-w-[110rem] px-3 sm:px-5 lg:px-8'
 
 /**
  * A link, highlighted.
@@ -23,15 +47,24 @@ export const SHELL = 'mx-auto w-full max-w-5xl px-5 sm:px-8'
 export const MARKED =
   'bg-yellow px-1 text-ink decoration-2 underline-offset-2 hover:underline'
 
-export function SiteHeader() {
+/**
+ * The masthead.
+ *
+ * Three zones on one rule: who this is, where you can go, and who YOU are. The
+ * third is new — the name used to live in a card halfway down the home page,
+ * which meant it was invisible from every other route and the site never
+ * greeted you anywhere else. A social place should say your name back to you on
+ * every screen, so it sits in the chrome now.
+ */
+export function SiteHeader({ session }: { session: AnonymousSession | null }) {
   return (
-    <header className="border-b-2 border-ink">
+    <header className="border-b-2 border-ink bg-paper">
       <div
-        className={`${SHELL} flex flex-wrap items-end justify-between gap-x-6 gap-y-3 py-4`}
+        className={`${SHELL} flex flex-wrap items-center justify-between gap-x-8 gap-y-3 py-3.5`}
       >
         {/* Masthead. The name is long, so it is set as a stacked lockup
             rather than squeezed onto one line. */}
-        <Link href="/" className="group leading-none">
+        <Link href="/" className="group shrink-0 leading-none">
           <span
             className="block font-display text-[1.0625rem] leading-none tracking-[-0.02em] group-hover:text-pink"
             style={{ fontVariationSettings: "'wght' 800, 'wdth' 90" }}
@@ -43,20 +76,25 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <div className="flex flex-wrap items-end gap-x-5 gap-y-2">
-          <nav className="flex items-baseline gap-4 font-mono text-xs">
-            <Link href="/wall" className="hover:bg-yellow">
-              wall
-            </Link>
-            <Link href="/rooms" className="hover:bg-yellow">
-              rooms
-            </Link>
-            <Link href="/lobby" className="hover:bg-yellow">
-              play
-            </Link>
-          </nav>
+        {/* Centre zone takes the slack, so the nav sits with the masthead and
+            the identity stays pinned to the right edge at every width. */}
+        <nav className="order-3 flex items-baseline gap-5 font-mono text-xs sm:order-none sm:flex-1">
+          <Link href="/wall" className="hover:bg-yellow">
+            wall
+          </Link>
+          <Link href="/rooms" className="hover:bg-yellow">
+            rooms
+          </Link>
+          <Link href="/lobby" className="hover:bg-yellow">
+            play
+          </Link>
+        </nav>
 
-          <Clocks />
+        <div className="flex shrink-0 items-center gap-x-5 gap-y-2">
+          <span className="hidden sm:block">
+            <Clocks />
+          </span>
+          <IdentityChip session={session} />
         </div>
       </div>
     </header>
