@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 
-import { ConnectionStatus, SHELL, SystemNote } from "@/components/site-chrome";
+import {
+  ConnectionStatus,
+  PRESS_INK,
+  SHELL,
+  SystemNote,
+} from "@/components/site-chrome";
 import { BOARD, WallSlip } from "@/components/wall-slip";
 import { useWall } from "@/lib/wall/use-wall";
 import { MAX_MESSAGE_LENGTH } from "@/lib/socket/events";
@@ -73,7 +78,7 @@ export function WallClient() {
           <button
             type="submit"
             disabled={!canPost}
-            className="border-2 border-ink bg-ink px-6 py-2.5 font-mono text-sm text-paper transition-colors hover:bg-pink hover:text-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-paper"
+            className={`${PRESS_INK} px-6 py-2.5 text-sm`}
           >
             {posting ? "Pinning…" : "Pin it up"}
           </button>

@@ -91,7 +91,7 @@ export function LiveWall() {
             <span
               aria-hidden="true"
               className={`size-2 rounded-full ${
-                connected ? 'bg-pink' : 'border border-ink-soft'
+                connected ? 'animate-breathe bg-pink' : 'border border-ink-soft'
               }`}
             />
             {connected ? 'live' : 'reconnecting'}

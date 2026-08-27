@@ -1,6 +1,6 @@
 'use client'
 
-import { SystemNote } from '@/components/site-chrome'
+import { PRESS_PAPER, SystemNote } from '@/components/site-chrome'
 import { useGame } from '@/lib/game/use-game'
 import type {
   BoardOutcome,
@@ -205,7 +205,7 @@ export function GameBoard({
           type="button"
           onClick={() => start('tic-tac-toe')}
           disabled={starting || busyElsewhere || Boolean(mine && !mine.finished)}
-          className="border-2 border-ink px-5 py-2.5 font-mono text-sm text-ink transition-colors hover:bg-yellow disabled:opacity-40 disabled:hover:bg-transparent"
+          className={`${PRESS_PAPER} px-5 py-2.5 text-sm`}
         >
           {mine?.finished ? 'Play again' : starting ? 'Starting…' : 'Start game'}
         </button>

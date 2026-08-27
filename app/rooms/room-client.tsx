@@ -2,7 +2,14 @@
 
 import { useState } from 'react'
 
-import { ConnectionStatus, SHELL, SystemNote, WIDE } from '@/components/site-chrome'
+import {
+  ConnectionStatus,
+  PRESS_INK,
+  PRESS_PAPER,
+  SHELL,
+  SystemNote,
+  WIDE,
+} from '@/components/site-chrome'
 import { useP2PRoom } from '@/lib/webrtc/use-p2p-room'
 
 import { GameBoard } from './game-board'
@@ -19,12 +26,10 @@ const PHASE_LABEL: Record<string, string> = {
 }
 
 /** Filled control. One per view, at most. */
-const PRIMARY =
-  'border-2 border-ink bg-ink px-6 py-2.5 font-mono text-sm text-paper transition-colors hover:bg-pink hover:text-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-paper'
+const PRIMARY = `${PRESS_INK} px-6 py-2.5 text-sm`
 
 /** Outline control, for everything that is not the main action. */
-const SECONDARY =
-  'border-2 border-ink px-5 py-2.5 font-mono text-sm text-ink transition-colors hover:bg-yellow disabled:opacity-40 disabled:hover:bg-transparent'
+const SECONDARY = `${PRESS_PAPER} px-5 py-2.5 text-sm`
 
 /**
  * In a call the stage IS the page: a wider gutter than the rest of the site,

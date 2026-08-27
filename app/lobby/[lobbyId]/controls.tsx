@@ -2,12 +2,16 @@
 
 import { useSyncExternalStore } from 'react'
 
+import { PRESS_INK, PRESS_PAPER } from '@/components/site-chrome'
+
 /**
- * Control styling for the Mr. White table.
+ * Control styling for the table.
  *
- * Lifted verbatim from `app/rooms/room-client.tsx` so the two routes cannot
- * drift. Five components share these, which is the only reason they live in a
- * module rather than being repeated inline.
+ * These were once "lifted verbatim from `app/rooms/room-client.tsx` so the two
+ * routes cannot drift", which is precisely how they drifted: copying a string
+ * is not sharing it, and by the time there were four copies only this one had
+ * kept the press. The shared pair now lives in `components/site-chrome.tsx`
+ * and everything here is a size on top of it.
  *
  * The palette rules from `globals.css` are load-bearing here:
  *   - `ink` / `ink-soft` carry every piece of text. Nothing else does.
@@ -23,13 +27,19 @@ import { useSyncExternalStore } from 'react'
  * grey, no pretence of floating.
  */
 
+/*
+ * SIZES ONLY, NOW. The table invented this pair, and for a while it was the
+ * only screen that had them — every other route drew the same button with the
+ * press left out. They live in site-chrome now so the whole site gets the
+ * register for free; these two say how big a control at a table is, and keep
+ * the names the room already imports so nothing downstream has to change.
+ */
+
 /** Filled control. One per view, at most. */
-export const PRIMARY =
-  'reg border-2 border-ink bg-ink px-6 py-2.5 font-mono text-sm text-paper transition-colors hover:bg-pink hover:text-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-paper'
+export const PRIMARY = `${PRESS_INK} px-6 py-2.5 text-sm`
 
 /** Outline control, for everything that is not the main action. */
-export const SECONDARY =
-  'reg border-2 border-ink bg-paper px-5 py-2.5 font-mono text-sm text-ink transition-colors hover:bg-yellow disabled:opacity-40 disabled:hover:bg-paper'
+export const SECONDARY = `${PRESS_PAPER} px-5 py-2.5 text-sm`
 
 /** Text entry. Square, typed, no focus ring of its own — `:focus-visible` is global. */
 export const FIELD =

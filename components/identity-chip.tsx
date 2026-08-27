@@ -143,7 +143,11 @@ export function IdentityChip({ session }: { session: AnonymousSession | null }) 
           setRenamed(false)
           setOpen((was) => !was)
         }}
-        className="flex max-w-[9.5rem] items-baseline gap-1.5 border-2 border-ink bg-yellow px-2 py-1 text-ink transition-colors hover:bg-pink sm:max-w-[13rem]"
+        // `reg` rather than the shared PRESS_* constants: site-chrome imports
+        // THIS file, so importing back would close a cycle. The class in
+        // globals.css is the shared thing; those constants are a convenience
+        // for files that do not already spell their own button out.
+        className="reg flex max-w-[9.5rem] items-baseline gap-1.5 border-2 border-ink bg-yellow px-2 py-1 text-ink transition-colors hover:bg-pink sm:max-w-[13rem]"
       >
         <span
           className="min-w-0 truncate font-display text-[0.8125rem] leading-none"
@@ -165,8 +169,10 @@ export function IdentityChip({ session }: { session: AnonymousSession | null }) 
           role="dialog"
           aria-label="Your name"
           // Right-anchored: the chip sits at the page edge, so a
-          // left-anchored panel would hang off the viewport on mobile.
-          className="absolute right-0 z-40 mt-2 w-[17rem] border-2 border-ink bg-stock p-4"
+          // left-anchored panel would hang off the viewport on mobile. The
+          // entry scales from that same top-right corner — see `pop-open` in
+          // globals.css — so the panel visibly belongs to the chip above it.
+          className="animate-pop-open absolute right-0 z-40 mt-2 w-[17rem] border-2 border-ink bg-stock p-4"
         >
           <form
             onSubmit={(event) => {
@@ -220,14 +226,14 @@ export function IdentityChip({ session }: { session: AnonymousSession | null }) 
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="border-2 border-ink px-3 py-1.5 font-mono text-xs text-ink transition-colors hover:bg-yellow"
+                  className="reg border-2 border-ink bg-paper px-3 py-1.5 font-mono text-xs text-ink transition-colors hover:bg-yellow"
                 >
                   cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!canSave}
-                  className="border-2 border-ink bg-ink px-3 py-1.5 font-mono text-xs text-paper transition-colors hover:bg-pink hover:text-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-paper"
+                  className="reg border-2 border-ink bg-ink px-3 py-1.5 font-mono text-xs text-paper transition-colors hover:bg-pink hover:text-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-paper"
                 >
                   {saving ? 'saving…' : 'save'}
                 </button>

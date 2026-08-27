@@ -3,7 +3,12 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
-import { READING, SHELL } from '@/components/site-chrome'
+import {
+  PRESS_INK,
+  PRESS_PAPER,
+  READING,
+  SHELL,
+} from '@/components/site-chrome'
 import { GAMES } from '@/lib/game/catalogue'
 import { useOpenLobbies } from '@/lib/lobby/use-open-lobbies'
 
@@ -49,13 +54,25 @@ function newLobbyId(): string {
 /** Matches `isValidLobbyId` on the server. Checked here only to explain early. */
 const LOBBY_ID = /^[A-Za-z0-9_-]{3,32}$/
 
-const PRIMARY =
-  'border-2 border-ink bg-ink px-6 py-3 font-mono text-sm text-paper transition-colors hover:bg-pink hover:text-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-paper'
-
-const SECONDARY =
-  'border-2 border-ink px-6 py-3 font-mono text-sm text-ink transition-colors hover:bg-yellow disabled:opacity-40 disabled:hover:bg-transparent'
+/*
+ * Sizes only. Both of these used to spell out the whole button here, which is
+ * how this page ended up with controls that looked like the table's and did not
+ * behave like them — no press, no register, just a colour swap. The shared
+ * constants carry the press; this file says how big.
+ */
+const PRIMARY = `${PRESS_INK} px-6 py-3 text-sm`
+const SECONDARY = `${PRESS_PAPER} px-6 py-3 text-sm`
 
 const DISPLAY = { fontVariationSettings: "'wght' 800, 'wdth' 95" }
+
+/**
+ * How far into the list the arrival stagger keeps counting.
+ *
+ * A table laid down 40ms after the one above it reads as dealing. Twelve of
+ * them would read as the page loading badly, so past this point every remaining
+ * row lands together — the effect has already been made by then.
+ */
+const STAGGER_CAP = 6
 
 export function LobbyEntry() {
   const router = useRouter()
@@ -237,14 +254,27 @@ export function LobbyEntry() {
             </div>
           )}
 
+          {/*
+            Tables are LAID DOWN, not faded in — the same keyframe the game
+            table lays a line of chat with, because it is the same gesture: a
+            piece of paper put on a board.
+
+            Safe to run on mount for every row. The list is keyed by lobbyId, so
+            React updates a table's seat count in place rather than remounting
+            it — a row mounting genuinely is a table opening, and the seat
+            counter ticking 3/8 → 4/8 does not replay anything.
+          */}
           <ul className="mt-3 space-y-2">
-            {lobbies.map((lobby) => {
+            {lobbies.map((lobby, index) => {
               const full = lobby.seated >= lobby.capacity
 
               return (
                 <li
                   key={lobby.lobbyId}
-                  className="flex flex-wrap items-center justify-between gap-x-5 gap-y-3 border-2 border-ink bg-stock px-4 py-3"
+                  style={{
+                    animationDelay: `${Math.min(index, STAGGER_CAP) * 40}ms`,
+                  }}
+                  className="animate-lay-down flex flex-wrap items-center justify-between gap-x-5 gap-y-3 border-2 border-ink bg-stock px-4 py-3"
                 >
                   <div className="min-w-0">
                     <p
@@ -272,7 +302,7 @@ export function LobbyEntry() {
                     type="button"
                     onClick={() => router.push(`/lobby/${lobby.lobbyId}`)}
                     disabled={full}
-                    className="shrink-0 border-2 border-ink px-5 py-2 font-mono text-sm text-ink transition-colors hover:bg-yellow disabled:opacity-40 disabled:hover:bg-transparent"
+                    className={`${PRESS_PAPER} shrink-0 px-5 py-2 text-sm`}
                   >
                     {full ? 'Full' : 'Sit down'}
                   </button>

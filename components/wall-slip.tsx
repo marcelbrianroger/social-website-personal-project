@@ -1,6 +1,7 @@
 'use client'
 
 import type { DuduBroadcast } from '@/lib/socket/events'
+import { useSlipDrag } from '@/lib/wall/use-slip-drag'
 
 /**
  * One slip of paper on the board.
@@ -75,8 +76,19 @@ export function WallSlip({
   const tilt = TILTS[slot % TILTS.length]!
   const [nudgeX, nudgeY] = NUDGES[slot % NUDGES.length]!
 
+  /*
+   * The slip owns its position from here on. `paint` composes the same
+   * rotate/translate this element renders with, so a slip that has never been
+   * touched sits exactly where the markup put it — the drag only ever adds to
+   * the resting transform, it never replaces the idea of one.
+   */
+  const { ref, dragging, handlers } = useSlipDrag({ tilt, nudgeX, nudgeY })
+
   return (
     <li
+      ref={ref}
+      {...handlers}
+      data-dragging={dragging}
       style={
         {
           // Also read by the pin-up keyframes, which have to land on exactly
@@ -85,10 +97,18 @@ export function WallSlip({
           '--nudge-x': `${nudgeX}px`,
           '--nudge-y': `${nudgeY}px`,
           transform: `rotate(${tilt}deg) translate(${nudgeX}px, ${nudgeY}px)`,
-          zIndex: slot % 2 === 0 ? 2 : 1,
+          /*
+           * A slip in hand is on top of every slip it is crossing. This has to
+           * be set HERE rather than in the stylesheet: the resting value is an
+           * inline style, and an inline declaration outranks a class, so a
+           * `z-index` rule keyed off `data-dragging` would lose to the very
+           * value it was trying to override and the picked-up note would slide
+           * underneath its neighbours.
+           */
+          zIndex: dragging ? 30 : slot % 2 === 0 ? 2 : 1,
         } as React.CSSProperties
       }
-      className={`slip relative flex min-h-44 flex-col justify-between border-2 border-ink bg-stock px-6 pt-10 pb-5 ${
+      className={`slip slip-drag relative flex min-h-44 flex-col justify-between border-2 border-ink bg-stock px-6 pt-10 pb-5 ${
         arriving ? 'animate-pin-up' : ''
       }`}
     >

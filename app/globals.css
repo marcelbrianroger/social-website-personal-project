@@ -142,8 +142,22 @@ body {
   animation: unpin 620ms cubic-bezier(0.5, 0, 0.75, 0.4) forwards;
 }
 
+/*
+ * `backwards`, NOT `both`, and the difference is now load-bearing.
+ *
+ * A filled-forwards animation sits in the animation origin of the cascade,
+ * which outranks an author declaration — including an inline `style`. While
+ * this was `both`, its final frame stayed in force forever and would silently
+ * beat the transform the drag handler writes onto the element, so a slip that
+ * had ever animated in could never be moved.
+ *
+ * `backwards` still applies the `from` frame during the delay, so nothing
+ * flashes at its resting position before swinging in. It simply stops holding
+ * the last frame afterwards — which costs nothing, because the keyframe ends on
+ * exactly the resting transform the element already carries inline.
+ */
 .animate-pin-up {
-  animation: pin-up 380ms ease-out both;
+  animation: pin-up 380ms ease-out backwards;
 }
 
 /*
@@ -237,14 +251,309 @@ body {
   animation: stamp 340ms cubic-bezier(0.3, 1.4, 0.5, 1) both;
 }
 
+/*
+ * The press, arriving.
+ *
+ * The one entry this stylesheet had never needed: STATIC TYPE landing on the
+ * page. Every other entrance here is an object — a slip swinging on its pin, a
+ * card dealt to a seat, a line laid on the table — and all of them rotate,
+ * because paper does. A masthead does not. It is printed, and a print either
+ * registers or it does not.
+ *
+ * So this is the plainest possible move: up ten pixels and in. No rotation, no
+ * scale, nothing that would make a headline behave like a loose sheet. The rise
+ * is small enough that the page never reads as empty first and filled second —
+ * the point is a sheet coming off the press, not a splash screen.
+ *
+ * Used only on the home hero, where a visitor sees it once. The delight budget
+ * lives at first-visit frequency and nowhere else; putting this on a control
+ * anyone presses twice would make the site feel slow rather than alive.
+ */
+@keyframes ink-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/*
+ * The curve is a strong ease-out, not the CSS keyword: built-in `ease-out` is
+ * too weak to read as arrival, and `ease-in` would hold the type back at
+ * exactly the moment a first-time visitor is looking hardest at it.
+ */
+.animate-ink-in {
+  animation: ink-in 460ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+/*
+ * A panel opening off its own chip.
+ *
+ * The rename panel hangs under the identity chip in the masthead, and it used
+ * to simply EXIST on the next frame — no bridge at all, which reads as a
+ * rendering glitch rather than as something opening.
+ *
+ * `transform-origin` is the whole point, and it is the corner the panel is
+ * pinned to (`absolute right-0`), not the centre. A panel that grows from its
+ * middle has no relationship to the thing that opened it; one that grows from
+ * the chip is obviously the chip's. Modals are the exception to this and stay
+ * centred — they are not anchored to anything.
+ *
+ * Scale starts at 0.97, never 0. Nothing on paper appears out of nothing, and a
+ * panel unfolding from a point looks like a magic trick; from 0.97 it looks
+ * like a sheet being turned over. 150ms puts it at the fast end of the dropdown
+ * budget, because this sits under the pointer that just asked for it.
+ */
+@keyframes pop-open {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-pop-open {
+  transform-origin: top right;
+  animation: pop-open 150ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+/*
+ * ===========================================================================
+ * THE MARKER
+ * ===========================================================================
+ *
+ * The highlighter pass is already this site's only way of letting colour touch
+ * type — ink over a yellow fill, because pink cannot legally carry small text.
+ * It was drawn instantly, which is the one thing a marker never does: a marker
+ * is DRAWN, left to right, in one stroke.
+ *
+ * Done with `background-size` rather than a clipped pseudo-element, and that is
+ * a deliberate trade. Painting a gradient each frame is not compositor work, so
+ * this is the one place in the stylesheet that knowingly costs paint. It buys
+ * the thing a pseudo-element cannot do: it survives `box-decoration-clone` and
+ * keeps working when the marked phrase wraps to a second line, which is exactly
+ * what happens to the masthead on a phone. A 420ms one-shot on one element is
+ * worth a repaint; a hover on every nav item is 160ms and equally cheap.
+ */
+@keyframes swipe {
+  from {
+    background-size: 0% 100%;
+  }
+  to {
+    background-size: 100% 100%;
+  }
+}
+
+/*
+ * Drawn once, on the hero, as the last beat of the opening sequence.
+ *
+ * THE CURVE IS `strike`'s, NOT THE UI EASE-OUT. Everything else on this site
+ * enters on a strong ease-out, and that is right for a thing ARRIVING — it
+ * should be there almost before you notice. A stroke is not arriving, it is
+ * being MADE, and the hand making it accelerates and decelerates. On the expo
+ * curve this was 95% drawn in 45% of its time, which reads as the yellow simply
+ * appearing with a short tail rather than as a marker crossing a word.
+ *
+ * So it borrows the curve this stylesheet already chose for the one other mark
+ * a person physically draws — the stroke through a winning line — because they
+ * are the same gesture and should not disagree about how a hand moves.
+ */
+.marker-swipe {
+  background-image: linear-gradient(var(--color-yellow), var(--color-yellow));
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  animation: swipe 420ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+/*
+ * Drawn under the pointer. A TRANSITION, not a keyframe, because a nav bar gets
+ * swept across: transitions retarget from wherever they are, keyframes restart
+ * from zero and would make a quick pass down the nav stutter.
+ */
+.marker-hover {
+  background-image: linear-gradient(var(--color-yellow), var(--color-yellow));
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  transition: background-size 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .marker-hover:hover {
+    background-size: 100% 100%;
+  }
+}
+
+/* No pointer to hover with: the marker is simply there. */
+@media not all and (hover: hover) {
+  .marker-hover {
+    background-size: 100% 100%;
+  }
+}
+
+/*
+ * ===========================================================================
+ * ARRIVING ON SCROLL
+ * ===========================================================================
+ *
+ * Each section of the home page comes off the press as you reach it, reusing
+ * `ink-in` rather than inventing a second arrival — one page, one gesture.
+ *
+ * SCROLL-DRIVEN CSS, NO OBSERVER. `animation-timeline: view()` ties the
+ * animation to the element's own passage through the viewport, which means no
+ * IntersectionObserver, no state, no client component, and no work on the main
+ * thread — this site is meant to run on a home server, and a scroll listener
+ * per section is the opposite of that.
+ *
+ * The `@supports` guard is load-bearing rather than polite. Without it, a
+ * browser that does not understand `view()` ignores only the timeline and runs
+ * the animation on the document timeline instead — every section below the fold
+ * would play its entrance while off-screen and be sitting still by the time you
+ * arrived. Inside the guard, such a browser gets no rule at all and the page is
+ * simply static, which is the correct fallback.
+ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: ink-in linear both;
+      animation-timeline: view();
+      /* Resolved while the section is entering, and finished well before it
+         reaches the middle of the screen — a reveal you have to wait for
+         reads as the page lagging, not as the page being alive. */
+      animation-range: entry 0% entry 40%;
+    }
+  }
+}
+
+/*
+ * ===========================================================================
+ * THE MASTHEAD, PRINTED IN TWO PASSES
+ * ===========================================================================
+ *
+ * This is the thesis of the whole site, finally stated out loud where a visitor
+ * lands. A riso pulls one ink per pass and the passes never line up perfectly;
+ * every interactive control here is drawn out of register and snaps flush when
+ * you commit to it. Until now the home page asserted that language in its
+ * buttons without ever SHOWING it, so the idea was only legible to someone who
+ * already knew what they were looking at.
+ *
+ * So the headline prints twice. The pink plate lands first and wide, the ink
+ * plate lands on top, and the pink slides most of the way home — but not all
+ * of it. It rests 2px out, permanently, because a real riso NEVER registers
+ * perfectly and a masthead that landed dead flush would be a lie about the
+ * object this is pretending to be. That residual hairline is the tell: it is
+ * the thing a stranger notices without being able to name, and the reason the
+ * page cannot be mistaken for a template that shipped with a theme.
+ *
+ * Transform only, so the whole thing is a compositor job on one element.
+ */
+@keyframes register {
+  from {
+    transform: translate(14px, 9px);
+  }
+  to {
+    transform: translate(2px, 2px);
+  }
+}
+
+.hero-plate {
+  animation: register 620ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+/*
+ * ===========================================================================
+ * PAPER YOU CAN ACTUALLY MOVE
+ * ===========================================================================
+ *
+ * A slip on this board is drawn as a physical object — tilted, overprinted,
+ * pinned — and then behaved like a div. Picking one up and shoving it across
+ * the board is the single thing that makes the metaphor true rather than
+ * decorative, and it is the moment a person who has never thought about how a
+ * website is built can tell that somebody built this one.
+ *
+ * FINE POINTERS ONLY, and that is not a shortcut. Making a slip draggable on
+ * touch means `touch-action: none` on it, and on a phone the wall is almost
+ * entirely slips — the page would simply stop scrolling. A board you cannot
+ * scroll is a worse board than one you cannot rearrange.
+ */
+@media (hover: hover) and (pointer: fine) {
+  .slip-drag {
+    cursor: grab;
+  }
+
+  /* Only once a drag has actually engaged past the threshold. Setting these on
+     pointerdown instead would kill text selection on every single click.
+
+     The raise-to-top that belongs with this lives on the element's inline style
+     instead — the slip sets its resting `z-index` inline, and a class can never
+     outrank that. See `wall-slip.tsx`. */
+  .slip-drag[data-dragging='true'] {
+    cursor: grabbing;
+    user-select: none;
+  }
+}
+
+/*
+ * The live dot, breathing.
+ *
+ * A connection indicator that never moves is indistinguishable from a printed
+ * dot, which on this site it literally could be. Opacity only, so it stays on
+ * the compositor, and slow enough to read as breathing rather than blinking —
+ * this sits on screen for as long as the wall is open.
+ */
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-breathe {
+  animation: breathe 2.4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-reject,
   .animate-reject-alt,
   .animate-unpin,
   .animate-pin-up,
   .animate-strike,
-  .animate-stamp {
+  .animate-stamp,
+  /* `animation: none` is the whole fix for these — the keyframe never applies,
+     so they render at their resting opacity instead of staying at zero. The
+     panel still opens; it simply opens instantly. */
+  .animate-ink-in,
+  .animate-pop-open,
+  .animate-breathe {
     animation: none;
+  }
+
+  /*
+   * The marker is CONTENT, not decoration — it is how this site marks a word,
+   * and a highlight that never arrives would silently delete the emphasis. So
+   * unlike the others it is not switched off, it is switched to FINISHED.
+   */
+  .marker-swipe {
+    animation: none;
+    background-size: 100% 100%;
+  }
+
+  /*
+   * The hover marker keeps its state change and loses only the sweep. Reduced
+   * motion means less movement, not less feedback — forcing this one to 100%
+   * would paint every nav item permanently yellow and destroy the affordance
+   * it exists to provide.
+   */
+  .marker-hover {
+    transition: none;
   }
 
   /* Expiry still has to resolve without motion. */
@@ -299,10 +608,19 @@ body {
     color 90ms ease-out;
 }
 
-/* Hover and press are scoped to things that actually take a press — the dial in
-   the middle of the table wears the same offset and is not one of them. */
-:is(button, a).reg:hover:not(:disabled) {
-  box-shadow: 5px 5px 0 0 var(--color-pink);
+/*
+ * Hover and press are scoped to things that actually take a press — the dial in
+ * the middle of the table wears the same offset and is not one of them.
+ *
+ * Gated on a real pointer. A touch screen fires :hover on tap and then LEAVES
+ * IT ON until you touch something else, so without this the last button you
+ * pressed on a phone sits permanently at the 5px hover offset — which reads as
+ * a control still waiting on you, on one that has already finished.
+ */
+@media (hover: hover) and (pointer: fine) {
+  :is(button, a).reg:hover:not(:disabled) {
+    box-shadow: 5px 5px 0 0 var(--color-pink);
+  }
 }
 
 /* In register. Pressed, and held there. */
