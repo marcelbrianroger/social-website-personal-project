@@ -8,6 +8,8 @@ import {
   type AnonymousSession,
   type ClientToServerEvents,
   type DuduBroadcast,
+  type DuduReply,
+  type ReplyResult,
   type ServerToClientEvents,
 } from '@/lib/socket/events'
 import {
@@ -23,6 +25,12 @@ import {
  * Expiry is enforced by Redis on the server. This hook also drops expired
  * messages locally on a timer, so a tab left open overnight does not keep
  * showing posts the server has already forgotten.
+ *
+ * THREADS ARE FETCHED, NOT PUSHED. A note carries only its `replyCount`; the
+ * replies themselves are asked for when a note is opened. Most notes are never
+ * opened, and shipping fifty threads to render the one somebody reads is a
+ * great deal of text for nothing. Once a thread is open it stays live — new
+ * replies arrive on the same socket as new notes.
  */
 
 type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>
@@ -41,7 +49,30 @@ export function useWall() {
   const [error, setError] = useState<string | null>(null)
   const [posting, setPosting] = useState(false)
 
+  /**
+   * Loaded threads, by note id. A missing key means "not opened yet".
+   *
+   * NOT PRUNED when a note expires, deliberately. A thread only lands here
+   * because somebody opened that note, nothing renders a thread for a note the
+   * board no longer holds, and ids are UUIDs so a dead key can never be hit
+   * again. Sweeping it would cost an effect that writes state on every change
+   * to the message list — cascading renders, for a few kilobytes that die with
+   * the page.
+   */
+  const [threads, setThreads] = useState<Record<string, DuduReply[]>>({})
+  const [replying, setReplying] = useState(false)
+
   const socketRef = useRef<AppSocket | null>(null)
+
+  /**
+   * Reply ids already accounted for.
+   *
+   * The author of a reply receives it twice — once as the ack, once as the
+   * broadcast every subscriber gets — and `replyCount` is a running tally, so
+   * without this the writer's own note would climb by two. A ref rather than
+   * state: it gates an update and is never rendered.
+   */
+  const seenReplies = useRef(new Set<string>())
 
   const addMessage = useCallback((incoming: DuduBroadcast) => {
     setMessages((current) => {
@@ -49,6 +80,49 @@ export function useWall() {
       // `dudu:post`, once via the broadcast every subscriber gets.
       if (current.some((message) => message.id === incoming.id)) return current
       return [incoming, ...current]
+    })
+  }, [])
+
+  const addReply = useCallback((incoming: DuduReply) => {
+    if (seenReplies.current.has(incoming.id)) return
+    seenReplies.current.add(incoming.id)
+
+    setThreads((current) => {
+      const thread = current[incoming.noteId]
+      // Not open. Nothing to append to — it will arrive complete, and correct,
+      // the moment somebody opens the note.
+      if (!thread) return current
+      return { ...current, [incoming.noteId]: [...thread, incoming] }
+    })
+
+    setMessages((current) =>
+      current.map((message) =>
+        message.id === incoming.noteId
+          ? { ...message, replyCount: message.replyCount + 1 }
+          : message,
+      ),
+    )
+  }, [])
+
+  /** Fetch one note's thread. Safe to call again — the server is the truth. */
+  const loadReplies = useCallback((noteId: string) => {
+    const socket = socketRef.current
+    if (!socket) return
+
+    socket.emit('dudu:replies', noteId, ({ replies }) => {
+      for (const reply of replies) seenReplies.current.add(reply.id)
+
+      setThreads((current) => ({ ...current, [noteId]: replies }))
+
+      // The server just counted these for real. Trust that over the running
+      // tally, which can drift across a reconnect or a missed broadcast.
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === noteId
+            ? { ...message, replyCount: replies.length }
+            : message,
+        ),
+      )
     })
   }, [])
 
@@ -85,6 +159,7 @@ export function useWall() {
       })
 
       connection.on('dudu:message', addMessage)
+      connection.on('dudu:reply:new', addReply)
 
       connection.on('disconnect', () => setConnected(false))
 
@@ -107,7 +182,7 @@ export function useWall() {
       socket?.disconnect()
       socketRef.current = null
     }
-  }, [addMessage])
+  }, [addMessage, addReply])
 
   // Drop messages that have aged past their 48h window.
   useEffect(() => {
@@ -150,5 +225,47 @@ export function useWall() {
     return true
   }, [addMessage])
 
-  return { messages, session, connected, error, posting, post, clearError: () => setError(null) }
+  /** Answer a note. Resolves true when the reply was accepted and broadcast. */
+  const reply = useCallback(
+    async (noteId: string, body: string): Promise<boolean> => {
+      const socket = socketRef.current
+      if (!socket) return false
+
+      setReplying(true)
+      setError(null)
+
+      const result = await new Promise<ReplyResult>((resolve) => {
+        socket.emit('dudu:reply', noteId, body, resolve)
+        setTimeout(() => resolve({ ok: false, error: 'moderation-unavailable' }), 8000)
+      })
+
+      setReplying(false)
+
+      if (!result.ok) {
+        setError(
+          POST_ERROR_TEXT[result.error ?? ''] ??
+            `Your reply was rejected (${result.error ?? 'unknown reason'}).`,
+        )
+        return false
+      }
+
+      if (result.reply) addReply(result.reply)
+      return true
+    },
+    [addReply],
+  )
+
+  return {
+    messages,
+    session,
+    connected,
+    error,
+    posting,
+    post,
+    threads,
+    replying,
+    reply,
+    loadReplies,
+    clearError: () => setError(null),
+  }
 }

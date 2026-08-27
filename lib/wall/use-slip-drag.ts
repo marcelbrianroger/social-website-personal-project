@@ -93,6 +93,13 @@ export function useSlipDrag({ tilt, nudgeX, nudgeY }: Resting) {
     lastX: 0,
     lastY: 0,
     engaged: false,
+    /**
+     * Whether the gesture that just ended travelled far enough to be a drag.
+     *
+     * A throw ends with a `click` on whatever the pointer came up over, so
+     * without this a note shoved across the board would also open itself.
+     */
+    dragged: false,
     pointerId: -1,
     frame: 0,
   })
@@ -168,6 +175,7 @@ export function useSlipDrag({ tilt, nudgeX, nudgeY }: Resting) {
         if (Math.hypot(dx, dy) < ENGAGE_PX) return
 
         g.engaged = true
+        g.dragged = true
 
         // Capture so the slip keeps following even when the pointer outruns it
         // and leaves the element — which it will, on any quick throw.
@@ -238,9 +246,17 @@ export function useSlipDrag({ tilt, nudgeX, nudgeY }: Resting) {
     return () => cancelAnimationFrame(g.frame)
   }, [])
 
+  /** Reads and clears, so it can only suppress the one click it belongs to. */
+  const wasDrag = useCallback(() => {
+    const dragged = grip.current.dragged
+    grip.current.dragged = false
+    return dragged
+  }, [])
+
   return {
     ref,
     dragging,
+    wasDrag,
     handlers: {
       onPointerDown,
       onPointerMove,

@@ -57,6 +57,13 @@ export function timeLeft(expiresAt: string): string {
   return `${Math.floor(remaining / 1000)}s left`
 }
 
+/** How the reply control reads at each count. Singular matters at one. */
+function replyLabel(count: number): string {
+  if (count === 0) return 'reply'
+  if (count === 1) return '1 reply'
+  return `${count} replies`
+}
+
 /** Under an hour, it is close enough to the end to mark. */
 function isSoon(expiresAt: string): boolean {
   return new Date(expiresAt).getTime() - Date.now() < 3_600_000
@@ -66,12 +73,15 @@ export function WallSlip({
   message,
   slot,
   arriving = false,
+  onOpen,
 }: {
   message: DuduBroadcast
   /** Position on the board. Decides tilt, nudge and overlap order. */
   slot: number
   /** Went up while the visitor was watching, so it plays its entry. */
   arriving?: boolean
+  /** Take this note down and read it up close. Omitted: the slip is inert. */
+  onOpen?: () => void
 }) {
   const tilt = TILTS[slot % TILTS.length]!
   const [nudgeX, nudgeY] = NUDGES[slot % NUDGES.length]!
@@ -82,7 +92,20 @@ export function WallSlip({
    * touched sits exactly where the markup put it — the drag only ever adds to
    * the resting transform, it never replaces the idea of one.
    */
-  const { ref, dragging, handlers } = useSlipDrag({ tilt, nudgeX, nudgeY })
+  const { ref, dragging, wasDrag, handlers } = useSlipDrag({ tilt, nudgeX, nudgeY })
+
+  /*
+   * Anywhere on the paper opens it — except at the end of a throw, which also
+   * lands a click. `wasDrag` reads and clears, so it suppresses exactly the one
+   * click that belongs to the drag and no other.
+   *
+   * This is the convenience path. The keyboard's way in is the real control in
+   * the footer, which is a button and carries the label.
+   */
+  const open = () => {
+    if (wasDrag()) return
+    onOpen?.()
+  }
 
   return (
     <li
@@ -108,6 +131,7 @@ export function WallSlip({
           zIndex: dragging ? 30 : slot % 2 === 0 ? 2 : 1,
         } as React.CSSProperties
       }
+      onClick={onOpen ? open : undefined}
       className={`slip slip-drag relative flex min-h-44 flex-col justify-between border-2 border-ink bg-stock px-6 pt-10 pb-5 ${
         arriving ? 'animate-pin-up' : ''
       }`}
@@ -125,15 +149,35 @@ export function WallSlip({
       <div className="mt-6 flex items-baseline justify-between gap-3 font-mono text-[0.6875rem]">
         <span className="truncate text-ink-soft">{message.nickname}</span>
 
-        <span
-          className={`shrink-0 ${
-            isSoon(message.expiresAt)
-              ? 'bg-pink px-1 text-paper'
-              : 'text-ink-soft'
-          }`}
-        >
-          {timeLeft(message.expiresAt)}
-        </span>
+        <div className="flex shrink-0 items-baseline gap-3">
+          {onOpen && (
+            <button
+              type="button"
+              // The click already bubbles to the slip, which opens it too —
+              // stopped here so one press cannot count as two.
+              onClick={(event) => {
+                event.stopPropagation()
+                onOpen()
+              }}
+              aria-label={`Open the note by ${message.nickname} — ${replyLabel(
+                message.replyCount,
+              )}`}
+              className="text-ink underline decoration-dotted underline-offset-2 hover:bg-yellow"
+            >
+              {replyLabel(message.replyCount)}
+            </button>
+          )}
+
+          <span
+            className={`${
+              isSoon(message.expiresAt)
+                ? 'bg-pink px-1 text-paper'
+                : 'text-ink-soft'
+            }`}
+          >
+            {timeLeft(message.expiresAt)}
+          </span>
+        </div>
       </div>
     </li>
   )

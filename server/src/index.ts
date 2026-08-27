@@ -3,7 +3,7 @@ import { createServer } from 'node:http'
 import { createAdapter } from '@socket.io/redis-adapter'
 import { Server, type Socket } from 'socket.io'
 
-import { getWall, postMessage, wallSize } from './wall.js'
+import { getReplies, getWall, postMessage, postReply, wallSize } from './wall.js'
 import { env } from './env.js'
 import { composeChat } from './game-chat.js'
 import {
@@ -25,6 +25,7 @@ import type { AnyGameDefinition, GamePlayer, StoredGame } from './games/types.js
 import type {
   ClientToServerEvents,
   DuduBroadcast,
+  DuduReply,
   LobbyMember,
   RoomPeer,
   ServerToClientEvents,
@@ -566,6 +567,30 @@ io.on('connection', (socket) => {
     )
   })
 
+  socket.on('dudu:replies', (noteId, ack) => {
+    if (typeof ack !== 'function') return
+
+    void getReplies(noteId).then(
+      (replies) => ack({ replies }),
+      () => ack({ replies: [] }),
+    )
+  })
+
+  socket.on('dudu:reply', (noteId, body, ack) => {
+    const respond = typeof ack === 'function' ? ack : () => {}
+
+    void postReply(session, noteId, body).then(
+      (outcome) =>
+        outcome.ok
+          ? respond({ ok: true, reply: outcome.reply })
+          : respond({ ok: false, error: outcome.error }),
+      (error: unknown) => {
+        console.error('[dudu] reply failed:', error)
+        respond({ ok: false, error: 'moderation-unavailable' })
+      },
+    )
+  })
+
   // --- Matchmaking -------------------------------------------------------
 
   socket.on('match:find', (ack) => {
@@ -980,14 +1005,21 @@ io.on('connection', (socket) => {
  */
 const duduSubscriber = createSubscriber('dudu-sub')
 
-await duduSubscriber.subscribe(keys.duduChannel)
+// One subscriber, two channels. A second connection would buy nothing: the
+// handler already has to discriminate by channel name, and both fan out to the
+// same room.
+await duduSubscriber.subscribe(keys.duduChannel, keys.duduReplyChannel)
 
 duduSubscriber.on('message', (channel: string, payload: string) => {
-  if (channel !== keys.duduChannel) return
-
   try {
-    const message = JSON.parse(payload) as DuduBroadcast
-    io.to(DUDU_ROOM).emit('dudu:message', message)
+    if (channel === keys.duduChannel) {
+      io.to(DUDU_ROOM).emit('dudu:message', JSON.parse(payload) as DuduBroadcast)
+      return
+    }
+
+    if (channel === keys.duduReplyChannel) {
+      io.to(DUDU_ROOM).emit('dudu:reply:new', JSON.parse(payload) as DuduReply)
+    }
   } catch {
     console.error('[redis] dropped malformed DUDU payload')
   }

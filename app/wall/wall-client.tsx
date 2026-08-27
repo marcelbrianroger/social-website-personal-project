@@ -8,14 +8,44 @@ import {
   SHELL,
   SystemNote,
 } from "@/components/site-chrome";
+import { WallNote } from "@/components/wall-note";
 import { BOARD, WallSlip } from "@/components/wall-slip";
 import { useWall } from "@/lib/wall/use-wall";
 import { MAX_MESSAGE_LENGTH } from "@/lib/socket/events";
 
 export function WallClient() {
-  const { messages, session, connected, error, posting, post, clearError } =
-    useWall();
+  const {
+    messages,
+    session,
+    connected,
+    error,
+    posting,
+    post,
+    threads,
+    replying,
+    reply,
+    loadReplies,
+    clearError,
+  } = useWall();
   const [draft, setDraft] = useState("");
+
+  /**
+   * Which note is off the wall, by id rather than by value.
+   *
+   * Holding the note itself would freeze it: replies would stop arriving and an
+   * expired note would sit open forever. Looked up against the live list every
+   * render, the panel follows the note and vanishes with it.
+   */
+  const [openId, setOpenId] = useState<string | null>(null);
+  const openNote = messages.find((message) => message.id === openId) ?? null;
+
+  function openNoteById(id: string) {
+    setOpenId(id);
+    loadReplies(id);
+    // A post error from the composer above is not this note's error, and the
+    // panel shows whatever is set.
+    clearError();
+  }
 
   const remaining = MAX_MESSAGE_LENGTH - draft.length;
   const canPost =
@@ -98,15 +128,31 @@ export function WallClient() {
       ) : (
         <ul className={`${BOARD} mt-10`}>
           {messages.map((message, index) => (
-            <WallSlip key={message.id} message={message} slot={index} />
+            <WallSlip
+              key={message.id}
+              message={message}
+              slot={index}
+              onOpen={() => openNoteById(message.id)}
+            />
           ))}
         </ul>
       )}
 
       <p className="mt-10 max-w-2xl border-t-2 border-ink pt-5 text-sm leading-relaxed text-ink-soft">
         Everything goes through a filter before it shows up. No links, and no
-        more than five notes a minute.
+        more than five notes a minute — replies included.
       </p>
+
+      {openNote && (
+        <WallNote
+          note={openNote}
+          replies={threads[openNote.id]}
+          replying={replying}
+          error={error}
+          onReply={(body) => reply(openNote.id, body)}
+          onClose={() => setOpenId(null)}
+        />
+      )}
     </div>
   );
 }

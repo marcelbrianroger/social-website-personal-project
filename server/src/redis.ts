@@ -108,6 +108,18 @@ export const keys = {
   duduWall: 'dudu:wall',
   /** Pub/sub channel fanning approved messages to every node. */
   duduChannel: 'dudu:broadcast',
+
+  /**
+   * LIST of reply payloads hanging off one note, oldest first.
+   *
+   * The expiry is copied from the note on every write rather than set once, so
+   * a thread inherits its note's clock exactly and comes down with the paper it
+   * is stapled to. Nothing here needs its own TTL, and no reply can outlive
+   * what it is replying to.
+   */
+  duduReplies: (noteId: string) => `dudu:replies:${noteId}`,
+  /** Pub/sub channel fanning new replies to every node. */
+  duduReplyChannel: 'dudu:reply',
   /** Per-session post counter for rate limiting. */
   duduRateLimit: (sessionId: string) => `ratelimit:dudu:${sessionId}`,
   /** Per-session in-game chat counter. Separate budget from the wall. */

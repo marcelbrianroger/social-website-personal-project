@@ -1,5 +1,6 @@
 /**
- * Smoke test for the DUDU wall: moderation gate, 24h TTL, broadcast, rate limit.
+ * Smoke test for the DUDU wall: moderation gate, 48h TTL, broadcast, replies,
+ * rate limit.
  *
  * Usage: start the server (`npm run dev`), then `npm run smoke:wall`.
  */
@@ -107,20 +108,69 @@ try {
     true,
   )
 
-  console.log('\n24-hour TTL')
+  console.log('\n48-hour TTL')
 
   const id = posted?.message?.id
   const ttl = await redis.ttl(`dudu:message:${id}`)
 
   // Allow a few seconds of slack for round-trip time.
   check('payload has a TTL set', ttl > 0, true)
-  check('TTL is ~24h', ttl > 86_000 && ttl <= 86_400, true)
+  check('TTL is ~48h', ttl > 172_000 && ttl <= 172_800, true)
 
   const createdAt = new Date(posted.message.createdAt).getTime()
   const expiresAt = new Date(posted.message.expiresAt).getTime()
-  check('expiresAt is exactly 24h after createdAt', expiresAt - createdAt, 86_400_000)
+  check('expiresAt is exactly 48h after createdAt', expiresAt - createdAt, 172_800_000)
 
   check('message is indexed on the wall zset', await redis.zscore('dudu:wall', id) !== null, true)
+
+  check('a fresh note reports zero replies', posted?.message?.replyCount, 0)
+
+  console.log('\nReplies')
+
+  const answerer = await client('Answerer')
+  const answer = `ja, ich auch ${Date.now()}`
+
+  const replyBroadcast = waitFor(listener, 'dudu:reply:new', 2000)
+  const replied = await emitAck(answerer, 'dudu:reply', id, answer)
+
+  check('reply is accepted', replied?.ok, true)
+  check('reply echoes the stored body', replied?.reply?.body, answer)
+  check('reply carries the author nickname', replied?.reply?.nickname, 'Answerer')
+  check('reply names the note it hangs on', replied?.reply?.noteId, id)
+  check('reply does NOT leak authorId', replied?.reply?.authorId, undefined)
+  check('reply carries no expiry of its own', replied?.reply?.expiresAt, undefined)
+
+  const heardReply = await replyBroadcast
+  check('subscriber receives the reply broadcast', heardReply?.body, answer)
+
+  const thread = await emitAck(answerer, 'dudu:replies', id)
+  check('thread contains the reply', thread?.replies?.length, 1)
+  check('thread reply matches what was written', thread?.replies?.[0]?.body, answer)
+
+  const afterReply = await emitAck(poster, 'dudu:history')
+  check(
+    'the note now reports one reply',
+    afterReply?.messages?.find((m) => m.id === id)?.replyCount,
+    1,
+  )
+
+  // The whole point of the expiry rule: a thread inherits the note's REMAINING
+  // life, so it can never outlive the paper it is stapled to.
+  const noteTtl = await redis.ttl(`dudu:message:${id}`)
+  const threadTtl = await redis.ttl(`dudu:replies:${id}`)
+
+  check('thread has its own TTL', threadTtl > 0, true)
+  check('thread expires with the note, not 48h later', Math.abs(threadTtl - noteTtl) <= 2, true)
+
+  const orphan = await emitAck(answerer, 'dudu:reply', crypto.randomUUID(), 'nobody is here')
+  check('reply to a note that is gone is refused', orphan?.error, 'unknown-note')
+
+  const forged = await emitAck(answerer, 'dudu:reply', 'wall', 'not a uuid')
+  check('reply to a forged note id is refused', forged?.error, 'unknown-note')
+
+  const spammyReply = await client('Spammy')
+  const blocked = await emitAck(spammyReply, 'dudu:reply', id, 'go to https://spam.example')
+  check('replies pass the same moderation gate', blocked?.error, 'links-not-allowed')
 
   console.log('\nModeration gate')
 
@@ -154,6 +204,10 @@ try {
   check('first five posts succeed', outcomes.slice(0, 5).every(Boolean), true)
   check('sixth post is rate limited', outcomes[5], false)
   check('seventh post is rate limited', outcomes[6], false)
+
+  // One budget covers both: a reply is exactly as cheap to flood as a note.
+  const spent = await emitAck(spammer, 'dudu:reply', id, 'and one more thing')
+  check('a spent budget blocks replies too', spent?.error, 'rate-limited')
 } finally {
   for (const socket of sockets) socket.close()
   await redis.quit()

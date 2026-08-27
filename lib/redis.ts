@@ -63,6 +63,10 @@ export const redisKeys = {
   duduMessage: (id: string) => `dudu:message:${id}`,
   /** Pub/sub channel that fans approved messages out to every socket node. */
   duduChannel: 'dudu:broadcast',
+  /** LIST of replies on one note. Expires with the note itself. */
+  duduReplies: (noteId: string) => `dudu:replies:${noteId}`,
+  /** Pub/sub channel that fans new replies out to every socket node. */
+  duduReplyChannel: 'dudu:reply',
   /** Per-session post rate limiting. */
   rateLimit: (sessionId: string) => `ratelimit:dudu:${sessionId}`,
 } as const

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 
 import { MARKED, SystemNote } from '@/components/site-chrome'
+import { WallNote } from '@/components/wall-note'
 import { BOARD, WallSlip } from '@/components/wall-slip'
 import { useWall } from '@/lib/wall/use-wall'
 
@@ -28,7 +29,23 @@ import { useWall } from '@/lib/wall/use-wall'
 const VISIBLE = 6
 
 export function LiveWall() {
-  const { messages, connected, error } = useWall()
+  const {
+    messages,
+    connected,
+    error,
+    threads,
+    replying,
+    reply,
+    loadReplies,
+    clearError,
+  } = useWall()
+
+  /**
+   * Which note is off the wall, by id — same reasoning as /wall: held by value
+   * it would stop receiving replies and outlive its own expiry.
+   */
+  const [openId, setOpenId] = useState<string | null>(null)
+  const openNote = messages.find((message) => message.id === openId) ?? null
 
   /**
    * Anything written after this moment went up while the visitor was watching,
@@ -81,6 +98,11 @@ export function LiveWall() {
             message={message}
             slot={slot}
             arriving={new Date(message.createdAt).getTime() > openedAt}
+            onOpen={() => {
+              setOpenId(message.id)
+              loadReplies(message.id)
+              clearError()
+            }}
           />
         ))}
       </ul>
@@ -113,6 +135,17 @@ export function LiveWall() {
             : 'open the wall and write one →'}
         </Link>
       </div>
+
+      {openNote && (
+        <WallNote
+          note={openNote}
+          replies={threads[openNote.id]}
+          replying={replying}
+          error={error}
+          onReply={(body) => reply(openNote.id, body)}
+          onClose={() => setOpenId(null)}
+        />
+      )}
     </div>
   )
 }

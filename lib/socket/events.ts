@@ -45,7 +45,25 @@ export interface DuduBroadcast {
   body: string
   createdAt: string
   expiresAt: string
+  /** How many replies are on it. The thread itself is fetched on demand. */
+  replyCount: number
 }
+
+/**
+ * One reply hanging off a note.
+ *
+ * No `expiresAt`: a reply lives and dies on its note's clock, so carrying a
+ * second timestamp would only invite the two to disagree. Read the parent's.
+ */
+export interface DuduReply {
+  id: string
+  /** The note this hangs on. */
+  noteId: string
+  nickname: string
+  body: string
+  createdAt: string
+}
+
 
 /** Sent to both halves of a pair the instant matchmaking finds one. */
 export interface MatchFound {
@@ -58,6 +76,12 @@ export interface MatchFound {
 export interface PostResult {
   ok: boolean
   message?: DuduBroadcast
+  error?: string
+}
+
+export interface ReplyResult {
+  ok: boolean
+  reply?: DuduReply
   error?: string
 }
 
@@ -428,6 +452,8 @@ export const START_ERROR_TEXT: Record<string, string> = {
 export interface ServerToClientEvents {
   'session:ready': (session: AnonymousSession) => void
   'dudu:message': (message: DuduBroadcast) => void
+  /** A reply went up. Carries its `noteId`, so clients know where to hang it. */
+  'dudu:reply:new': (reply: DuduReply) => void
 
   'room:peer-joined': (peer: RoomPeer) => void
   'room:peer-left': (peer: Pick<RoomPeer, 'socketId' | 'sessionId'>) => void
@@ -464,6 +490,16 @@ export interface ClientToServerEvents {
   'dudu:unsubscribe': () => void
   'dudu:post': (body: string, ack: (result: PostResult) => void) => void
   'dudu:history': (ack: (result: { messages: DuduBroadcast[] }) => void) => void
+  'dudu:reply': (
+    noteId: string,
+    body: string,
+    ack: (result: ReplyResult) => void,
+  ) => void
+  /** The whole thread on one note, oldest first. Fetched when a note is opened. */
+  'dudu:replies': (
+    noteId: string,
+    ack: (result: { replies: DuduReply[] }) => void,
+  ) => void
 
   'room:join': (roomId: string, ack: (result: JoinResult) => void) => void
   'room:leave': (ack?: (result: { ok: boolean }) => void) => void
@@ -508,6 +544,8 @@ export const POST_ERROR_TEXT: Record<string, string> = {
   'blocked-language': 'That message was blocked by moderation.',
   'moderation-unavailable':
     'Moderation is unavailable right now, so nothing can be posted. Try again shortly.',
+  // Replies only: the note came down between opening it and answering it.
+  'unknown-note': 'That note is gone. It came down while you were writing.',
 }
 
 export const MAX_MESSAGE_LENGTH = 280

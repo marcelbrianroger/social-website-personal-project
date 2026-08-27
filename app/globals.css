@@ -94,7 +94,7 @@ body {
 /*
  * Taken down.
  *
- * A note reaching the end of its 24 hours is not deleted, it is unpinned: it
+ * A note reaching the end of its 48 hours is not deleted, it is unpinned: it
  * swings off the pin and drops. The rotation origin is the pin mark, top-left,
  * which is what makes it read as paper coming off a board rather than a div
  * fading out.
