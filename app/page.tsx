@@ -181,7 +181,14 @@ export default async function Home() {
               className="animate-ink-in inline-flex"
               style={{ animationDelay: "190ms" }}
             >
-              <Link href="/wall" className={`${PRESS_INK} px-6 py-3 text-sm`}>
+              {/* `reg-orbit` is on the three hero doors and nowhere else. It
+                  is the loudest thing this page does, and it earns that only by
+                  being rare — the same offset circling on every button in the
+                  site would stop reading as emphasis within one screen. */}
+              <Link
+                href="/wall"
+                className={`${PRESS_INK} reg-orbit px-6 py-3 text-sm`}
+              >
                 Open the wall
               </Link>
             </span>
@@ -192,7 +199,7 @@ export default async function Home() {
             >
               <Link
                 href="/rooms"
-                className={`${PRESS_PAPER} px-6 py-3 text-sm`}
+                className={`${PRESS_PAPER} reg-orbit px-6 py-3 text-sm`}
               >
                 Meet someone face to face
               </Link>
@@ -204,7 +211,7 @@ export default async function Home() {
             >
               <Link
                 href="/lobby"
-                className={`${PRESS_PAPER} px-6 py-3 text-sm`}
+                className={`${PRESS_PAPER} reg-orbit px-6 py-3 text-sm`}
               >
                 Play a game
               </Link>

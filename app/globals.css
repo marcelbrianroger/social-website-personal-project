@@ -644,6 +644,97 @@ body {
 }
 
 /*
+ * ===========================================================================
+ * THE PINK PASS, WANDERING
+ * ===========================================================================
+ *
+ * An opt-in on top of `reg`: instead of sitting at the bottom-right, the pink
+ * plate walks the whole way round the control, continuously. A press still
+ * snaps it flush — the registration language is unchanged, the offset simply
+ * refuses to settle on one corner until you commit.
+ *
+ * TWELVE STOPS ON A CIRCLE, not four on a square. Interpolating between four
+ * corner positions drags the offset through the diagonals and reads as a
+ * rectangle being traced, with a visible hesitation at each corner. Sampling
+ * every 30° puts the path within a hair of a true circle at this radius, and
+ * `linear` keeps the speed even — an eased orbit appears to speed up and slow
+ * down for no reason a viewer could name.
+ *
+ * The radius is 4px against the 3px resting offset, so the travel is legible
+ * without the control ever looking like it has come loose from the page.
+ *
+ * COST, STATED PLAINLY: `box-shadow` cannot be composited, so every frame of
+ * this repaints the element. That is why it is a separate class rather than a
+ * change to `reg` itself — a game table has eight seats, a dial and several
+ * buttons all wearing `reg`, and setting them all orbiting would be a real
+ * paint load and, worse, visual noise. It would also collide outright with
+ * `tap` below, which animates this very property to show whose turn it is.
+ */
+@keyframes orbit {
+  0% {
+    box-shadow: 2.83px 2.83px 0 0 var(--color-pink);
+  }
+  8.33% {
+    box-shadow: 1.04px 3.86px 0 0 var(--color-pink);
+  }
+  16.67% {
+    box-shadow: -1.04px 3.86px 0 0 var(--color-pink);
+  }
+  25% {
+    box-shadow: -2.83px 2.83px 0 0 var(--color-pink);
+  }
+  33.33% {
+    box-shadow: -3.86px 1.04px 0 0 var(--color-pink);
+  }
+  41.67% {
+    box-shadow: -3.86px -1.04px 0 0 var(--color-pink);
+  }
+  50% {
+    box-shadow: -2.83px -2.83px 0 0 var(--color-pink);
+  }
+  58.33% {
+    box-shadow: -1.04px -3.86px 0 0 var(--color-pink);
+  }
+  66.67% {
+    box-shadow: 1.04px -3.86px 0 0 var(--color-pink);
+  }
+  75% {
+    box-shadow: 2.83px -2.83px 0 0 var(--color-pink);
+  }
+  83.33% {
+    box-shadow: 3.86px -1.04px 0 0 var(--color-pink);
+  }
+  91.67% {
+    box-shadow: 3.86px 1.04px 0 0 var(--color-pink);
+  }
+  100% {
+    box-shadow: 2.83px 2.83px 0 0 var(--color-pink);
+  }
+}
+
+.reg-orbit {
+  animation: orbit 4.5s linear infinite;
+}
+
+/*
+ * Stopping it is not optional polish — it is a cascade requirement.
+ *
+ * A running animation sits in the animation origin, which outranks every plain
+ * author declaration. While `orbit` runs it therefore BEATS the `:active` and
+ * `:disabled` rules above, and the press would stop reading as a press: the
+ * offset would keep circling under a finger that had already pushed it flush.
+ * Killing the animation hands those rules back their own property.
+ *
+ * It also says the right thing. In register is a state of rest, and a plate
+ * that has landed has no reason to still be looking for its position.
+ */
+:is(button, a).reg-orbit:active:not(:disabled),
+.reg-orbit.reg-set,
+.reg-orbit:disabled {
+  animation: none;
+}
+
+/*
  * The seat the table is waiting on.
  *
  * Applied only when exactly ONE player may act — during a general vote every
@@ -794,6 +885,16 @@ body {
   /* The states still have to land — instantly, rather than not at all. */
   .reg {
     transition: none;
+  }
+
+  /*
+   * A pink block circling every primary button forever is close to the worst
+   * thing this stylesheet could do to somebody who asked for less motion, so
+   * the orbit stops outright. The offset falls back to `reg`'s resting 3px —
+   * the control keeps its registration, it simply stops looking for it.
+   */
+  .reg-orbit {
+    animation: none;
   }
 
   /* The clock still has to move, or it stops being a clock. It steps with the
