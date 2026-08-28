@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import {
+  FLAT_PAPER,
   PRESS_INK,
   PRESS_PAPER,
   READING,
@@ -318,7 +319,7 @@ export default async function Home() {
                     thing it sits on or the border is doing all the work. */}
                 <Link
                   href="/lobby"
-                  className={`${PRESS_PAPER} mt-6 self-start px-5 py-2.5 text-sm`}
+                  className={`${FLAT_PAPER} mt-6 self-start px-5 py-2.5 text-sm`}
                 >
                   Play {game.label}
                 </Link>
@@ -338,9 +339,10 @@ export default async function Home() {
 
           The button's paper-coloured edge around a yellow fill is a mock
           mis-registration — the imperfection a real print run has when two
-          plates do not land in the same place. It now also carries `reg`, so
-          the joke resolves when you touch it: the offset that was decoration
-          becomes the press, and the plates land. */}
+          plates do not land in the same place. That edge is the whole joke, and
+          it is enough: a pink offset stacked behind it put a third colour on a
+          control that was already saying this, on a plate where the eye has
+          nothing else to look at. It presses, it does not print twice. */}
       <section className="reveal border-t-2 border-ink bg-ink py-14 text-paper sm:py-18">
         <div className={SHELL}>
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-16">
@@ -364,7 +366,7 @@ export default async function Home() {
 
             <Link
               href="/rooms"
-              className="reg inline-flex shrink-0 items-center justify-center border-2 border-paper bg-yellow px-9 py-4 font-mono text-base text-ink transition-colors"
+              className="reg-flat inline-flex shrink-0 items-center justify-center border-2 border-paper bg-yellow px-9 py-4 font-mono text-base text-ink transition-colors hover:bg-pink"
             >
               Open a room
             </Link>

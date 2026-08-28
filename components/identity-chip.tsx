@@ -143,11 +143,16 @@ export function IdentityChip({ session }: { session: AnonymousSession | null }) 
           setRenamed(false)
           setOpen((was) => !was)
         }}
-        // `reg` rather than the shared PRESS_* constants: site-chrome imports
-        // THIS file, so importing back would close a cycle. The class in
-        // globals.css is the shared thing; those constants are a convenience
-        // for files that do not already spell their own button out.
-        className="reg flex max-w-[9.5rem] items-baseline gap-1.5 border-2 border-ink bg-yellow px-2 py-1 text-ink transition-colors hover:bg-pink sm:max-w-[13rem]"
+        // `reg-flat` rather than the shared constants: site-chrome imports THIS
+        // file, so importing back would close a cycle. The class in globals.css
+        // is the shared thing; those constants are a convenience for files that
+        // do not already spell their own button out.
+        //
+        // FLAT, because this one is on every screen. The offset is rationed for
+        // things worth looking at, and a permanent pink block in the masthead
+        // spends that ration on a name label — on every route, forever, beside
+        // two clocks. It keeps the press and loses the second pass.
+        className="reg-flat flex max-w-[9.5rem] items-baseline gap-1.5 border-2 border-ink bg-yellow px-2 py-1 text-ink transition-colors hover:bg-pink sm:max-w-[13rem]"
       >
         <span
           className="min-w-0 truncate font-display text-[0.8125rem] leading-none"

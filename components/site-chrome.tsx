@@ -67,13 +67,36 @@ export const MARKED =
  * a constant that already says `px-3` is a coin toss. Each call site sizes
  * itself; only the ink, the border and the press belong to everyone.
  */
-const PRESS = 'reg border-2 font-mono transition-colors'
+const PRESS = 'border-2 font-mono transition-colors'
+
+/**
+ * The two skins, held apart from the register.
+ *
+ * Split so a control can wear the ink without the second pass. The offset is
+ * rationed on purpose — see `reg-flat` in globals.css — and before this the only
+ * way to drop it was to stop using these constants and hand-write the whole
+ * button again, which is exactly the drift they exist to prevent.
+ */
+const INK =
+  'border-ink bg-ink text-paper hover:bg-pink hover:text-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-paper'
+
+const PAPER =
+  'border-ink bg-paper text-ink hover:bg-yellow disabled:opacity-40 disabled:hover:bg-paper'
 
 /** The dark plate. What the page most wants you to do. */
-export const PRESS_INK = `${PRESS} border-ink bg-ink text-paper hover:bg-pink hover:text-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-paper`
+export const PRESS_INK = `reg ${PRESS} ${INK}`
 
 /** Paper. Everything that is a real choice, but not THE choice. */
-export const PRESS_PAPER = `${PRESS} border-ink bg-paper text-ink hover:bg-yellow disabled:opacity-40 disabled:hover:bg-paper`
+export const PRESS_PAPER = `reg ${PRESS} ${PAPER}`
+
+/**
+ * Paper, printed in one pass.
+ *
+ * Identical to `PRESS_PAPER` minus the pink offset, for controls sitting inside
+ * something that has already earned the eye — a card with its own border, a
+ * panel on the dark plate. Keeps the press; drops the second impression.
+ */
+export const FLAT_PAPER = `reg-flat ${PRESS} ${PAPER}`
 
 /**
  * The masthead.

@@ -431,6 +431,25 @@ body {
 }
 
 /*
+ * ON PAPER, EVERYTHING HAS ALREADY ARRIVED.
+ *
+ * A view timeline is driven by a scrollport, and printing has none — so a
+ * section that had not been scrolled past prints at the start of its entrance,
+ * which is `opacity: 0`. Every section below the fold would come out of the
+ * printer blank.
+ *
+ * This site is drawn as a printed object and its footer carries a colophon, so
+ * printing it blank would be a particularly bad joke. Anything that renders the
+ * document without scrolling it — print, print-to-PDF, some screenshot and
+ * archiving tools — lands here and gets the settled page.
+ */
+@media print {
+  .reveal {
+    animation: none;
+  }
+}
+
+/*
  * ===========================================================================
  * THE MASTHEAD, PRINTED IN TWO PASSES
  * ===========================================================================
@@ -631,6 +650,42 @@ body {
 
 .reg:disabled {
   box-shadow: none;
+}
+
+/*
+ * The same control, printed in a single pass.
+ *
+ * Not every control wants a second impression behind it. The offset is meant to
+ * be RATIONED — the note further up this file is explicit that a board where
+ * everything is out of register is just a badly printed board — and a page that
+ * has already spent it on its masthead doors does not need to spend it again on
+ * a card lower down.
+ *
+ * This is `reg` with the pink pass omitted, and it is its own class rather than
+ * a `box-shadow: none` override because overriding would mean fighting `reg`'s
+ * hover and active rules on specificity for the rest of time. Opting out is
+ * cleaner than opting back in.
+ *
+ * THE PRESS SURVIVES. Only the ink is dropped, not the feedback: a 1px nudge
+ * instead of a 3px snap into register, which is about as much travel as a
+ * control can take before it looks like it is sliding rather than being pushed.
+ * A control that acknowledges nothing when you press it is the thing this file
+ * was largely written to stop.
+ *
+ * The colours are listed here for the same reason `reg` lists them: this rule
+ * is unlayered and Tailwind's utilities are not, so an unlayered `transition`
+ * wins outright and would silently drop the hover fade if it named only
+ * `transform`.
+ */
+.reg-flat {
+  transition:
+    transform 90ms ease-out,
+    background-color 90ms ease-out,
+    color 90ms ease-out;
+}
+
+:is(button, a).reg-flat:active:not(:disabled) {
+  transform: translate(1px, 1px);
 }
 
 /*
@@ -883,7 +938,8 @@ body {
   }
 
   /* The states still have to land — instantly, rather than not at all. */
-  .reg {
+  .reg,
+  .reg-flat {
     transition: none;
   }
 
