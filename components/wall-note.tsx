@@ -23,6 +23,10 @@ import {
  * found and the panel goes with it — which is the honest behaviour: the paper
  * is gone, and so is everything stapled to it.
  */
+
+/** Five lines of reply, then it scrolls. Past that you wanted a note. */
+const COMPOSER_MAX_HEIGHT = 132
+
 export function WallNote({
   note,
   replies,
@@ -67,6 +71,19 @@ export function WallNote({
   useEffect(() => {
     composer.current?.focus()
   }, [])
+
+  // THE BOX IS AS TALL AS THE DRAFT AND NO TALLER. A fixed two-row field
+  // reserved a second line for every reply that never needed one, and reserved
+  // room reads as an empty panel with a rule drawn under it. Measuring means
+  // collapsing to nothing first — scrollHeight on an element already taller
+  // than its content just returns the height it is currently stuck at.
+  useEffect(() => {
+    const box = composer.current
+    if (!box) return
+
+    box.style.height = 'auto'
+    box.style.height = `${Math.min(box.scrollHeight, COMPOSER_MAX_HEIGHT)}px`
+  }, [draft])
 
   return (
     <div
@@ -135,7 +152,12 @@ export function WallNote({
         {/* --- writing one ------------------------------------------------ */}
 
         <form
-          className="mt-6 border-2 border-ink bg-paper p-4"
+          // ONE ROW, NOT THREE. This used to stack a two-line field, a rule,
+          // and a strip holding nothing but a counter and the button — most of
+          // the box's height spent on furniture rather than on the reply. The
+          // button moves in beside the field and the counter folds into the
+          // line already printed underneath.
+          className="mt-6 flex items-end gap-2 border-2 border-ink bg-paper p-2.5"
           onSubmit={async (event) => {
             event.preventDefault()
             if (!canReply) return
@@ -146,31 +168,31 @@ export function WallNote({
             ref={composer}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            rows={2}
+            // Enter sends. A field drawn one line tall that answered Enter with
+            // a newline and made you reach for the mouse would be lying about
+            // its own shape; Shift+Enter is still there for the long ones.
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter' || event.shiftKey) return
+              // Mid-composition Enter picks an IME candidate, it does not post.
+              if (event.nativeEvent.isComposing) return
+
+              event.preventDefault()
+              event.currentTarget.form?.requestSubmit()
+            }}
+            rows={1}
             maxLength={MAX_MESSAGE_LENGTH + 40}
             placeholder="Write a reply…"
             aria-label="Your reply"
-            className="w-full resize-none bg-transparent text-[0.9375rem] leading-relaxed text-ink outline-none placeholder:text-ink-soft/70"
+            className="min-w-0 flex-1 resize-none bg-transparent px-1 py-1.5 text-[0.9375rem] leading-relaxed text-ink outline-none placeholder:text-ink-soft/70"
           />
 
-          <div className="mt-3 flex items-center justify-between gap-3 border-t border-rule pt-3">
-            <span
-              className={`font-mono text-[0.6875rem] tabular-nums ${
-                remaining < 0 ? 'bg-pink px-1 text-paper' : 'text-ink-soft'
-              }`}
-            >
-              {remaining}
-              <span className="sr-only"> characters left</span>
-            </span>
-
-            <button
-              type="submit"
-              disabled={!canReply}
-              className={`${PRESS_INK} px-5 py-2 text-xs`}
-            >
-              {replying ? 'Sending…' : 'Reply'}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={!canReply}
+            className={`${PRESS_INK} shrink-0 px-4 py-2 text-xs`}
+          >
+            {replying ? 'Sending…' : 'Reply'}
+          </button>
         </form>
 
         {error && (
@@ -179,9 +201,23 @@ export function WallNote({
           </p>
         )}
 
-        <p className="mt-4 font-mono text-[0.6875rem] leading-relaxed text-ink-soft">
-          Replies come down with the note.
-        </p>
+        <div className="mt-3 flex items-baseline justify-between gap-3 font-mono text-[0.6875rem] leading-relaxed text-ink-soft">
+          <span>Replies come down with the note.</span>
+
+          {/* Only once it is nearly relevant. A counter parked at 280 for the
+              whole of a twelve-word reply is a number nobody was reading, and
+              it was costing a full row to say so. */}
+          {draft.length > MAX_MESSAGE_LENGTH - 40 && (
+            <span
+              className={`shrink-0 tabular-nums ${
+                remaining < 0 ? 'bg-pink px-1 text-paper' : ''
+              }`}
+            >
+              {remaining}
+              <span className="sr-only"> characters left</span>
+            </span>
+          )}
+        </div>
       </div>
     </div>
   )
