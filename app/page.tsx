@@ -364,7 +364,7 @@ export default async function Home() {
 
             <Link
               href="/rooms"
-              className="reg inline-flex shrink-0 items-center justify-center border-2 border-paper bg-yellow px-9 py-4 font-mono text-base text-ink transition-colors hover:bg-pink"
+              className="reg inline-flex shrink-0 items-center justify-center border-2 border-paper bg-yellow px-9 py-4 font-mono text-base text-ink transition-colors"
             >
               Open a room
             </Link>
