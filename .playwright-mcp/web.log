@@ -1,0 +1,1887 @@
+▲ Next.js 16.2.12 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.56.1:3000
+- Environments: .env
+✓ Ready in 329ms
+
+ GET /wall 200 in 352ms (next.js: 80ms, proxy.ts: 107ms, application-code: 165ms)
+ GET /api/socket-ticket 200 in 57ms (next.js: 37ms, proxy.ts: 5ms, application-code: 14ms)
+ GET / 200 in 118ms (next.js: 27ms, proxy.ts: 5ms, application-code: 86ms)
+ GET /api/socket-ticket 200 in 20ms (next.js: 3ms, proxy.ts: 5ms, application-code: 13ms)
+ GET /rooms 200 in 62ms (next.js: 23ms, proxy.ts: 4ms, application-code: 36ms)
+ GET /api/ice 200 in 35ms (next.js: 23ms, proxy.ts: 5ms, application-code: 7ms)
+ GET /api/socket-ticket 200 in 36ms (next.js: 2ms, proxy.ts: 6ms, application-code: 29ms)
+ GET /lobby 200 in 65ms (next.js: 21ms, proxy.ts: 3ms, application-code: 41ms)
+ GET /api/socket-ticket 200 in 25ms (next.js: 3ms, proxy.ts: 4ms, application-code: 19ms)
+ GET / 200 in 39ms (next.js: 3ms, proxy.ts: 3ms, application-code: 33ms)
+ GET /api/socket-ticket 200 in 25ms (next.js: 1926µs, proxy.ts: 4ms, application-code: 19ms)
+✓ Compiled in 378ms
+✓ Compiled in 130ms
+✓ Compiled in 138ms
+✓ Compiled in 81ms
+ GET / 200 in 235ms (next.js: 67ms, proxy.ts: 39ms, application-code: 129ms)
+ GET / 200 in 195ms (next.js: 9ms, proxy.ts: 102ms, application-code: 84ms)
+ GET /api/socket-ticket 200 in 54ms (next.js: 24ms, proxy.ts: 6ms, application-code: 24ms)
+[browser] Uncaught ReferenceError: sheetFor is not defined
+    at WallSlip (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_0-bcs14._.js:787:20)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+    at <unknown> (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_0-bcs14._.js:1813:258)
+    at Array.map (<anonymous>)
+    at LiveWall (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_0-bcs14._.js:1813:35)
+    at Home (app\page.tsx:255:13)
+  253 |
+  254 |           <div className="mt-10">
+> 255 |             <LiveWall />
+      |             ^
+  256 |           </div>
+  257 |         </div>
+  258 |       </section>
+✓ Compiled in 74ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 191ms (next.js: 55ms, proxy.ts: 33ms, application-code: 103ms)
+ GET /api/socket-ticket 200 in 49ms (next.js: 21ms, proxy.ts: 4ms, application-code: 24ms)
+✓ Compiled in 85ms
+⨯ ReferenceError: NAV is not defined
+    at SiteHeader (components\site-chrome.tsx:137:12)
+  135 |             whole nav sideways every time the pointer crossed it. */}
+  136 |         <nav className="order-3 -mx-1 flex items-center gap-2 font-mono text-sm sm:order-...
+> 137 |           {NAV.map((item) => (
+      |            ^
+  138 |             <Link
+  139 |               key={item.href}
+  140 |               href={item.href} {
+  digest: '1601723881'
+}
+ GET /api/socket-ticket 200 in 143ms (next.js: 34ms, proxy.ts: 97ms, application-code: 12ms)
+⨯ ReferenceError: NAV is not defined
+    at SiteHeader (components\site-chrome.tsx:137:12)
+  135 |             whole nav sideways every time the pointer crossed it. */}
+  136 |         <nav className="order-3 -mx-1 flex items-center gap-2 font-mono text-sm sm:order-...
+> 137 |           {NAV.map((item) => (
+      |            ^
+  138 |             <Link
+  139 |               key={item.href}
+  140 |               href={item.href} {
+  digest: '1601723881'
+}
+⨯ ReferenceError: NAV is not defined
+    at SiteHeader (components\site-chrome.tsx:137:12)
+  135 |             whole nav sideways every time the pointer crossed it. */}
+  136 |         <nav className="order-3 -mx-1 flex items-center gap-2 font-mono text-sm sm:order-...
+> 137 |           {NAV.map((item) => (
+      |            ^
+  138 |             <Link
+  139 |               key={item.href}
+  140 |               href={item.href} {
+  digest: '1601723881'
+}
+⨯ ReferenceError: NAV is not defined
+    at SiteHeader (components\site-chrome.tsx:137:12)
+  135 |             whole nav sideways every time the pointer crossed it. */}
+  136 |         <nav className="order-3 -mx-1 flex items-center gap-2 font-mono text-sm sm:order-...
+> 137 |           {NAV.map((item) => (
+      |            ^
+  138 |             <Link
+  139 |               key={item.href}
+  140 |               href={item.href} {
+  digest: '1601723881'
+}
+⨯ ReferenceError: NAV is not defined
+    at SiteHeader (components\site-chrome.tsx:137:12)
+  135 |             whole nav sideways every time the pointer crossed it. */}
+  136 |         <nav className="order-3 -mx-1 flex items-center gap-2 font-mono text-sm sm:order-...
+> 137 |           {NAV.map((item) => (
+      |            ^
+  138 |             <Link
+  139 |               key={item.href}
+  140 |               href={item.href} {
+  digest: '1601723881'
+}
+⨯ ReferenceError: NAV is not defined
+    at SiteHeader (components\site-chrome.tsx:137:12)
+  135 |             whole nav sideways every time the pointer crossed it. */}
+  136 |         <nav className="order-3 -mx-1 flex items-center gap-2 font-mono text-sm sm:order-...
+> 137 |           {NAV.map((item) => (
+      |            ^
+  138 |             <Link
+  139 |               key={item.href}
+  140 |               href={item.href} {
+  digest: '1601723881'
+}
+ GET / 200 in 304ms (next.js: 62ms, proxy.ts: 40ms, application-code: 201ms)
+ GET / 200 in 187ms (next.js: 5ms, proxy.ts: 44ms, application-code: 138ms)
+⨯ ReferenceError: NAV is not defined
+    at SiteHeader (components\site-chrome.tsx:137:12)
+  135 |             whole nav sideways every time the pointer crossed it. */}
+  136 |         <nav className="order-3 -mx-1 flex items-center gap-2 font-mono text-sm sm:order-...
+> 137 |           {NAV.map((item) => (
+      |            ^
+  138 |             <Link
+  139 |               key={item.href}
+  140 |               href={item.href} {
+  digest: '1601723881'
+}
+ GET / 200 in 143ms (next.js: 5ms, proxy.ts: 12ms, application-code: 125ms)
+ GET / 200 in 143ms (next.js: 16ms, proxy.ts: 12ms, application-code: 115ms)
+ GET / 200 in 153ms (next.js: 42ms, proxy.ts: 12ms, application-code: 100ms)
+ GET / 200 in 157ms (next.js: 27ms, proxy.ts: 12ms, application-code: 118ms)
+⨯ ReferenceError: NAV is not defined
+    at SiteHeader (components\site-chrome.tsx:137:12)
+  135 |             whole nav sideways every time the pointer crossed it. */}
+  136 |         <nav className="order-3 -mx-1 flex items-center gap-2 font-mono text-sm sm:order-...
+> 137 |           {NAV.map((item) => (
+      |            ^
+  138 |             <Link
+  139 |               key={item.href}
+  140 |               href={item.href} {
+  digest: '1601723881'
+}
+⨯ ReferenceError: NAV is not defined
+    at SiteHeader (components\site-chrome.tsx:137:12)
+  135 |             whole nav sideways every time the pointer crossed it. */}
+  136 |         <nav className="order-3 -mx-1 flex items-center gap-2 font-mono text-sm sm:order-...
+> 137 |           {NAV.map((item) => (
+      |            ^
+  138 |             <Link
+  139 |               key={item.href}
+  140 |               href={item.href} {
+  digest: '1601723881'
+}
+⨯ ReferenceError: NAV is not defined
+    at SiteHeader (components\site-chrome.tsx:137:12)
+  135 |             whole nav sideways every time the pointer crossed it. */}
+  136 |         <nav className="order-3 -mx-1 flex items-center gap-2 font-mono text-sm sm:order-...
+> 137 |           {NAV.map((item) => (
+      |            ^
+  138 |             <Link
+  139 |               key={item.href}
+  140 |               href={item.href} {
+  digest: '1601723881'
+}
+ GET / 200 in 108ms (next.js: 3ms, proxy.ts: 4ms, application-code: 101ms)
+ GET / 200 in 89ms (next.js: 4ms, proxy.ts: 11ms, application-code: 74ms)
+ GET / 200 in 62ms (next.js: 16ms, proxy.ts: 13ms, application-code: 33ms)
+ GET / 200 in 63ms (next.js: 3ms, proxy.ts: 13ms, application-code: 47ms)
+[browser] Uncaught ReferenceError: NAV is not defined
+    at SiteHeader (components\site-chrome.tsx:137:12)
+    at resolveErrorDev (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:1919:150)
+    at processFullStringRow (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2434:29)
+    at processFullBinaryRow (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2393:9)
+    at processBinaryChunk (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2502:221)
+    at progress (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2689:13)
+  135 |             whole nav sideways every time the pointer crossed it. */}
+  136 |         <nav className="order-3 -mx-1 flex items-center gap-2 font-mono text-sm sm:order-...
+> 137 |           {NAV.map((item) => (
+      |            ^
+  138 |             <Link
+  139 |               key={item.href}
+  140 |               href={item.href}
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] Uncaught ReferenceError: NAV is not defined
+    at SiteHeader (components\site-chrome.tsx:137:12)
+    at resolveErrorDev (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:1919:150)
+    at processFullStringRow (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2434:29)
+    at processFullBinaryRow (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2393:9)
+    at processBinaryChunk (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2502:221)
+    at progress (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2689:13)
+  135 |             whole nav sideways every time the pointer crossed it. */}
+  136 |         <nav className="order-3 -mx-1 flex items-center gap-2 font-mono text-sm sm:order-...
+> 137 |           {NAV.map((item) => (
+      |            ^
+  138 |             <Link
+  139 |               key={item.href}
+  140 |               href={item.href}
+✓ Compiled in 67ms
+ GET / 200 in 218ms (next.js: 69ms, proxy.ts: 38ms, application-code: 111ms)
+ GET /api/socket-ticket 200 in 49ms (next.js: 22ms, proxy.ts: 5ms, application-code: 23ms)
+✓ Compiled in 83ms
+ GET /api/socket-ticket 200 in 126ms (next.js: 28ms, proxy.ts: 87ms, application-code: 11ms)
+ GET / 200 in 244ms (next.js: 57ms, proxy.ts: 34ms, application-code: 153ms)
+ GET / 200 in 239ms (next.js: 6ms, proxy.ts: 37ms, application-code: 197ms)
+ GET / 200 in 188ms (next.js: 6ms, proxy.ts: 17ms, application-code: 165ms)
+ GET / 200 in 188ms (next.js: 17ms, proxy.ts: 17ms, application-code: 154ms)
+ GET / 200 in 188ms (next.js: 28ms, proxy.ts: 17ms, application-code: 143ms)
+ GET / 200 in 184ms (next.js: 47ms, proxy.ts: 12ms, application-code: 125ms)
+ GET / 200 in 127ms (next.js: 4ms, proxy.ts: 9ms, application-code: 113ms)
+ GET / 200 in 80ms (next.js: 6ms, proxy.ts: 4ms, application-code: 70ms)
+ GET / 200 in 59ms (next.js: 16ms, proxy.ts: 15ms, application-code: 28ms)
+ GET / 200 in 58ms (next.js: 3ms, proxy.ts: 15ms, application-code: 40ms)
+✓ Compiled in 81ms
+ GET /api/socket-ticket 200 in 153ms (next.js: 33ms, proxy.ts: 99ms, application-code: 21ms)
+ GET / 200 in 307ms (next.js: 63ms, proxy.ts: 39ms, application-code: 205ms)
+ GET / 200 in 193ms (next.js: 51ms, proxy.ts: 10ms, application-code: 132ms)
+ GET / 200 in 146ms (next.js: 33ms, proxy.ts: 11ms, application-code: 102ms)
+ GET / 200 in 146ms (next.js: 49ms, proxy.ts: 11ms, application-code: 86ms)
+ GET / 200 in 150ms (next.js: 5ms, proxy.ts: 12ms, application-code: 134ms)
+ GET / 200 in 150ms (next.js: 18ms, proxy.ts: 12ms, application-code: 120ms)
+ GET / 200 in 132ms (next.js: 4ms, proxy.ts: 5ms, application-code: 123ms)
+ GET / 200 in 115ms (next.js: 7ms, proxy.ts: 19ms, application-code: 89ms)
+ GET / 200 in 77ms (next.js: 4ms, proxy.ts: 14ms, application-code: 60ms)
+ GET / 200 in 79ms (next.js: 17ms, proxy.ts: 14ms, application-code: 48ms)
+ GET / 200 in 72ms (next.js: 28ms, proxy.ts: 9ms, application-code: 35ms)
+⚠ Fast Refresh had to perform a full reload when ./components/clocks.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+✓ Compiled in 66ms
+ GET / 200 in 281ms (next.js: 76ms, proxy.ts: 43ms, application-code: 162ms)
+ GET / 200 in 65ms (next.js: 4ms, proxy.ts: 39ms, application-code: 23ms)
+ GET / 200 in 290ms (next.js: 55ms, proxy.ts: 43ms, application-code: 192ms)
+ GET /api/socket-ticket 200 in 46ms (next.js: 22ms, proxy.ts: 5ms, application-code: 19ms)
+✓ Compiled in 89ms
+✓ Compiled in 130ms
+ GET / 200 in 202ms (next.js: 58ms, proxy.ts: 38ms, application-code: 106ms)
+ GET / 200 in 74ms (next.js: 3ms, proxy.ts: 8ms, application-code: 63ms)
+ GET / 200 in 31ms (next.js: 2ms, proxy.ts: 6ms, application-code: 22ms)
+ GET /api/socket-ticket 200 in 43ms (next.js: 25ms, proxy.ts: 6ms, application-code: 12ms)
+ GET /api/socket-ticket 200 in 43ms (next.js: 31ms, proxy.ts: 6ms, application-code: 7ms)
+✓ Compiled in 77ms
+ GET /api/socket-ticket 200 in 129ms (next.js: 23ms, proxy.ts: 86ms, application-code: 19ms)
+ GET / 200 in 164ms (next.js: 60ms, proxy.ts: 34ms, application-code: 70ms)
+✓ Compiled in 55ms
+ GET /api/socket-ticket 200 in 105ms (next.js: 21ms, proxy.ts: 77ms, application-code: 7ms)
+ GET / 200 in 142ms (next.js: 50ms, proxy.ts: 34ms, application-code: 57ms)
+ GET / 200 in 131ms (next.js: 2ms, proxy.ts: 4ms, application-code: 125ms)
+ GET /api/socket-ticket 200 in 12ms (next.js: 3ms, proxy.ts: 5ms, application-code: 4ms)
+✓ Compiled in 82ms
+ GET / 200 in 172ms (next.js: 59ms, proxy.ts: 39ms, application-code: 74ms)
+ GET / 200 in 44ms (next.js: 3ms, proxy.ts: 11ms, application-code: 31ms)
+✓ Compiled in 54ms
+ GET / 200 in 156ms (next.js: 57ms, proxy.ts: 35ms, application-code: 63ms)
+ GET / 200 in 34ms (next.js: 3ms, proxy.ts: 8ms, application-code: 23ms)
+✓ Compiled in 85ms
+ GET / 200 in 107ms (next.js: 43ms, proxy.ts: 32ms, application-code: 33ms)
+ GET / 200 in 96ms (next.js: 38ms, proxy.ts: 32ms, application-code: 26ms)
+✓ Compiled in 72ms
+ GET / 200 in 101ms (next.js: 34ms, proxy.ts: 32ms, application-code: 34ms)
+✓ Compiled in 63ms
+ GET / 200 in 176ms (next.js: 68ms, proxy.ts: 41ms, application-code: 68ms)
+ GET / 200 in 35ms (next.js: 3ms, proxy.ts: 10ms, application-code: 23ms)
+✓ Compiled in 57ms
+ GET / 200 in 152ms (next.js: 55ms, proxy.ts: 33ms, application-code: 64ms)
+ GET / 200 in 34ms (next.js: 4ms, proxy.ts: 7ms, application-code: 23ms)
+✓ Compiled in 81ms
+ GET / 200 in 152ms (next.js: 57ms, proxy.ts: 33ms, application-code: 61ms)
+ GET / 200 in 31ms (next.js: 2ms, proxy.ts: 6ms, application-code: 23ms)
+✓ Compiled in 59ms
+ GET / 200 in 214ms (next.js: 82ms, proxy.ts: 38ms, application-code: 95ms)
+ GET / 200 in 62ms (next.js: 7ms, proxy.ts: 16ms, application-code: 39ms)
+✓ Compiled in 56ms
+ GET / 200 in 152ms (next.js: 57ms, proxy.ts: 32ms, application-code: 63ms)
+ GET / 200 in 37ms (next.js: 4ms, proxy.ts: 7ms, application-code: 26ms)
+✓ Compiled in 58ms
+ GET / 200 in 175ms (next.js: 59ms, proxy.ts: 37ms, application-code: 80ms)
+ GET / 200 in 107ms (next.js: 3ms, proxy.ts: 6ms, application-code: 97ms)
+ GET / 200 in 80ms (next.js: 3ms, proxy.ts: 10ms, application-code: 67ms)
+ GET / 200 in 80ms (next.js: 14ms, proxy.ts: 9ms, application-code: 57ms)
+ GET / 200 in 80ms (next.js: 28ms, proxy.ts: 9ms, application-code: 42ms)
+ GET /rooms 200 in 103ms (next.js: 78ms, proxy.ts: 5ms, application-code: 20ms)
+ GET /api/socket-ticket 200 in 76ms (next.js: 27ms, proxy.ts: 15ms, application-code: 34ms)
+ GET /api/ice 200 in 75ms (next.js: 49ms, proxy.ts: 15ms, application-code: 10ms)
+ GET /api/socket-ticket 200 in 77ms (next.js: 53ms, proxy.ts: 15ms, application-code: 9ms)
+ GET /api/ice 200 in 75ms (next.js: 58ms, proxy.ts: 13ms, application-code: 3ms)
+ GET /wall 200 in 93ms (next.js: 68ms, proxy.ts: 4ms, application-code: 21ms)
+ GET /api/socket-ticket 200 in 15ms (next.js: 2ms, proxy.ts: 7ms, application-code: 6ms)
+ GET /api/socket-ticket 200 in 16ms (next.js: 5ms, proxy.ts: 7ms, application-code: 4ms)
+ GET / 200 in 31ms (next.js: 3ms, proxy.ts: 3ms, application-code: 25ms)
+ GET /api/socket-ticket 200 in 14ms (next.js: 2ms, proxy.ts: 5ms, application-code: 7ms)
+ GET /api/socket-ticket 200 in 15ms (next.js: 5ms, proxy.ts: 5ms, application-code: 5ms)
+ GET / 200 in 122ms (next.js: 3ms, proxy.ts: 4ms, application-code: 116ms)
+ GET /api/socket-ticket 200 in 18ms (next.js: 1855µs, proxy.ts: 4ms, application-code: 12ms)
+ GET /wall 200 in 77ms (next.js: 41ms, proxy.ts: 3ms, application-code: 33ms)
+ GET /api/socket-ticket 200 in 14ms (next.js: 1492µs, proxy.ts: 4ms, application-code: 9ms)
+ GET / 200 in 77ms (next.js: 38ms, proxy.ts: 4ms, application-code: 34ms)
+ GET /api/socket-ticket 200 in 18ms (next.js: 2ms, proxy.ts: 4ms, application-code: 12ms)
+ GET /wall 200 in 72ms (next.js: 40ms, proxy.ts: 5ms, application-code: 27ms)
+ GET /api/socket-ticket 200 in 22ms (next.js: 1833µs, proxy.ts: 3ms, application-code: 17ms)
+✓ Compiled in 90ms
+ GET /wall 200 in 117ms (next.js: 52ms, proxy.ts: 33ms, application-code: 32ms)
+ GET /wall 200 in 121ms (next.js: 45ms, proxy.ts: 37ms, application-code: 38ms)
+ GET /wall 200 in 108ms (next.js: 45ms, proxy.ts: 36ms, application-code: 27ms)
+✓ Compiled in 112ms
+ GET /wall 200 in 148ms (next.js: 62ms, proxy.ts: 46ms, application-code: 40ms)
+ GET /wall 200 in 124ms (next.js: 53ms, proxy.ts: 38ms, application-code: 32ms)
+✓ Compiled in 60ms
+ GET /wall 200 in 149ms (next.js: 51ms, proxy.ts: 42ms, application-code: 56ms)
+ GET /wall 200 in 28ms (next.js: 3ms, proxy.ts: 5ms, application-code: 20ms)
+✓ Compiled in 68ms
+ GET /wall 200 in 138ms (next.js: 54ms, proxy.ts: 40ms, application-code: 44ms)
+ GET /wall 200 in 29ms (next.js: 5ms, proxy.ts: 5ms, application-code: 19ms)
+✓ Compiled in 73ms
+ GET /wall 200 in 181ms (next.js: 61ms, proxy.ts: 48ms, application-code: 72ms)
+ GET /wall 200 in 36ms (next.js: 4ms, proxy.ts: 5ms, application-code: 27ms)
+ GET /wall 200 in 157ms (next.js: 56ms, proxy.ts: 44ms, application-code: 57ms)
+ GET /wall 200 in 28ms (next.js: 3ms, proxy.ts: 4ms, application-code: 21ms)
+ GET / 200 in 252ms (next.js: 72ms, proxy.ts: 4ms, application-code: 176ms)
+ GET /api/socket-ticket 200 in 33ms (next.js: 20ms, proxy.ts: 5ms, application-code: 7ms)
+ GET /rooms 200 in 192ms (next.js: 101ms, proxy.ts: 4ms, application-code: 87ms)
+ GET /api/ice 200 in 34ms (next.js: 24ms, proxy.ts: 5ms, application-code: 5ms)
+ GET /api/socket-ticket 200 in 36ms (next.js: 7ms, proxy.ts: 6ms, application-code: 23ms)
+ GET /lobby 200 in 217ms (next.js: 119ms, proxy.ts: 5ms, application-code: 93ms)
+ GET /api/socket-ticket 200 in 21ms (next.js: 2ms, proxy.ts: 5ms, application-code: 14ms)
+ GET / 200 in 48ms (next.js: 3ms, proxy.ts: 4ms, application-code: 41ms)
+ GET /api/socket-ticket 200 in 16ms (next.js: 1934µs, proxy.ts: 5ms, application-code: 9ms)
+ GET /lobby 200 in 20ms (next.js: 3ms, proxy.ts: 3ms, application-code: 14ms)
+ GET /api/socket-ticket 200 in 19ms (next.js: 4ms, proxy.ts: 6ms, application-code: 8ms)
+ GET /api/socket-ticket 200 in 18ms (next.js: 7ms, proxy.ts: 7ms, application-code: 5ms)
+ GET /rooms 200 in 49ms (next.js: 3ms, proxy.ts: 5ms, application-code: 40ms)
+ GET /api/socket-ticket 200 in 28ms (next.js: 6ms, proxy.ts: 15ms, application-code: 7ms)
+ GET /api/ice 200 in 29ms (next.js: 10ms, proxy.ts: 15ms, application-code: 5ms)
+ GET /rooms 200 in 77ms (next.js: 6ms, proxy.ts: 8ms, application-code: 63ms)
+ GET /api/socket-ticket 200 in 17ms (next.js: 3ms, proxy.ts: 7ms, application-code: 7ms)
+ GET /api/ice 200 in 17ms (next.js: 5ms, proxy.ts: 7ms, application-code: 5ms)
+ GET /lobby 200 in 40ms (next.js: 3ms, proxy.ts: 4ms, application-code: 33ms)
+ GET /api/socket-ticket 200 in 16ms (next.js: 1621µs, proxy.ts: 3ms, application-code: 11ms)
+ GET /lobby/jmw2t6 200 in 363ms (next.js: 343ms, proxy.ts: 4ms, application-code: 16ms)
+ GET /api/socket-ticket 200 in 14ms (next.js: 2ms, proxy.ts: 6ms, application-code: 5ms)
+ GET /api/socket-ticket 200 in 14ms (next.js: 4ms, proxy.ts: 6ms, application-code: 4ms)
+ GET /lobby/jmw2t6 200 in 55ms (next.js: 12ms, proxy.ts: 5ms, application-code: 38ms)
+ GET /api/socket-ticket 200 in 24ms (next.js: 3ms, proxy.ts: 5ms, application-code: 16ms)
+ GET /lobby/jmw2t6 200 in 63ms (next.js: 7ms, proxy.ts: 6ms, application-code: 50ms)
+ GET /api/socket-ticket 200 in 20ms (next.js: 3ms, proxy.ts: 6ms, application-code: 11ms)
+ GET /lobby/jmw2t6 200 in 59ms (next.js: 15ms, proxy.ts: 6ms, application-code: 38ms)
+ GET /api/socket-ticket 200 in 17ms (next.js: 4ms, proxy.ts: 5ms, application-code: 8ms)
+ GET /lobby/jmw2t6 200 in 60ms (next.js: 6ms, proxy.ts: 8ms, application-code: 47ms)
+ GET /api/socket-ticket 200 in 22ms (next.js: 3ms, proxy.ts: 4ms, application-code: 16ms)
+✓ Compiled in 109ms
+ GET /api/ice 200 in 416ms (next.js: 226ms, proxy.ts: 176ms, application-code: 14ms)
+ GET /api/socket-ticket 200 in 423ms (next.js: 203ms, proxy.ts: 177ms, application-code: 43ms)
+ GET /rooms 200 in 758ms (next.js: 156ms, proxy.ts: 180ms, application-code: 423ms)
+ GET /lobby/jmw2t6 200 in 855ms (next.js: 379ms, proxy.ts: 179ms, application-code: 296ms)
+ GET /lobby/jmw2t6 200 in 853ms (next.js: 433ms, proxy.ts: 179ms, application-code: 240ms)
+ GET /lobby/jmw2t6 200 in 861ms (next.js: 422ms, proxy.ts: 179ms, application-code: 259ms)
+ GET /lobby/jmw2t6 200 in 852ms (next.js: 449ms, proxy.ts: 179ms, application-code: 224ms)
+ GET /lobby/jmw2t6 200 in 906ms (next.js: 468ms, proxy.ts: 177ms, application-code: 261ms)
+ GET /rooms 200 in 541ms (next.js: 18ms, proxy.ts: 269ms, application-code: 254ms)
+ GET /lobby/jmw2t6 200 in 488ms (next.js: 49ms, proxy.ts: 27ms, application-code: 412ms)
+ GET /lobby/jmw2t6 200 in 487ms (next.js: 65ms, proxy.ts: 26ms, application-code: 397ms)
+ GET /lobby/jmw2t6 200 in 488ms (next.js: 83ms, proxy.ts: 25ms, application-code: 380ms)
+ GET /lobby/jmw2t6 200 in 531ms (next.js: 88ms, proxy.ts: 42ms, application-code: 401ms)
+ GET /lobby/jmw2t6 200 in 569ms (next.js: 118ms, proxy.ts: 38ms, application-code: 413ms)
+ GET /rooms 200 in 529ms (next.js: 136ms, proxy.ts: 15ms, application-code: 378ms)
+ GET /rooms 200 in 421ms (next.js: 16ms, proxy.ts: 31ms, application-code: 375ms)
+ GET /lobby/jmw2t6 200 in 546ms (next.js: 63ms, proxy.ts: 105ms, application-code: 378ms)
+ GET /lobby/jmw2t6 200 in 545ms (next.js: 79ms, proxy.ts: 104ms, application-code: 362ms)
+ GET /lobby/jmw2t6 200 in 498ms (next.js: 108ms, proxy.ts: 54ms, application-code: 336ms)
+ GET /lobby/jmw2t6 200 in 499ms (next.js: 142ms, proxy.ts: 53ms, application-code: 304ms)
+ GET /lobby/jmw2t6 200 in 501ms (next.js: 125ms, proxy.ts: 54ms, application-code: 322ms)
+ GET /lobby/jmw2t6 200 in 500ms (next.js: 186ms, proxy.ts: 53ms, application-code: 261ms)
+ GET /lobby/jmw2t6 200 in 502ms (next.js: 159ms, proxy.ts: 53ms, application-code: 290ms)
+ GET /lobby/jmw2t6 200 in 488ms (next.js: 211ms, proxy.ts: 39ms, application-code: 239ms)
+ GET /lobby/jmw2t6 200 in 545ms (next.js: 252ms, proxy.ts: 36ms, application-code: 257ms)
+ GET /rooms 200 in 478ms (next.js: 17ms, proxy.ts: 212ms, application-code: 249ms)
+ GET /lobby/jmw2t6 200 in 475ms (next.js: 46ms, proxy.ts: 109ms, application-code: 320ms)
+ GET /lobby/jmw2t6 200 in 475ms (next.js: 62ms, proxy.ts: 108ms, application-code: 305ms)
+ GET /lobby/jmw2t6 200 in 446ms (next.js: 79ms, proxy.ts: 70ms, application-code: 297ms)
+ GET /lobby/jmw2t6 200 in 504ms (next.js: 105ms, proxy.ts: 37ms, application-code: 362ms)
+ GET /lobby/jmw2t6 200 in 504ms (next.js: 127ms, proxy.ts: 36ms, application-code: 341ms)
+ GET /rooms 200 in 466ms (next.js: 73ms, proxy.ts: 73ms, application-code: 320ms)
+ GET /lobby/jmw2t6 200 in 520ms (next.js: 63ms, proxy.ts: 106ms, application-code: 351ms)
+ GET /lobby/jmw2t6 200 in 520ms (next.js: 80ms, proxy.ts: 106ms, application-code: 333ms)
+ GET /rooms 200 in 425ms (next.js: 58ms, proxy.ts: 35ms, application-code: 333ms)
+ GET /lobby/jmw2t6 200 in 525ms (next.js: 106ms, proxy.ts: 100ms, application-code: 319ms)
+ GET /lobby/jmw2t6 200 in 469ms (next.js: 143ms, proxy.ts: 46ms, application-code: 280ms)
+ GET /lobby/jmw2t6 200 in 468ms (next.js: 157ms, proxy.ts: 45ms, application-code: 265ms)
+ GET /lobby/jmw2t6 200 in 466ms (next.js: 192ms, proxy.ts: 43ms, application-code: 231ms)
+ GET /lobby/jmw2t6 200 in 468ms (next.js: 175ms, proxy.ts: 44ms, application-code: 249ms)
+ GET /lobby/jmw2t6 200 in 478ms (next.js: 208ms, proxy.ts: 40ms, application-code: 231ms)
+ GET /rooms 200 in 358ms (next.js: 14ms, proxy.ts: 128ms, application-code: 215ms)
+ GET /lobby/jmw2t6 200 in 418ms (next.js: 64ms, proxy.ts: 134ms, application-code: 221ms)
+ GET /lobby/jmw2t6 200 in 418ms (next.js: 94ms, proxy.ts: 134ms, application-code: 190ms)
+ GET /lobby/jmw2t6 200 in 442ms (next.js: 126ms, proxy.ts: 128ms, application-code: 188ms)
+ GET /lobby/jmw2t6 200 in 363ms (next.js: 133ms, proxy.ts: 42ms, application-code: 188ms)
+ GET /rooms 200 in 320ms (next.js: 49ms, proxy.ts: 97ms, application-code: 175ms)
+ GET /lobby/jmw2t6 200 in 315ms (next.js: 45ms, proxy.ts: 67ms, application-code: 203ms)
+ GET /lobby/jmw2t6 200 in 315ms (next.js: 61ms, proxy.ts: 66ms, application-code: 188ms)
+ GET /lobby/jmw2t6 200 in 317ms (next.js: 62ms, proxy.ts: 67ms, application-code: 187ms)
+ GET /rooms 200 in 255ms (next.js: 67ms, proxy.ts: 11ms, application-code: 176ms)
+ GET /lobby/jmw2t6 200 in 288ms (next.js: 116ms, proxy.ts: 15ms, application-code: 157ms)
+ GET /rooms 200 in 245ms (next.js: 9ms, proxy.ts: 33ms, application-code: 203ms)
+ GET /lobby/jmw2t6 200 in 309ms (next.js: 53ms, proxy.ts: 66ms, application-code: 190ms)
+ GET /lobby/jmw2t6 200 in 309ms (next.js: 68ms, proxy.ts: 65ms, application-code: 175ms)
+ GET /lobby/jmw2t6 200 in 292ms (next.js: 83ms, proxy.ts: 36ms, application-code: 173ms)
+ GET /lobby/jmw2t6 200 in 294ms (next.js: 107ms, proxy.ts: 9ms, application-code: 177ms)
+ GET /rooms 200 in 242ms (next.js: 30ms, proxy.ts: 40ms, application-code: 171ms)
+ GET /lobby/jmw2t6 200 in 286ms (next.js: 59ms, proxy.ts: 40ms, application-code: 188ms)
+ GET /lobby/jmw2t6 200 in 288ms (next.js: 81ms, proxy.ts: 36ms, application-code: 171ms)
+ GET /lobby/jmw2t6 200 in 286ms (next.js: 81ms, proxy.ts: 48ms, application-code: 158ms)
+ GET /lobby/jmw2t6 200 in 280ms (next.js: 84ms, proxy.ts: 52ms, application-code: 145ms)
+ GET /lobby/jmw2t6 200 in 240ms (next.js: 55ms, proxy.ts: 50ms, application-code: 135ms)
+ GET /lobby/jmw2t6 200 in 253ms (next.js: 69ms, proxy.ts: 45ms, application-code: 138ms)
+ GET /lobby/jmw2t6 200 in 240ms (next.js: 61ms, proxy.ts: 45ms, application-code: 134ms)
+ GET /lobby/jmw2t6 200 in 211ms (next.js: 45ms, proxy.ts: 48ms, application-code: 118ms)
+ GET /lobby/jmw2t6 200 in 226ms (next.js: 37ms, proxy.ts: 36ms, application-code: 153ms)
+ GET /lobby/jmw2t6 200 in 244ms (next.js: 61ms, proxy.ts: 32ms, application-code: 151ms)
+ GET /lobby/jmw2t6 200 in 242ms (next.js: 65ms, proxy.ts: 29ms, application-code: 148ms)
+ GET /lobby/jmw2t6 200 in 276ms (next.js: 49ms, proxy.ts: 51ms, application-code: 176ms)
+ GET /lobby/jmw2t6 200 in 256ms (next.js: 52ms, proxy.ts: 50ms, application-code: 154ms)
+ GET /lobby/jmw2t6 200 in 230ms (next.js: 77ms, proxy.ts: 31ms, application-code: 122ms)
+ GET /lobby/jmw2t6 200 in 202ms (next.js: 74ms, proxy.ts: 33ms, application-code: 95ms)
+ GET /lobby/jmw2t6 200 in 161ms (next.js: 63ms, proxy.ts: 57ms, application-code: 41ms)
+✓ Compiled in 75ms
+ GET /rooms 200 in 724ms (next.js: 99ms, proxy.ts: 93ms, application-code: 533ms)
+ GET /lobby/jmw2t6 200 in 741ms (next.js: 356ms, proxy.ts: 87ms, application-code: 298ms)
+ GET /lobby/jmw2t6 200 in 743ms (next.js: 413ms, proxy.ts: 92ms, application-code: 239ms)
+ GET /lobby/jmw2t6 200 in 742ms (next.js: 446ms, proxy.ts: 94ms, application-code: 201ms)
+ GET /lobby/jmw2t6 200 in 670ms (next.js: 517ms, proxy.ts: 27ms, application-code: 126ms)
+ GET /lobby/jmw2t6 200 in 738ms (next.js: 475ms, proxy.ts: 90ms, application-code: 172ms)
+✓ Compiled in 227ms
+ GET /rooms 200 in 1273ms (next.js: 169ms, proxy.ts: 201ms, application-code: 903ms)
+ GET /lobby/jmw2t6 200 in 1292ms (next.js: 538ms, proxy.ts: 185ms, application-code: 569ms)
+ GET /lobby/jmw2t6 200 in 1291ms (next.js: 642ms, proxy.ts: 200ms, application-code: 449ms)
+ GET /lobby/jmw2t6 200 in 1276ms (next.js: 754ms, proxy.ts: 197ms, application-code: 325ms)
+ GET /lobby/jmw2t6 200 in 1273ms (next.js: 838ms, proxy.ts: 195ms, application-code: 240ms)
+ GET /lobby/jmw2t6 200 in 1136ms (next.js: 927ms, proxy.ts: 59ms, application-code: 150ms)
+✓ Compiled in 66ms
+ GET /rooms 200 in 462ms (next.js: 94ms, proxy.ts: 103ms, application-code: 265ms)
+ GET /lobby/jmw2t6 200 in 487ms (next.js: 234ms, proxy.ts: 108ms, application-code: 144ms)
+ GET /lobby/jmw2t6 200 in 485ms (next.js: 264ms, proxy.ts: 107ms, application-code: 114ms)
+ GET /lobby/jmw2t6 200 in 472ms (next.js: 276ms, proxy.ts: 106ms, application-code: 89ms)
+ GET /lobby/jmw2t6 200 in 467ms (next.js: 309ms, proxy.ts: 103ms, application-code: 55ms)
+ GET /lobby/jmw2t6 200 in 470ms (next.js: 292ms, proxy.ts: 104ms, application-code: 74ms)
+✓ Compiled in 90ms
+ GET /rooms 200 in 847ms (next.js: 144ms, proxy.ts: 87ms, application-code: 617ms)
+ GET /lobby/jmw2t6 200 in 859ms (next.js: 498ms, proxy.ts: 87ms, application-code: 275ms)
+ GET /lobby/jmw2t6 200 in 859ms (next.js: 586ms, proxy.ts: 85ms, application-code: 189ms)
+ GET /lobby/jmw2t6 200 in 868ms (next.js: 418ms, proxy.ts: 89ms, application-code: 361ms)
+ GET /lobby/jmw2t6 200 in 866ms (next.js: 545ms, proxy.ts: 85ms, application-code: 236ms)
+ GET /lobby/jmw2t6 200 in 866ms (next.js: 629ms, proxy.ts: 88ms, application-code: 149ms)
+✓ Compiled in 80ms
+ GET /rooms 200 in 440ms (next.js: 83ms, proxy.ts: 151ms, application-code: 206ms)
+ GET /lobby/jmw2t6 200 in 446ms (next.js: 218ms, proxy.ts: 150ms, application-code: 79ms)
+ GET /lobby/jmw2t6 200 in 446ms (next.js: 195ms, proxy.ts: 149ms, application-code: 101ms)
+ GET /lobby/jmw2t6 200 in 445ms (next.js: 230ms, proxy.ts: 149ms, application-code: 66ms)
+ GET /lobby/jmw2t6 200 in 442ms (next.js: 239ms, proxy.ts: 151ms, application-code: 52ms)
+ GET /lobby/jmw2t6 200 in 433ms (next.js: 256ms, proxy.ts: 147ms, application-code: 31ms)
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Ftable-stage.tsx+%255Bapp-client%255D+%2528ecmascript%2529:78:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9061:186)
+    at performSyncWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10179:316)
+    at processRootScheduleInMicrotask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10200:106)
+    at <unknown> (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10274:158)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:4176:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5748:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Ftable-stage.tsx+%255Bapp-client%255D+%2528ecmascript%2529:78:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9061:186)
+    at performSyncWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10179:316)
+    at processRootScheduleInMicrotask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10200:106)
+    at <unknown> (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10274:158)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:4176:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5748:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Ftable-stage.tsx+%255Bapp-client%255D+%2528ecmascript%2529:78:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9061:186)
+    at performSyncWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10179:316)
+    at processRootScheduleInMicrotask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10200:106)
+    at <unknown> (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10274:158)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:4176:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5748:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Ftable-stage.tsx+%255Bapp-client%255D+%2528ecmascript%2529:78:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9061:186)
+    at performSyncWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10179:316)
+    at processRootScheduleInMicrotask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10200:106)
+    at <unknown> (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10274:158)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:4176:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5748:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Ftable-stage.tsx+%255Bapp-client%255D+%2528ecmascript%2529:78:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9061:186)
+    at performSyncWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10179:316)
+    at processRootScheduleInMicrotask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10200:106)
+    at <unknown> (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10274:158)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:4176:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5748:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+✓ Compiled in 85ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /api/socket-ticket 200 in 460ms (next.js: 226ms, proxy.ts: 132ms, application-code: 102ms)
+ GET /api/socket-ticket 200 in 459ms (next.js: 237ms, proxy.ts: 130ms, application-code: 92ms)
+ GET /api/socket-ticket 200 in 459ms (next.js: 240ms, proxy.ts: 130ms, application-code: 89ms)
+ GET /api/socket-ticket 200 in 459ms (next.js: 244ms, proxy.ts: 130ms, application-code: 85ms)
+ GET /api/socket-ticket 200 in 460ms (next.js: 247ms, proxy.ts: 130ms, application-code: 83ms)
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Ftable-stage.tsx+%255Bapp-client%255D+%2528ecmascript%2529:78:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Fwerewolf-actions.tsx+%255Bapp-client%255D+%2528ecmascript%2529:310:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5748:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Ftable-stage.tsx+%255Bapp-client%255D+%2528ecmascript%2529:78:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Fwerewolf-actions.tsx+%255Bapp-client%255D+%2528ecmascript%2529:310:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5748:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Ftable-stage.tsx+%255Bapp-client%255D+%2528ecmascript%2529:78:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Fwerewolf-actions.tsx+%255Bapp-client%255D+%2528ecmascript%2529:310:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5748:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Ftable-stage.tsx+%255Bapp-client%255D+%2528ecmascript%2529:78:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Fwerewolf-actions.tsx+%255Bapp-client%255D+%2528ecmascript%2529:310:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5748:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Ftable-stage.tsx+%255Bapp-client%255D+%2528ecmascript%2529:78:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Fwerewolf-actions.tsx+%255Bapp-client%255D+%2528ecmascript%2529:310:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5748:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+ GET /rooms 200 in 1241ms (next.js: 126ms, proxy.ts: 83ms, application-code: 1032ms)
+ GET /lobby/jmw2t6 200 in 1329ms (next.js: 260ms, proxy.ts: 111ms, application-code: 958ms)
+ GET /lobby/jmw2t6 200 in 1228ms (next.js: 455ms, proxy.ts: 139ms, application-code: 634ms)
+ GET /lobby/jmw2t6 200 in 1226ms (next.js: 514ms, proxy.ts: 138ms, application-code: 575ms)
+ GET /lobby/jmw2t6 200 in 1221ms (next.js: 620ms, proxy.ts: 134ms, application-code: 468ms)
+ GET /lobby/jmw2t6 200 in 1215ms (next.js: 713ms, proxy.ts: 130ms, application-code: 372ms)
+ GET /api/socket-ticket 200 in 61ms (next.js: 9ms, proxy.ts: 40ms, application-code: 12ms)
+ GET /api/socket-ticket 200 in 57ms (next.js: 13ms, proxy.ts: 28ms, application-code: 16ms)
+ GET /api/socket-ticket 200 in 54ms (next.js: 17ms, proxy.ts: 20ms, application-code: 17ms)
+ GET /api/socket-ticket 200 in 52ms (next.js: 21ms, proxy.ts: 17ms, application-code: 14ms)
+ GET /api/socket-ticket 200 in 47ms (next.js: 22ms, proxy.ts: 16ms, application-code: 9ms)
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:2544:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:4209:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5781:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:2544:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:4209:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5781:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:2544:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:4209:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5781:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:2544:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:4209:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5781:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+✓ Compiled in 73ms
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:2544:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:4209:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5781:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /rooms 200 in 643ms (next.js: 89ms, proxy.ts: 120ms, application-code: 434ms)
+ GET /lobby/jmw2t6 200 in 709ms (next.js: 225ms, proxy.ts: 129ms, application-code: 355ms)
+ GET /lobby/jmw2t6 200 in 606ms (next.js: 338ms, proxy.ts: 25ms, application-code: 242ms)
+ GET /lobby/jmw2t6 200 in 597ms (next.js: 254ms, proxy.ts: 129ms, application-code: 215ms)
+ GET /lobby/jmw2t6 200 in 597ms (next.js: 270ms, proxy.ts: 129ms, application-code: 197ms)
+ GET /lobby/jmw2t6 200 in 599ms (next.js: 287ms, proxy.ts: 129ms, application-code: 183ms)
+ GET /api/socket-ticket 200 in 125ms (next.js: 76ms, proxy.ts: 17ms, application-code: 33ms)
+ GET /api/socket-ticket 200 in 86ms (next.js: 6ms, proxy.ts: 37ms, application-code: 44ms)
+ GET /api/socket-ticket 200 in 87ms (next.js: 11ms, proxy.ts: 35ms, application-code: 40ms)
+ GET /api/socket-ticket 200 in 95ms (next.js: 18ms, proxy.ts: 34ms, application-code: 43ms)
+ GET /api/socket-ticket 200 in 97ms (next.js: 28ms, proxy.ts: 34ms, application-code: 35ms)
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:2544:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:4210:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5782:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:2544:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:4210:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5782:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:2544:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:4210:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5782:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:2544:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:4210:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5782:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plate is not defined
+    at TableStage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:2544:19)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:4210:215)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5782:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+✓ Compiled in 87ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /rooms 200 in 618ms (next.js: 145ms, proxy.ts: 76ms, application-code: 398ms)
+ GET /lobby/jmw2t6 200 in 659ms (next.js: 234ms, proxy.ts: 125ms, application-code: 300ms)
+ GET /lobby/jmw2t6 200 in 544ms (next.js: 195ms, proxy.ts: 142ms, application-code: 207ms)
+ GET /lobby/jmw2t6 200 in 541ms (next.js: 222ms, proxy.ts: 140ms, application-code: 179ms)
+ GET /lobby/jmw2t6 200 in 545ms (next.js: 209ms, proxy.ts: 141ms, application-code: 195ms)
+ GET /lobby/jmw2t6 200 in 545ms (next.js: 261ms, proxy.ts: 140ms, application-code: 145ms)
+ GET /api/socket-ticket 200 in 134ms (next.js: 63ms, proxy.ts: 35ms, application-code: 36ms)
+ GET /api/socket-ticket 200 in 123ms (next.js: 64ms, proxy.ts: 30ms, application-code: 29ms)
+ GET /api/socket-ticket 200 in 121ms (next.js: 67ms, proxy.ts: 28ms, application-code: 26ms)
+ GET /api/socket-ticket 200 in 121ms (next.js: 71ms, proxy.ts: 28ms, application-code: 22ms)
+ GET /api/socket-ticket 200 in 121ms (next.js: 76ms, proxy.ts: 27ms, application-code: 18ms)
+✓ Compiled in 186ms
+ GET /rooms 200 in 366ms (next.js: 62ms, proxy.ts: 50ms, application-code: 253ms)
+ GET /lobby/jmw2t6 200 in 367ms (next.js: 214ms, proxy.ts: 50ms, application-code: 103ms)
+ GET /lobby/jmw2t6 200 in 367ms (next.js: 184ms, proxy.ts: 50ms, application-code: 133ms)
+ GET /lobby/jmw2t6 200 in 363ms (next.js: 257ms, proxy.ts: 53ms, application-code: 54ms)
+ GET /lobby/jmw2t6 200 in 368ms (next.js: 230ms, proxy.ts: 54ms, application-code: 85ms)
+ GET /lobby/jmw2t6 200 in 365ms (next.js: 274ms, proxy.ts: 53ms, application-code: 38ms)
+✓ Compiled in 164ms
+ GET /rooms 200 in 426ms (next.js: 62ms, proxy.ts: 66ms, application-code: 299ms)
+ GET /lobby/jmw2t6 200 in 430ms (next.js: 185ms, proxy.ts: 65ms, application-code: 180ms)
+ GET /lobby/jmw2t6 200 in 431ms (next.js: 220ms, proxy.ts: 65ms, application-code: 146ms)
+ GET /lobby/jmw2t6 200 in 431ms (next.js: 250ms, proxy.ts: 66ms, application-code: 114ms)
+ GET /lobby/jmw2t6 200 in 428ms (next.js: 278ms, proxy.ts: 67ms, application-code: 82ms)
+ GET /lobby/jmw2t6 200 in 428ms (next.js: 298ms, proxy.ts: 68ms, application-code: 62ms)
+✓ Compiled in 52ms
+ GET /rooms 200 in 283ms (next.js: 50ms, proxy.ts: 39ms, application-code: 194ms)
+ GET /lobby/jmw2t6 200 in 282ms (next.js: 143ms, proxy.ts: 42ms, application-code: 97ms)
+ GET /lobby/jmw2t6 200 in 282ms (next.js: 164ms, proxy.ts: 43ms, application-code: 75ms)
+ GET /lobby/jmw2t6 200 in 247ms (next.js: 126ms, proxy.ts: 78ms, application-code: 44ms)
+ GET /lobby/jmw2t6 200 in 250ms (next.js: 116ms, proxy.ts: 75ms, application-code: 58ms)
+ GET /lobby/jmw2t6 200 in 247ms (next.js: 143ms, proxy.ts: 77ms, application-code: 27ms)
+✓ Compiled in 70ms
+ GET /rooms 200 in 345ms (next.js: 61ms, proxy.ts: 54ms, application-code: 230ms)
+ GET /lobby/jmw2t6 200 in 352ms (next.js: 171ms, proxy.ts: 54ms, application-code: 127ms)
+ GET /lobby/jmw2t6 200 in 347ms (next.js: 207ms, proxy.ts: 54ms, application-code: 86ms)
+ GET /lobby/jmw2t6 200 in 353ms (next.js: 193ms, proxy.ts: 53ms, application-code: 107ms)
+ GET /lobby/jmw2t6 200 in 348ms (next.js: 234ms, proxy.ts: 56ms, application-code: 58ms)
+ GET /lobby/jmw2t6 200 in 345ms (next.js: 252ms, proxy.ts: 55ms, application-code: 37ms)
+✓ Compiled in 72ms
+ GET /rooms 200 in 367ms (next.js: 59ms, proxy.ts: 49ms, application-code: 259ms)
+ GET /lobby/jmw2t6 200 in 373ms (next.js: 198ms, proxy.ts: 49ms, application-code: 126ms)
+ GET /lobby/jmw2t6 200 in 372ms (next.js: 237ms, proxy.ts: 47ms, application-code: 88ms)
+ GET /lobby/jmw2t6 200 in 374ms (next.js: 221ms, proxy.ts: 48ms, application-code: 105ms)
+ GET /lobby/jmw2t6 200 in 375ms (next.js: 255ms, proxy.ts: 48ms, application-code: 72ms)
+ GET /lobby/jmw2t6 200 in 373ms (next.js: 271ms, proxy.ts: 49ms, application-code: 54ms)
+✓ Compiled in 55ms
+ GET /rooms 200 in 326ms (next.js: 66ms, proxy.ts: 51ms, application-code: 209ms)
+ GET /lobby/jmw2t6 200 in 329ms (next.js: 171ms, proxy.ts: 50ms, application-code: 109ms)
+ GET /lobby/jmw2t6 200 in 329ms (next.js: 204ms, proxy.ts: 50ms, application-code: 74ms)
+ GET /lobby/jmw2t6 200 in 330ms (next.js: 191ms, proxy.ts: 50ms, application-code: 90ms)
+ GET /lobby/jmw2t6 200 in 329ms (next.js: 234ms, proxy.ts: 51ms, application-code: 44ms)
+ GET /lobby/jmw2t6 200 in 332ms (next.js: 218ms, proxy.ts: 51ms, application-code: 63ms)
+[browser] Uncaught ReferenceError: plateFor is not defined
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Fwerewolf-actions.tsx+%255Bapp-client%255D+%2528ecmascript%2529:317:24)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9061:186)
+    at performSyncWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10179:316)
+    at processRootScheduleInMicrotask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10200:106)
+    at <unknown> (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10274:158)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5787:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plateFor is not defined
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Fwerewolf-actions.tsx+%255Bapp-client%255D+%2528ecmascript%2529:317:24)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9061:186)
+    at performSyncWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10179:316)
+    at processRootScheduleInMicrotask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10200:106)
+    at <unknown> (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10274:158)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5787:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plateFor is not defined
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Fwerewolf-actions.tsx+%255Bapp-client%255D+%2528ecmascript%2529:317:24)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9061:186)
+    at performSyncWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10179:316)
+    at processRootScheduleInMicrotask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10200:106)
+    at <unknown> (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10274:158)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5787:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plateFor is not defined
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Fwerewolf-actions.tsx+%255Bapp-client%255D+%2528ecmascript%2529:317:24)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9061:186)
+    at performSyncWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10179:316)
+    at processRootScheduleInMicrotask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10200:106)
+    at <unknown> (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10274:158)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5787:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+[browser] Uncaught ReferenceError: plateFor is not defined
+    at WerewolfActions (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js?id=%255Bproject%255D%252Fapp%252Flobby%252F%255BlobbyId%255D%252Fwerewolf-actions.tsx+%255Bapp-client%255D+%2528ecmascript%2529:317:24)
+    at Object.react_stack_bottom_frame (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:15037:24)
+    at renderWithHooks (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6081:21)
+    at beginWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9449:40)
+    at renderRootSync (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9061:186)
+    at performSyncWorkOnRoot (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10179:316)
+    at processRootScheduleInMicrotask (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10200:106)
+    at <unknown> (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10274:158)
+    at LobbyClient (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/_16_52pp._.js:5787:238)
+    at LobbyPage (app\lobby\[lobbyId]\page.tsx:43:10)
+  41 |   if (!LOBBY_ID.test(lobbyId)) notFound()
+  42 |
+> 43 |   return <LobbyClient lobbyId={lobbyId} />
+     |          ^
+  44 | }
+  45 |
+✓ Compiled in 56ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /api/socket-ticket 200 in 569ms (next.js: 128ms, proxy.ts: 368ms, application-code: 73ms)
+ GET /api/socket-ticket 200 in 566ms (next.js: 134ms, proxy.ts: 365ms, application-code: 68ms)
+ GET /api/socket-ticket 200 in 563ms (next.js: 136ms, proxy.ts: 361ms, application-code: 66ms)
+ GET /api/socket-ticket 200 in 560ms (next.js: 138ms, proxy.ts: 359ms, application-code: 64ms)
+ GET /api/socket-ticket 200 in 576ms (next.js: 141ms, proxy.ts: 355ms, application-code: 81ms)
+ GET /rooms 200 in 1046ms (next.js: 362ms, proxy.ts: 121ms, application-code: 563ms)
+ GET /lobby/jmw2t6 200 in 1073ms (next.js: 495ms, proxy.ts: 121ms, application-code: 457ms)
+ GET /lobby/jmw2t6 200 in 1074ms (next.js: 516ms, proxy.ts: 121ms, application-code: 437ms)
+ GET /lobby/jmw2t6 200 in 1068ms (next.js: 544ms, proxy.ts: 211ms, application-code: 313ms)
+ GET /lobby/jmw2t6 200 in 919ms (next.js: 304ms, proxy.ts: 379ms, application-code: 237ms)
+ GET /lobby/jmw2t6 200 in 915ms (next.js: 322ms, proxy.ts: 373ms, application-code: 220ms)
+ GET /api/socket-ticket 200 in 37ms (next.js: 8ms, proxy.ts: 17ms, application-code: 12ms)
+ GET /api/socket-ticket 200 in 37ms (next.js: 11ms, proxy.ts: 14ms, application-code: 12ms)
+ GET /api/socket-ticket 200 in 38ms (next.js: 16ms, proxy.ts: 11ms, application-code: 10ms)
+ GET /api/socket-ticket 200 in 42ms (next.js: 15ms, proxy.ts: 18ms, application-code: 10ms)
+ GET /api/socket-ticket 200 in 37ms (next.js: 3ms, proxy.ts: 19ms, application-code: 15ms)
+ GET /lobby/jmw2t6 200 in 205ms (next.js: 19ms, proxy.ts: 10ms, application-code: 176ms)
+ GET /lobby/jmw2t6 200 in 205ms (next.js: 37ms, proxy.ts: 11ms, application-code: 157ms)
+ GET /lobby/jmw2t6 200 in 203ms (next.js: 57ms, proxy.ts: 11ms, application-code: 135ms)
+ GET /lobby/jmw2t6 200 in 201ms (next.js: 71ms, proxy.ts: 10ms, application-code: 121ms)
+ GET /lobby/jmw2t6 200 in 202ms (next.js: 100ms, proxy.ts: 10ms, application-code: 92ms)
+ GET /api/socket-ticket 200 in 51ms (next.js: 14ms, proxy.ts: 26ms, application-code: 10ms)
+ GET /api/socket-ticket 200 in 55ms (next.js: 16ms, proxy.ts: 26ms, application-code: 13ms)
+ GET /api/socket-ticket 200 in 63ms (next.js: 19ms, proxy.ts: 23ms, application-code: 20ms)
+ GET /api/socket-ticket 200 in 61ms (next.js: 23ms, proxy.ts: 22ms, application-code: 16ms)
+ GET /api/socket-ticket 200 in 51ms (next.js: 18ms, proxy.ts: 23ms, application-code: 11ms)
+✓ Compiled in 418ms
+⨯ ./app/lobby/[lobbyId]/table-stage.tsx:532:7
+Expression expected
+  [90m530 |[0m         </span>
+  [90m531 |[0m       )}
+[31m[1m>[0m [90m532 |[0m     </>
+  [90m    |[0m       [31m[1m^[0m
+  [90m533 |[0m   )
+  [90m534 |[0m
+  [90m535 |[0m   [36mconst[0m shell = [32m`block w-full border-2 px-2.5 py-2 text-left transition-transform duratio...[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+
+⨯ ./app/lobby/[lobbyId]/table-stage.tsx:532:7
+Expression expected
+  [90m530 |[0m         </span>
+  [90m531 |[0m       )}
+[31m[1m>[0m [90m532 |[0m     </>
+  [90m    |[0m       [31m[1m^[0m
+  [90m533 |[0m   )
+  [90m534 |[0m
+  [90m535 |[0m   [36mconst[0m shell = [32m`block w-full border-2 px-2.5 py-2 text-left transition-transform duratio...[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+
+⨯ ./app/lobby/[lobbyId]/table-stage.tsx:532:7
+Expression expected
+  [90m530 |[0m         </span>
+  [90m531 |[0m       )}
+[31m[1m>[0m [90m532 |[0m     </>
+  [90m    |[0m       [31m[1m^[0m
+  [90m533 |[0m   )
+  [90m534 |[0m
+  [90m535 |[0m   [36mconst[0m shell = [32m`block w-full border-2 px-2.5 py-2 text-left transition-transform duratio...[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+
+⨯ ./app/lobby/[lobbyId]/table-stage.tsx:532:7
+Expression expected
+  [90m530 |[0m         </span>
+  [90m531 |[0m       )}
+[31m[1m>[0m [90m532 |[0m     </>
+  [90m    |[0m       [31m[1m^[0m
+  [90m533 |[0m   )
+  [90m534 |[0m
+  [90m535 |[0m   [36mconst[0m shell = [32m`block w-full border-2 px-2.5 py-2 text-left transition-transform duratio...[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+
+⨯ ./app/lobby/[lobbyId]/table-stage.tsx:532:7
+Expression expected
+  [90m530 |[0m         </span>
+  [90m531 |[0m       )}
+[31m[1m>[0m [90m532 |[0m     </>
+  [90m    |[0m       [31m[1m^[0m
+  [90m533 |[0m   )
+  [90m534 |[0m
+  [90m535 |[0m   [36mconst[0m shell = [32m`block w-full border-2 px-2.5 py-2 text-left transition-transform duratio...[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+
+[browser] ./app/lobby/[lobbyId]/table-stage.tsx:532:7
+Expression expected
+  530 |         </span>
+  531 |       )}
+> 532 |     </>
+      |       ^
+  533 |   )
+  534 |
+  535 |   const shell = `block w-full border-2 px-2.5 py-2 text-left transition-transform duratio...
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+    at processMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:14014:21)
+    at WebSocket.handleMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13458:52) (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+[browser] ./app/lobby/[lobbyId]/table-stage.tsx:532:7
+Expression expected
+  530 |         </span>
+  531 |       )}
+> 532 |     </>
+      |       ^
+  533 |   )
+  534 |
+  535 |   const shell = `block w-full border-2 px-2.5 py-2 text-left transition-transform duratio...
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+    at processMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:14014:21)
+    at WebSocket.handleMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13458:52) (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+[browser] ./app/lobby/[lobbyId]/table-stage.tsx:532:7
+Expression expected
+  530 |         </span>
+  531 |       )}
+> 532 |     </>
+      |       ^
+  533 |   )
+  534 |
+  535 |   const shell = `block w-full border-2 px-2.5 py-2 text-left transition-transform duratio...
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+    at processMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:14014:21)
+    at WebSocket.handleMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13458:52) (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+[browser] ./app/lobby/[lobbyId]/table-stage.tsx:532:7
+Expression expected
+  530 |         </span>
+  531 |       )}
+> 532 |     </>
+      |       ^
+  533 |   )
+  534 |
+  535 |   const shell = `block w-full border-2 px-2.5 py-2 text-left transition-transform duratio...
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+    at processMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:14014:21)
+    at WebSocket.handleMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13458:52) (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+[browser] ./app/lobby/[lobbyId]/table-stage.tsx:532:7
+Expression expected
+  530 |         </span>
+  531 |       )}
+> 532 |     </>
+      |       ^
+  533 |   )
+  534 |
+  535 |   const shell = `block w-full border-2 px-2.5 py-2 text-left transition-transform duratio...
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+    at processMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:14014:21)
+    at WebSocket.handleMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13458:52) (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+[browser] ./app/lobby/[lobbyId]/table-stage.tsx:532:7
+Expression expected
+  530 |         </span>
+  531 |       )}
+> 532 |     </>
+      |       ^
+  533 |   )
+  534 |
+  535 |   const shell = `block w-full border-2 px-2.5 py-2 text-left transition-transform duratio...
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+    at processMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:14014:21)
+    at WebSocket.handleMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13458:52) (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+[browser] ./app/lobby/[lobbyId]/table-stage.tsx:532:7
+Expression expected
+  530 |         </span>
+  531 |       )}
+> 532 |     </>
+      |       ^
+  533 |   )
+  534 |
+  535 |   const shell = `block w-full border-2 px-2.5 py-2 text-left transition-transform duratio...
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+    at processMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:14014:21)
+    at WebSocket.handleMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13458:52) (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+[browser] ./app/lobby/[lobbyId]/table-stage.tsx:532:7
+Expression expected
+  530 |         </span>
+  531 |       )}
+> 532 |     </>
+      |       ^
+  533 |   )
+  534 |
+  535 |   const shell = `block w-full border-2 px-2.5 py-2 text-left transition-transform duratio...
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+    at processMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:14014:21)
+    at WebSocket.handleMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13458:52) (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+[browser] ./app/lobby/[lobbyId]/table-stage.tsx:532:7
+Expression expected
+  530 |         </span>
+  531 |       )}
+> 532 |     </>
+      |       ^
+  533 |   )
+  534 |
+  535 |   const shell = `block w-full border-2 px-2.5 py-2 text-left transition-transform duratio...
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+    at processMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:14014:21)
+    at WebSocket.handleMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13458:52) (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+[browser] ./app/lobby/[lobbyId]/table-stage.tsx:532:7
+Expression expected
+  530 |         </span>
+  531 |       )}
+> 532 |     </>
+      |       ^
+  533 |   )
+  534 |
+  535 |   const shell = `block w-full border-2 px-2.5 py-2 text-left transition-transform duratio...
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+    at processMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:14014:21)
+    at WebSocket.handleMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13458:52) (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+[browser] ./app/lobby/[lobbyId]/table-stage.tsx:532:7
+Expression expected
+  530 |         </span>
+  531 |       )}
+> 532 |     </>
+      |       ^
+  533 |   )
+  534 |
+  535 |   const shell = `block w-full border-2 px-2.5 py-2 text-left transition-transform duratio...
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+    at processMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:14014:21)
+    at WebSocket.handleMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13458:52) (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+[browser] ./app/lobby/[lobbyId]/table-stage.tsx:532:7
+Expression expected
+  530 |         </span>
+  531 |       )}
+> 532 |     </>
+      |       ^
+  533 |   )
+  534 |
+  535 |   const shell = `block w-full border-2 px-2.5 py-2 text-left transition-transform duratio...
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component Browser]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/lobby/[lobbyId]/table-stage.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/werewolf-actions.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Client Component SSR]
+    ./app/lobby/[lobbyId]/lobby-client.tsx [Server Component]
+    ./app/lobby/[lobbyId]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+    at processMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:14014:21)
+    at WebSocket.handleMessage (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13458:52) (file://C:/Users/roger/Desktop/Informatik aachen/project/website sosialisasi/.next/dev/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13951:21)
+○ Compiling /_error ...
+✓ Compiled in 4.8s
+ GET /lobby/jmw2t6 500 in 10.3s (next.js: 9.3s, proxy.ts: 159ms, application-code: 855ms)
+ GET /lobby/jmw2t6 500 in 10.3s (next.js: 9.9s, proxy.ts: 167ms, application-code: 234ms)
+ GET /lobby/jmw2t6 500 in 10.3s (next.js: 10.0s, proxy.ts: 168ms, application-code: 188ms)
+ GET /rooms 500 in 10.3s (next.js: 10.0s, proxy.ts: 174ms, application-code: 145ms)
+ GET /lobby/jmw2t6 500 in 10.3s (next.js: 10.1s, proxy.ts: 170ms, application-code: 97ms)
+ GET /lobby/jmw2t6 500 in 10.3s (next.js: 10.1s, proxy.ts: 172ms, application-code: 58ms)
+✓ Compiled in 411ms
+⨯ Error: Module [project]/app/rooms/room-client.tsx [app-ssr] (ecmascript) was instantiated because it was required from module [project]/node_modules/next/dist/esm/build/templates/app-page.js?page=/lobby/[lobbyId]/page { METADATA_0 => "[project]/app/favicon.ico.mjs { IMAGE => \"[project]/app/favicon.ico (static in ecmascript, tag client)\" } [app-rsc] (structured image object, ecmascript)", MODULE_1 => "[project]/app/layout.tsx [app-rsc] (ecmascript, Next.js Server Component)", MODULE_2 => "[project]/node_modules/next/dist/client/components/builtin/not-found.js [app-rsc] (ecmascript, Next.js Server Component)", MODULE_3 => "[project]/node_modules/next/dist/client/components/builtin/forbidden.js [app-rsc] (ecmascript, Next.js Server Component)", MODULE_4 => "[project]/node_modules/next/dist/client/components/builtin/unauthorized.js [app-rsc] (ecmascript, Next.js Server Component)", MODULE_5 => "[project]/node_modules/next/dist/client/components/builtin/global-error.js [app-rsc] (ecmascript, Next.js Server Component)", MODULE_6 => "[project]/app/lobby/[lobbyId]/page.tsx [app-rsc] (ecmascript, Next.js Server Component)" } [app-rsc] (ecmascript) <locals>, but the module factory is not available.
+This is often caused by a stale browser cache, misconfigured Cache-Control headers, or a service worker serving outdated responses.
+To fix this, make sure your Cache-Control headers allow revalidation of chunks and review your service worker configuration. As an immediate workaround, try hard-reloading the page, clearing the browser cache, or unregistering any service workers.
+    at ignore-listed frames {
+  digest: '3619801489'
+}
+ GET /lobby/jmw2t6 200 in 6.9s (next.js: 3.4s, proxy.ts: 368ms, application-code: 3.2s)
+ GET /lobby/jmw2t6 200 in 6.9s (next.js: 2.9s, proxy.ts: 360ms, application-code: 3.6s)
+ GET /lobby/jmw2t6 200 in 6.9s (next.js: 3.1s, proxy.ts: 361ms, application-code: 3.5s)
+ GET /lobby/jmw2t6 200 in 6.9s (next.js: 1929ms, proxy.ts: 364ms, application-code: 4.6s)
+ GET /lobby/jmw2t6 200 in 6.9s (next.js: 1686ms, proxy.ts: 360ms, application-code: 4.9s)
+ GET /rooms 200 in 7.1s (next.js: 775ms, proxy.ts: 357ms, application-code: 6.0s)
+ GET /rooms 200 in 2.1s (next.js: 277ms, proxy.ts: 1742ms, application-code: 66ms)
+ GET /rooms 500 in 6.8s (next.js: 664ms, proxy.ts: 190ms, application-code: 5.9s)
+ GET /lobby/jmw2t6 200 in 7.1s (next.js: 1719ms, proxy.ts: 411ms, application-code: 5.0s)
+ GET /lobby/jmw2t6 200 in 6.7s (next.js: 1810ms, proxy.ts: 170ms, application-code: 4.8s)
+ GET /lobby/jmw2t6 200 in 6.8s (next.js: 3.3s, proxy.ts: 197ms, application-code: 3.3s)
+ GET /lobby/jmw2t6 200 in 6.8s (next.js: 3.0s, proxy.ts: 192ms, application-code: 3.6s)
+ GET /lobby/jmw2t6 200 in 6.7s (next.js: 3.3s, proxy.ts: 137ms, application-code: 3.2s)
+ GET /api/socket-ticket 200 in 216ms (next.js: 127ms, proxy.ts: 45ms, application-code: 44ms)
+ GET /api/socket-ticket 200 in 950ms (next.js: 171ms, proxy.ts: 55ms, application-code: 724ms)
+ GET /api/socket-ticket 200 in 799ms (next.js: 10ms, proxy.ts: 774ms, application-code: 15ms)
+ GET /api/socket-ticket 200 in 797ms (next.js: 14ms, proxy.ts: 772ms, application-code: 12ms)
+ GET /api/socket-ticket 200 in 810ms (next.js: 16ms, proxy.ts: 756ms, application-code: 38ms)
+ GET /api/ice 200 in 784ms (next.js: 42ms, proxy.ts: 732ms, application-code: 10ms)
+ GET /api/socket-ticket 200 in 786ms (next.js: 20ms, proxy.ts: 732ms, application-code: 34ms)
+✓ Compiled in 74ms
+ GET /rooms 200 in 349ms (next.js: 65ms, proxy.ts: 49ms, application-code: 236ms)
+ GET /lobby/jmw2t6 200 in 348ms (next.js: 172ms, proxy.ts: 54ms, application-code: 122ms)
+ GET /lobby/jmw2t6 200 in 347ms (next.js: 194ms, proxy.ts: 55ms, application-code: 98ms)
+ GET /lobby/jmw2t6 200 in 344ms (next.js: 211ms, proxy.ts: 56ms, application-code: 77ms)
+ GET /lobby/jmw2t6 200 in 307ms (next.js: 174ms, proxy.ts: 95ms, application-code: 38ms)
+ GET /lobby/jmw2t6 200 in 309ms (next.js: 159ms, proxy.ts: 95ms, application-code: 55ms)
+ GET / 200 in 203ms (next.js: 79ms, proxy.ts: 8ms, application-code: 116ms)
+ GET /api/socket-ticket 200 in 53ms (next.js: 27ms, proxy.ts: 3ms, application-code: 23ms)
+ GET /rooms 200 in 24ms (next.js: 4ms, proxy.ts: 5ms, application-code: 15ms)
+ GET /api/ice 200 in 41ms (next.js: 21ms, proxy.ts: 11ms, application-code: 9ms)
+ GET /api/socket-ticket 200 in 43ms (next.js: 4ms, proxy.ts: 12ms, application-code: 28ms)
+ GET /api/ice 200 in 41ms (next.js: 27ms, proxy.ts: 10ms, application-code: 4ms)
+ GET /api/socket-ticket 200 in 42ms (next.js: 24ms, proxy.ts: 11ms, application-code: 7ms)
+ GET / 200 in 33ms (next.js: 3ms, proxy.ts: 4ms, application-code: 25ms)
+ GET /api/socket-ticket 200 in 21ms (next.js: 4ms, proxy.ts: 8ms, application-code: 10ms)
+ GET /api/socket-ticket 200 in 22ms (next.js: 8ms, proxy.ts: 7ms, application-code: 7ms)
+✓ Compiled in 124ms
+ GET /rooms 200 in 582ms (next.js: 134ms, proxy.ts: 90ms, application-code: 358ms)
+ GET /lobby/jmw2t6 200 in 593ms (next.js: 352ms, proxy.ts: 91ms, application-code: 151ms)
+ GET /lobby/jmw2t6 200 in 592ms (next.js: 316ms, proxy.ts: 90ms, application-code: 186ms)
+ GET /lobby/jmw2t6 200 in 592ms (next.js: 369ms, proxy.ts: 89ms, application-code: 133ms)
+ GET /lobby/jmw2t6 200 in 592ms (next.js: 392ms, proxy.ts: 89ms, application-code: 110ms)
+ GET /lobby/jmw2t6 200 in 592ms (next.js: 418ms, proxy.ts: 92ms, application-code: 82ms)
+ GET / 200 in 600ms (next.js: 87ms, proxy.ts: 90ms, application-code: 423ms)
+✓ Compiled in 112ms
+ GET /rooms 200 in 533ms (next.js: 127ms, proxy.ts: 72ms, application-code: 333ms)
+ GET /lobby/jmw2t6 200 in 546ms (next.js: 290ms, proxy.ts: 76ms, application-code: 179ms)
+ GET /lobby/jmw2t6 200 in 546ms (next.js: 325ms, proxy.ts: 76ms, application-code: 145ms)
+ GET /lobby/jmw2t6 200 in 535ms (next.js: 349ms, proxy.ts: 71ms, application-code: 115ms)
+ GET /lobby/jmw2t6 200 in 535ms (next.js: 372ms, proxy.ts: 70ms, application-code: 92ms)
+ GET /lobby/jmw2t6 200 in 535ms (next.js: 392ms, proxy.ts: 69ms, application-code: 73ms)
+ GET / 200 in 555ms (next.js: 87ms, proxy.ts: 77ms, application-code: 390ms)
+✓ Compiled in 269ms
+ GET /lobby/jmw2t6 200 in 370ms (next.js: 30ms, proxy.ts: 22ms, application-code: 318ms)
+ GET /lobby/jmw2t6 200 in 371ms (next.js: 113ms, proxy.ts: 24ms, application-code: 234ms)
+ GET /lobby/jmw2t6 200 in 367ms (next.js: 160ms, proxy.ts: 22ms, application-code: 185ms)
+ GET /lobby/jmw2t6 200 in 371ms (next.js: 144ms, proxy.ts: 22ms, application-code: 204ms)
+ GET /lobby/jmw2t6 200 in 369ms (next.js: 208ms, proxy.ts: 21ms, application-code: 140ms)
+ GET /api/socket-ticket 200 in 87ms (next.js: 42ms, proxy.ts: 28ms, application-code: 17ms)
+ GET /api/socket-ticket 200 in 95ms (next.js: 49ms, proxy.ts: 25ms, application-code: 21ms)
+ GET /api/socket-ticket 200 in 91ms (next.js: 55ms, proxy.ts: 20ms, application-code: 16ms)
+ GET /api/socket-ticket 200 in 90ms (next.js: 57ms, proxy.ts: 17ms, application-code: 15ms)
+ GET /api/socket-ticket 200 in 89ms (next.js: 63ms, proxy.ts: 16ms, application-code: 9ms)
+✓ Compiled in 335ms
+ GET /rooms 200 in 3.6s (next.js: 558ms, proxy.ts: 448ms, application-code: 2.6s)
+ GET /lobby/jmw2t6 200 in 3.6s (next.js: 2.2s, proxy.ts: 444ms, application-code: 988ms)
+ GET /lobby/jmw2t6 200 in 3.6s (next.js: 1963ms, proxy.ts: 441ms, application-code: 1209ms)
+ GET /lobby/jmw2t6 200 in 3.6s (next.js: 2.5s, proxy.ts: 445ms, application-code: 614ms)
+ GET /lobby/jmw2t6 200 in 3.6s (next.js: 2.3s, proxy.ts: 445ms, application-code: 830ms)
+ GET /lobby/jmw2t6 200 in 3.6s (next.js: 2.7s, proxy.ts: 448ms, application-code: 410ms)
+ GET / 200 in 3.6s (next.js: 870ms, proxy.ts: 444ms, application-code: 2.3s)
+✓ Compiled in 350ms
+✓ Compiled in 6ms
+ GET /rooms 200 in 5.5s (next.js: 906ms, proxy.ts: 434ms, application-code: 4.1s)
+ GET /lobby/jmw2t6 200 in 6.9s (next.js: 2.4s, proxy.ts: 435ms, application-code: 4.1s)
+ GET /lobby/jmw2t6 200 in 6.9s (next.js: 2.9s, proxy.ts: 429ms, application-code: 3.6s)
+ GET /lobby/jmw2t6 200 in 6.9s (next.js: 2.6s, proxy.ts: 433ms, application-code: 3.9s)
+ GET /lobby/jmw2t6 200 in 6.9s (next.js: 2.7s, proxy.ts: 435ms, application-code: 3.8s)
+ GET /lobby/jmw2t6 200 in 6.9s (next.js: 2.8s, proxy.ts: 432ms, application-code: 3.7s)
+ GET / 200 in 7.1s (next.js: 606ms, proxy.ts: 435ms, application-code: 6.1s)
+ GET /rooms 200 in 2.9s (next.js: 671ms, proxy.ts: 370ms, application-code: 1854ms)
+ GET /lobby/jmw2t6 200 in 2.9s (next.js: 1524ms, proxy.ts: 379ms, application-code: 1028ms)
+ GET /lobby/jmw2t6 200 in 2.9s (next.js: 1855ms, proxy.ts: 370ms, application-code: 689ms)
+ GET /lobby/jmw2t6 200 in 2.9s (next.js: 2.2s, proxy.ts: 367ms, application-code: 362ms)
+ GET /lobby/jmw2t6 200 in 2.9s (next.js: 1681ms, proxy.ts: 371ms, application-code: 876ms)
+ GET /lobby/jmw2t6 200 in 2.9s (next.js: 2.0s, proxy.ts: 368ms, application-code: 552ms)
+ GET / 200 in 3.0s (next.js: 422ms, proxy.ts: 375ms, application-code: 2.2s)
+✓ Compiled in 580ms
+ GET /rooms 200 in 4.0s (next.js: 710ms, proxy.ts: 632ms, application-code: 2.6s)
+ GET /lobby/jmw2t6 200 in 4.0s (next.js: 2.0s, proxy.ts: 643ms, application-code: 1316ms)
+ GET /lobby/jmw2t6 200 in 4.0s (next.js: 2.3s, proxy.ts: 640ms, application-code: 1072ms)
+ GET /lobby/jmw2t6 200 in 4.0s (next.js: 2.5s, proxy.ts: 644ms, application-code: 840ms)
+ GET /lobby/jmw2t6 200 in 4.0s (next.js: 2.8s, proxy.ts: 633ms, application-code: 487ms)
+ GET /lobby/jmw2t6 200 in 4.0s (next.js: 2.7s, proxy.ts: 639ms, application-code: 669ms)
+ GET / 200 in 4.0s (next.js: 1059ms, proxy.ts: 644ms, application-code: 2.3s)
+✓ Compiled in 315ms
+ GET /api/socket-ticket 200 in 2.4s (next.js: 1782ms, proxy.ts: 162ms, application-code: 469ms)
+ GET /api/ice 200 in 2.4s (next.js: 447ms, proxy.ts: 1584ms, application-code: 360ms)
+ GET /rooms 200 in 3.5s (next.js: 1313ms, proxy.ts: 482ms, application-code: 1679ms)
+ GET /lobby/jmw2t6 200 in 3.5s (next.js: 2.1s, proxy.ts: 483ms, application-code: 913ms)
+ GET /lobby/jmw2t6 200 in 3.5s (next.js: 2.1s, proxy.ts: 496ms, application-code: 969ms)
+ GET /lobby/jmw2t6 200 in 3.5s (next.js: 2.2s, proxy.ts: 483ms, application-code: 833ms)
+ GET /lobby/jmw2t6 200 in 3.5s (next.js: 2.2s, proxy.ts: 482ms, application-code: 783ms)
+ GET /lobby/jmw2t6 200 in 3.5s (next.js: 2.1s, proxy.ts: 482ms, application-code: 903ms)
+ GET / 200 in 3.8s (next.js: 527ms, proxy.ts: 488ms, application-code: 2.8s)
+✓ Compiled in 827ms
+ GET /rooms 200 in 3.6s (next.js: 1374ms, proxy.ts: 552ms, application-code: 1681ms)
+ GET /lobby/jmw2t6 200 in 3.7s (next.js: 2.0s, proxy.ts: 566ms, application-code: 1117ms)
+ GET /lobby/jmw2t6 200 in 3.6s (next.js: 2.2s, proxy.ts: 546ms, application-code: 915ms)
+ GET /lobby/jmw2t6 200 in 3.6s (next.js: 2.3s, proxy.ts: 540ms, application-code: 771ms)
+ GET /lobby/jmw2t6 200 in 3.6s (next.js: 2.5s, proxy.ts: 537ms, application-code: 541ms)
+ GET /lobby/jmw2t6 200 in 3.6s (next.js: 2.7s, proxy.ts: 535ms, application-code: 391ms)
+ GET / 200 in 3.7s (next.js: 562ms, proxy.ts: 557ms, application-code: 2.5s)
+✓ Compiled in 338ms
+ GET /rooms 200 in 3.0s (next.js: 1150ms, proxy.ts: 457ms, application-code: 1416ms)
+ GET /lobby/jmw2t6 200 in 3.0s (next.js: 1715ms, proxy.ts: 461ms, application-code: 864ms)
+ GET /lobby/jmw2t6 200 in 3.0s (next.js: 1848ms, proxy.ts: 454ms, application-code: 727ms)
+ GET /lobby/jmw2t6 200 in 3.0s (next.js: 2.1s, proxy.ts: 447ms, application-code: 506ms)
+ GET /lobby/jmw2t6 200 in 3.0s (next.js: 1945ms, proxy.ts: 449ms, application-code: 635ms)
+ GET /lobby/jmw2t6 200 in 3.0s (next.js: 2.2s, proxy.ts: 417ms, application-code: 314ms)
+ GET / 200 in 3.1s (next.js: 442ms, proxy.ts: 466ms, application-code: 2.2s)
+✓ Compiled in 759ms
+ GET /rooms 200 in 3.5s (next.js: 1195ms, proxy.ts: 445ms, application-code: 1883ms)
+ GET /lobby/jmw2t6 200 in 3.6s (next.js: 1936ms, proxy.ts: 460ms, application-code: 1175ms)
+ GET /lobby/jmw2t6 200 in 3.5s (next.js: 2.4s, proxy.ts: 448ms, application-code: 732ms)
+ GET /lobby/jmw2t6 200 in 3.5s (next.js: 2.8s, proxy.ts: 443ms, application-code: 309ms)
+ GET /lobby/jmw2t6 200 in 3.5s (next.js: 2.6s, proxy.ts: 440ms, application-code: 450ms)
+ GET /lobby/jmw2t6 200 in 3.6s (next.js: 2.5s, proxy.ts: 452ms, application-code: 578ms)
+ GET / 200 in 3.6s (next.js: 486ms, proxy.ts: 457ms, application-code: 2.6s)
+ GET /rooms 200 in 344ms (next.js: 10ms, proxy.ts: 13ms, application-code: 321ms)
+ GET /api/ice 200 in 263ms (next.js: 204ms, proxy.ts: 25ms, application-code: 33ms)
+ GET /api/socket-ticket 200 in 272ms (next.js: 116ms, proxy.ts: 25ms, application-code: 131ms)
+ GET /rooms 200 in 144ms (next.js: 13ms, proxy.ts: 24ms, application-code: 107ms)
+ GET /api/ice 200 in 30ms (next.js: 12ms, proxy.ts: 11ms, application-code: 7ms)
+ GET /api/socket-ticket 200 in 34ms (next.js: 7ms, proxy.ts: 11ms, application-code: 15ms)
+ GET /rooms 200 in 59ms (next.js: 5ms, proxy.ts: 5ms, application-code: 50ms)
+ GET /api/ice 200 in 28ms (next.js: 11ms, proxy.ts: 10ms, application-code: 7ms)
+ GET /api/socket-ticket 200 in 31ms (next.js: 6ms, proxy.ts: 10ms, application-code: 15ms)
+ GET /rooms 200 in 303ms (next.js: 18ms, proxy.ts: 19ms, application-code: 267ms)
+ GET /api/ice 200 in 140ms (next.js: 53ms, proxy.ts: 60ms, application-code: 28ms)
+ GET /api/socket-ticket 200 in 158ms (next.js: 29ms, proxy.ts: 63ms, application-code: 66ms)
+ GET /rooms 200 in 368ms (next.js: 26ms, proxy.ts: 52ms, application-code: 290ms)
+ GET /api/ice 200 in 137ms (next.js: 61ms, proxy.ts: 43ms, application-code: 33ms)
+ GET /api/socket-ticket 200 in 152ms (next.js: 33ms, proxy.ts: 46ms, application-code: 73ms)
+ GET /rooms 200 in 473ms (next.js: 19ms, proxy.ts: 35ms, application-code: 419ms)
+ GET /api/ice 200 in 149ms (next.js: 57ms, proxy.ts: 51ms, application-code: 41ms)
+ GET /api/socket-ticket 200 in 166ms (next.js: 30ms, proxy.ts: 54ms, application-code: 82ms)
+ GET /wall 200 in 1237ms (next.js: 1025ms, proxy.ts: 49ms, application-code: 163ms)
+ GET /api/socket-ticket 200 in 122ms (next.js: 20ms, proxy.ts: 38ms, application-code: 63ms)
+✓ Compiled in 1347ms
+ GET /rooms 200 in 9.9s (next.js: 2.5s, proxy.ts: 834ms, application-code: 6.5s)
+ GET /rooms 200 in 9.9s (next.js: 2.9s, proxy.ts: 823ms, application-code: 6.1s)
+ GET /lobby/jmw2t6 200 in 11.7s (next.js: 5.9s, proxy.ts: 863ms, application-code: 5.0s)
+ GET /lobby/jmw2t6 200 in 11.7s (next.js: 6.4s, proxy.ts: 851ms, application-code: 4.4s)
+ GET /lobby/jmw2t6 200 in 11.7s (next.js: 6.9s, proxy.ts: 845ms, application-code: 4.0s)
+ GET /lobby/jmw2t6 200 in 11.7s (next.js: 6.2s, proxy.ts: 863ms, application-code: 4.7s)
+ GET /lobby/jmw2t6 200 in 11.7s (next.js: 6.6s, proxy.ts: 850ms, application-code: 4.2s)
+ GET /rooms 200 in 8.2s (next.js: 474ms, proxy.ts: 3.5s, application-code: 4.2s)
+ GET /rooms 200 in 8.2s (next.js: 662ms, proxy.ts: 3.5s, application-code: 4.0s)
+ GET / 200 in 14.0s (next.js: 1134ms, proxy.ts: 855ms, application-code: 12.0s)
+ GET / 200 in 10.4s (next.js: 280ms, proxy.ts: 3.5s, application-code: 6.6s)
+ GET / 200 in 5.7s (next.js: 1800ms, proxy.ts: 320ms, application-code: 3.6s)
+ GET / 200 in 5.7s (next.js: 1997ms, proxy.ts: 317ms, application-code: 3.4s)
+ GET /lobby/jmw2t6 200 in 8.5s (next.js: 678ms, proxy.ts: 919ms, application-code: 6.9s)
+ GET /lobby/jmw2t6 200 in 8.5s (next.js: 905ms, proxy.ts: 909ms, application-code: 6.7s)
+ GET /lobby/jmw2t6 200 in 8.5s (next.js: 1111ms, proxy.ts: 905ms, application-code: 6.5s)
+ GET /rooms 200 in 7.7s (next.js: 1530ms, proxy.ts: 313ms, application-code: 5.9s)
+ GET /rooms 200 in 7.7s (next.js: 1050ms, proxy.ts: 318ms, application-code: 6.4s)
+ GET /lobby/jmw2t6 200 in 8.9s (next.js: 1176ms, proxy.ts: 1106ms, application-code: 6.6s)
+ GET /lobby/jmw2t6 200 in 8.8s (next.js: 2.4s, proxy.ts: 1143ms, application-code: 5.3s)
+ GET /rooms 200 in 5.4s (next.js: 1576ms, proxy.ts: 635ms, application-code: 3.2s)
+ GET /rooms 200 in 5.2s (next.js: 977ms, proxy.ts: 1197ms, application-code: 3.0s)
+ GET /lobby/jmw2t6 200 in 7.2s (next.js: 2.6s, proxy.ts: 1357ms, application-code: 3.2s)
+ GET /lobby/jmw2t6 200 in 7.2s (next.js: 2.8s, proxy.ts: 1353ms, application-code: 3.0s)
+ GET /lobby/jmw2t6 200 in 7.2s (next.js: 3.1s, proxy.ts: 1351ms, application-code: 2.7s)
+ GET /lobby/jmw2t6 200 in 7.2s (next.js: 2.4s, proxy.ts: 1361ms, application-code: 3.4s)
+ GET /lobby/jmw2t6 200 in 6.5s (next.js: 3.4s, proxy.ts: 634ms, application-code: 2.4s)
+ GET /lobby/jmw2t6 200 in 6.5s (next.js: 2.7s, proxy.ts: 1599ms, application-code: 2.2s)
+ GET / 200 in 9.4s (next.js: 389ms, proxy.ts: 2.8s, application-code: 6.3s)
+ GET /lobby/jmw2t6 200 in 2.4s (next.js: 398ms, proxy.ts: 592ms, application-code: 1442ms)
+ GET /lobby/jmw2t6 200 in 2.4s (next.js: 647ms, proxy.ts: 586ms, application-code: 1195ms)
+ GET /lobby/jmw2t6 200 in 2.1s (next.js: 833ms, proxy.ts: 290ms, application-code: 965ms)
+ GET /lobby/jmw2t6 200 in 1915ms (next.js: 1240ms, proxy.ts: 242ms, application-code: 433ms)
+ GET /api/socket-ticket 200 in 410ms (next.js: 248ms, proxy.ts: 56ms, application-code: 107ms)
+ GET / 200 in 821ms (next.js: 33ms, proxy.ts: 158ms, application-code: 630ms)
+ GET /api/socket-ticket 200 in 108ms (next.js: 25ms, proxy.ts: 44ms, application-code: 39ms)
+ GET /lobby 200 in 106ms (next.js: 84ms, proxy.ts: 3ms, application-code: 19ms)
+ GET /api/socket-ticket 200 in 14ms (next.js: 2ms, proxy.ts: 6ms, application-code: 6ms)
+ GET /api/socket-ticket 200 in 14ms (next.js: 5ms, proxy.ts: 5ms, application-code: 5ms)
+ GET /lobby/vqxu28 200 in 30ms (next.js: 11ms, proxy.ts: 3ms, application-code: 16ms)
+ GET /api/socket-ticket 200 in 12ms (next.js: 2ms, proxy.ts: 5ms, application-code: 5ms)
+ GET /api/socket-ticket 200 in 12ms (next.js: 4ms, proxy.ts: 5ms, application-code: 3ms)
+ GET / 200 in 26ms (next.js: 3ms, proxy.ts: 4ms, application-code: 19ms)
+ GET /api/socket-ticket 200 in 14ms (next.js: 2ms, proxy.ts: 5ms, application-code: 6ms)
+ GET /api/socket-ticket 200 in 14ms (next.js: 5ms, proxy.ts: 5ms, application-code: 4ms)
+✓ Compiled in 92ms
+✓ Compiled in 56ms
+ GET / 200 in 142ms (next.js: 68ms, proxy.ts: 39ms, application-code: 35ms)
+✓ Compiled in 51ms
+ GET / 200 in 123ms (next.js: 53ms, proxy.ts: 32ms, application-code: 38ms)
+✓ Compiled in 115ms
+ GET / 200 in 159ms (next.js: 59ms, proxy.ts: 34ms, application-code: 66ms)
+ GET / 200 in 35ms (next.js: 3ms, proxy.ts: 10ms, application-code: 22ms)
+✓ Compiled in 75ms
+ GET / 200 in 151ms (next.js: 53ms, proxy.ts: 34ms, application-code: 64ms)
+ GET / 200 in 38ms (next.js: 2ms, proxy.ts: 14ms, application-code: 22ms)
+ GET / 200 in 132ms (next.js: 3ms, proxy.ts: 8ms, application-code: 121ms)
+ GET /api/socket-ticket 200 in 52ms (next.js: 20ms, proxy.ts: 9ms, application-code: 23ms)
+ GET /wall 200 in 111ms (next.js: 88ms, proxy.ts: 3ms, application-code: 19ms)
+ GET /api/socket-ticket 200 in 14ms (next.js: 2ms, proxy.ts: 6ms, application-code: 6ms)
+ GET /api/socket-ticket 200 in 14ms (next.js: 5ms, proxy.ts: 6ms, application-code: 3ms)
+ GET /rooms 200 in 35ms (next.js: 14ms, proxy.ts: 4ms, application-code: 18ms)
+ GET /api/ice 200 in 45ms (next.js: 25ms, proxy.ts: 11ms, application-code: 8ms)
+ GET /api/socket-ticket 200 in 49ms (next.js: 5ms, proxy.ts: 12ms, application-code: 33ms)
+ GET /api/ice 200 in 48ms (next.js: 33ms, proxy.ts: 11ms, application-code: 4ms)
+ GET /api/socket-ticket 200 in 50ms (next.js: 29ms, proxy.ts: 11ms, application-code: 9ms)
+ GET /lobby 200 in 28ms (next.js: 13ms, proxy.ts: 3ms, application-code: 12ms)
+ GET /api/socket-ticket 200 in 14ms (next.js: 2ms, proxy.ts: 6ms, application-code: 6ms)
+ GET /api/socket-ticket 200 in 14ms (next.js: 5ms, proxy.ts: 5ms, application-code: 4ms)
+ GET /lobby/6jg8m7 200 in 111ms (next.js: 81ms, proxy.ts: 5ms, application-code: 25ms)
+ GET /api/socket-ticket 200 in 18ms (next.js: 2ms, proxy.ts: 8ms, application-code: 7ms)
+ GET /api/socket-ticket 200 in 18ms (next.js: 6ms, proxy.ts: 7ms, application-code: 5ms)
+✓ Compiled in 114ms
+✓ Compiled in 77ms
+✓ Compiled in 77ms

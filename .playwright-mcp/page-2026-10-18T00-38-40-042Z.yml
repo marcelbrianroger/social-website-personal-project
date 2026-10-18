@@ -1,0 +1,11 @@
+- generic [active] [ref=f1e1]:
+  - figure "werewolf" [ref=f1e2]
+  - figure "seer" [ref=f1e14]
+  - figure "guard" [ref=f1e24]
+  - figure "witch" [ref=f1e32]
+  - figure "hunter" [ref=f1e47]
+  - figure "cupid" [ref=f1e59]
+  - figure "jester" [ref=f1e69]
+  - figure "villager" [ref=f1e80]
+  - figure "civilian" [ref=f1e87]
+  - figure "mr-white" [ref=f1e97]

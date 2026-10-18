@@ -1,0 +1,113 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "SOCIAL AACHEN website" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e5]: SOCIAL AACHEN
+        - generic [ref=e6]: website
+      - navigation [ref=e7]:
+        - link "wall" [ref=e8] [cursor=pointer]:
+          - /url: /wall
+        - link "video room" [ref=e9] [cursor=pointer]:
+          - /url: /rooms
+        - link "play" [ref=e10] [cursor=pointer]:
+          - /url: /lobby
+      - generic [ref=e11]:
+        - generic [ref=e13]:
+          - generic [ref=e14]:
+            - term [ref=e15]: aachen
+            - definition [ref=e16]: "--:--"
+          - generic [ref=e17]:
+            - term [ref=e18]: jakarta
+            - definition [ref=e19]: "--:--"
+        - button "SturmReiher221 — change your name" [ref=e21]:
+          - generic [ref=e22]: SturmReiher221
+          - generic [aria-hidden] [ref=e23]: edit
+          - generic [ref=e24]: — change your name
+  - main [ref=e25]:
+    - generic [ref=e26]:
+      - paragraph [ref=e27]: an anonymous noticeboard for indonesians in aachen
+      - heading "Someone is still awake." [level=1] [ref=e28]:
+        - generic [aria-hidden]: Someone is still awake.
+      - generic [ref=e30]:
+        - paragraph [ref=e31]: Write anything on the wall and it deletes itself after 48 hours. Go straight into a video call with whoever is online. Or sit down at a table and play something with five other people. No introductions first, no sign-up.
+        - generic [ref=e32]:
+          - link "Open the wall" [ref=e34] [cursor=pointer]:
+            - /url: /wall
+          - link "Meet someone face to face" [ref=e36] [cursor=pointer]:
+            - /url: /rooms
+          - link "Play a game" [ref=e38] [cursor=pointer]:
+            - /url: /lobby
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - paragraph [ref=e43]: the wall
+          - heading "Everything is gone after 48 hours." [level=2] [ref=e44]
+        - link "pin something up" [ref=e45] [cursor=pointer]:
+          - /url: /wall
+      - paragraph [ref=e46]: Anyone who is online can pin something up. No archive, no undo, nothing you can ask back. Below is what is on it right now, written by whoever was here before you.
+      - paragraph [ref=e49]: Reaching the wall…
+    - generic [ref=e51]:
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - paragraph [ref=e54]: two games at the table
+          - heading "Bring people. Both need a crowd." [level=2] [ref=e55]
+        - link "see who has a table open" [ref=e56] [cursor=pointer]:
+          - /url: /lobby
+      - generic [ref=e57]:
+        - article [ref=e58]:
+          - generic [ref=e59]:
+            - heading "Werewolf" [level=3] [ref=e60]
+            - paragraph [ref=e61]: 5–8
+          - paragraph [ref=e62]: eight roles · night and day · nobody tells the truth
+          - paragraph [ref=e63]: Five to eight players. Every night the wolves take somebody and the village wakes up one short; every day the table argues and hangs a suspect. Eight roles — a Seer who can read one person a night, a Witch holding one save and one kill, a Hunter who shoots back as they die, a Cupid who ties two people together, and a Jester who wins by getting himself hanged.
+          - link "Play Werewolf" [ref=e64] [cursor=pointer]:
+            - /url: /lobby
+        - article [ref=e65]:
+          - generic [ref=e66]:
+            - heading "Mr. White" [level=3] [ref=e67]
+            - paragraph [ref=e68]: 4–8
+          - paragraph [ref=e69]: one word · one liar · four rounds
+          - paragraph [ref=e70]: Four to eight players. Everyone is given the same secret word except one, who has to work it out from what everybody else says without ever giving themselves away. One clue each per round, then the table votes.
+          - link "Play Mr. White" [ref=e71] [cursor=pointer]:
+            - /url: /lobby
+    - generic [ref=e74]:
+      - generic [ref=e75]:
+        - paragraph [ref=e76]: no roles, no rounds
+        - heading "Or just show your face." [level=2] [ref=e77]
+        - paragraph [ref=e78]: Two people per room. Press once and wait until somebody else is waiting too, or type in a room ID if you already arranged it. Video goes straight from browser to browser, never through our server, on our side there is nothing to record.
+      - link "Open a room" [ref=e79] [cursor=pointer]:
+        - /url: /rooms
+    - generic [ref=e81]:
+      - paragraph [ref=e82]: the rules
+      - generic [ref=e83]:
+        - generic [ref=e84]:
+          - term [ref=e85]: Germany only
+          - definition [ref=e86]: Where a request comes from is checked before anything else runs. From outside Germany, this site does not answer at all.
+        - generic [ref=e87]:
+          - term [ref=e88]: Nothing is kept
+          - definition [ref=e89]: The wall holds a note for 48 hours and then throws it away. Games are deleted the moment the room empties. Video is never recorded, because it never reaches us in the first place.
+        - generic [ref=e90]:
+          - term [ref=e91]: No accounts
+          - definition [ref=e92]:
+            - text: "There is nothing to sign up for, and nothing to delete. This is everything the site knows about you:"
+            - generic [ref=e93]: bcccf627-167a-444d-85b5-8a5e02f45fb2
+  - contentinfo [ref=e94]:
+    - generic [ref=e95]:
+      - generic [aria-hidden] [ref=e96]:
+        - list [ref=e100]:
+          - listitem [ref=e101]:
+            - generic [ref=e103]: paper
+          - listitem [ref=e104]:
+            - generic [ref=e106]: stock
+          - listitem [ref=e107]:
+            - generic [ref=e109]: ink
+          - listitem [ref=e110]:
+            - generic [ref=e112]: pink
+          - listitem [ref=e113]:
+            - generic [ref=e115]: yellow
+        - generic [ref=e116]: five inks · one sheet
+      - paragraph [ref=e120]: Set in Bricolage Grotesque, Karla and Courier Prime. The paper grain and the halftone are drawn in CSS rather than photographed — apart from the favicon, this page loads no images.
+      - generic [ref=e121]:
+        - generic [ref=e122]: social aachen website
+        - generic [ref=e123]: only reachable from Germany · nur aus Deutschland
