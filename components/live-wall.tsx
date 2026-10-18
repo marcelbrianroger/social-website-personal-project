@@ -74,8 +74,14 @@ export function LiveWall() {
     if (error) return <SystemNote>{error}</SystemNote>
 
     return (
-      <div className="border-2 border-dashed border-rule px-5 py-14 text-center">
-        <p className="text-ink-soft">
+      // A blank sheet pinned up and waiting, rather than a dashed hole: the
+      // board is empty, not broken.
+      <div className="relative mx-auto max-w-md -rotate-1 bg-sheet-white px-6 pt-10 pb-8 text-center">
+        <span
+          aria-hidden="true"
+          className="absolute left-1/2 top-3 size-3 -translate-x-1/2 rounded-full border-2 border-ink bg-pink"
+        />
+        <p className="text-[1.0625rem] text-ink">
           {connected ? 'Nothing is up there right now.' : 'Reaching the wall…'}
         </p>
 
@@ -107,7 +113,7 @@ export function LiveWall() {
         ))}
       </ul>
 
-      <div className="mt-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3 font-mono text-xs">
+      <div className="mt-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3 font-mono text-sm">
         <p className="text-ink-soft">
           <span className="inline-flex items-center gap-1.5">
             <span

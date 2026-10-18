@@ -1,5 +1,6 @@
 'use client'
 
+import { RolePortrait } from '@/components/role-art'
 import type { MrWhiteRole } from '@/lib/game/mr-white-view'
 
 import { DISPLAY_HEADING, EYEBROW, PANEL } from './controls'
@@ -45,24 +46,25 @@ export function RoleCard({
         <p className={EYEBROW}>your role</p>
 
         {eliminated && (
-          <p className="border border-ink px-1.5 font-mono text-[0.625rem] uppercase tracking-wide text-ink-soft">
+          <p className="border border-ink px-1.5 font-mono text-xs uppercase tracking-wide text-ink-soft">
             eliminated
           </p>
         )}
       </div>
 
-      <p
-        className="mt-1.5 font-display text-2xl leading-none"
-        style={DISPLAY_HEADING}
-      >
-        {role === null
-          ? waiting
-            ? 'In next round'
-            : 'Watching'
-          : isImpostor
-            ? 'Mr. White'
-            : 'Civilian'}
-      </p>
+      <div className="mt-1.5 flex items-end justify-between gap-3">
+        <p className="font-display text-2xl leading-none" style={DISPLAY_HEADING}>
+          {role === null
+            ? waiting
+              ? 'In next round'
+              : 'Watching'
+            : isImpostor
+              ? 'Mr. White'
+              : 'Civilian'}
+        </p>
+
+        {role !== null && <RolePortrait role={role} out={eliminated} />}
+      </div>
 
       {/* ------------------------------------------------------------- word */}
       <p className={`${EYEBROW} mt-5`}>
@@ -82,7 +84,7 @@ export function RoleCard({
         // A blank slip, not a spinner. The dashed rule reads as a form field
         // nobody filled in, which is exactly the position Mr. White is in.
         <p
-          className="mt-1.5 grid h-[2.75rem] place-items-center border-2 border-dashed border-rule font-mono text-[0.6875rem] uppercase tracking-[0.2em] text-ink-soft"
+          className="mt-1.5 grid h-[2.75rem] place-items-center border-2 border-dashed border-rule font-mono text-xs uppercase tracking-[0.2em] text-ink-soft"
           aria-label={
             role === null ? 'No word: you are watching' : 'No word issued'
           }

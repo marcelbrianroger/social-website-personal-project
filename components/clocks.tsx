@@ -31,6 +31,32 @@ function timeIn(timeZone: string): string {
   }).format(new Date())
 }
 
+/**
+ * The same two clocks, said as a sentence — for the home hero, where the time
+ * gap is the reason the headline is true and deserves to be read rather than
+ * glanced at. Same tick, same zones, same empty server render.
+ */
+export function ClockLine() {
+  const [times, setTimes] = useState<string[] | null>(null)
+
+  useEffect(() => {
+    const update = () => setTimes(ZONES.map((zone) => timeIn(zone.timeZone)))
+
+    update()
+    const interval = setInterval(update, 15_000)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <p className="font-mono text-sm text-ink-soft">
+      <span className="tabular-nums text-ink">{times ? times[0] : '--:--'}</span>{' '}
+      in Aachen ·{' '}
+      <span className="tabular-nums text-ink">{times ? times[1] : '--:--'}</span>{' '}
+      in Jakarta
+    </p>
+  )
+}
+
 export function Clocks() {
   const [times, setTimes] = useState<string[] | null>(null)
 
@@ -43,7 +69,7 @@ export function Clocks() {
   }, [])
 
   return (
-    <dl className="flex items-baseline gap-4 font-mono text-[0.6875rem] leading-none text-ink-soft">
+    <dl className="flex items-baseline gap-4 font-mono text-xs leading-none text-ink-soft">
       {ZONES.map((zone, index) => (
         <div key={zone.timeZone} className="flex items-baseline gap-1.5">
           <dt>{zone.label}</dt>

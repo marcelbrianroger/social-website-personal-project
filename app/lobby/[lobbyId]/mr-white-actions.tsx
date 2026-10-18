@@ -251,7 +251,7 @@ export function MrWhiteActions({
                         : 'Accuse one player of being Mr. White. Votes stay hidden until everyone has cast.'}
                     </p>
 
-                    <p className="mt-3 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-[0.6875rem] leading-relaxed text-ink">
+                    <p className="mt-3 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-xs leading-relaxed text-ink">
                       {sent ? (
                         <>
                           You accused{' '}
@@ -261,7 +261,7 @@ export function MrWhiteActions({
                           . Click another chair to move it.
                         </>
                       ) : (
-                        'Click their chair at the table. Your own counts, if it comes to that.'
+                        'Click their card on the board. Your own counts, if it comes to that.'
                       )}
                     </p>
                   </div>
@@ -324,7 +324,7 @@ export function MrWhiteActions({
                   {/* Said before the next deal, not after: the roster is about to
                   be bigger than the one that just played. */}
                   {waiting.length > 0 && (
-                    <p className="mt-2 font-mono text-[0.6875rem] leading-relaxed text-ink">
+                    <p className="mt-2 font-mono text-xs leading-relaxed text-ink">
                       <span className="bg-yellow px-1">
                         {waiting.length} more{' '}
                         {waiting.length === 1 ? 'person' : 'people'}
@@ -411,7 +411,7 @@ function ReadyToVote({
 
       <p
         aria-live="polite"
-        className="mt-2 font-mono text-[0.6875rem] text-ink-soft"
+        className="mt-2 font-mono text-xs text-ink-soft"
       >
         <span className="tabular-nums text-ink">
           {ready} of {needed}
@@ -457,7 +457,7 @@ function NotInThisRound() {
         deal takes everyone at the table, and your chair is already there.
       </p>
 
-      <p className="mt-3 font-mono text-[0.6875rem] leading-relaxed text-ink-soft">
+      <p className="mt-3 font-mono text-xs leading-relaxed text-ink-soft">
         Chat is shut until then — watching players cannot talk to a table
         mid-game.
       </p>
@@ -502,7 +502,7 @@ function WordForm({
             {sent}
           </span>
         </p>
-        <p className="mt-3 font-mono text-[0.6875rem] text-ink-soft">
+        <p className="mt-3 font-mono text-xs text-ink-soft">
           Waiting on the rest of the table.
         </p>
       </div>

@@ -9,6 +9,7 @@ import {
   READING,
   SHELL,
 } from '@/components/site-chrome'
+import { GAME_ART } from '@/components/home-art'
 import { GAMES } from '@/lib/game/catalogue'
 import { useOpenLobbies } from '@/lib/lobby/use-open-lobbies'
 
@@ -120,7 +121,7 @@ export function LobbyEntry() {
             nobody in it should say so rather than look broken. */}
         <p
           aria-live="polite"
-          className="font-mono text-[0.6875rem] tabular-nums text-ink-soft"
+          className="font-mono text-xs tabular-nums text-ink-soft"
         >
           {phase === 'connecting' ? (
             'looking…'
@@ -147,34 +148,47 @@ export function LobbyEntry() {
 
       {/* ------------------------------------------------------- the games */}
       <section className="mt-10" aria-label="Games you can play">
-        <div className="grid gap-px border-2 border-ink bg-ink md:grid-cols-2">
-          {GAMES.map((game) => (
-            <article key={game.id} className="bg-stock p-6">
-              <div className="flex items-baseline justify-between gap-4">
-                <h2 className="font-display text-2xl leading-none" style={DISPLAY}>
-                  {game.label}
-                </h2>
-                <p className="shrink-0 border-2 border-ink bg-paper px-2 py-0.5 font-mono text-[0.6875rem] tabular-nums text-ink">
-                  {game.minPlayers}–{game.maxPlayers}
-                </p>
-              </div>
+        {/* The same two sheets, paper and drawing as on the home page, so a
+            game looks like itself wherever it is named. */}
+        <div className="grid gap-5 md:grid-cols-2 md:gap-6">
+          {GAMES.map((game) => {
+            const art = GAME_ART[game.id]
 
-              <p className="mt-3 border-y-2 border-rule py-2 font-mono text-[0.6875rem] lowercase tracking-wide text-ink-soft">
-                {game.spec}
-              </p>
+            return (
+              <article
+                key={game.id}
+                className={`flex gap-5 p-6 ${art?.sheet ?? 'bg-sheet-white'}`}
+              >
+                {art && <art.Art className="hidden h-20 w-auto shrink-0 sm:block" />}
 
-              <p className="mt-4 text-[0.9375rem] leading-relaxed text-ink">
-                {game.pitch}
-              </p>
-            </article>
-          ))}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <h2 className="font-display text-2xl leading-none" style={DISPLAY}>
+                      {game.label}
+                    </h2>
+                    <p className="shrink-0 font-mono text-sm tabular-nums text-ink">
+                      {game.minPlayers}–{game.maxPlayers} players
+                    </p>
+                  </div>
+
+                  <p className="mt-3 border-y border-ink/25 py-2 font-mono text-xs lowercase tracking-wide text-ink-soft">
+                    {game.spec}
+                  </p>
+
+                  <p className="mt-3 text-[1rem] leading-relaxed text-ink">
+                    {game.pitch}
+                  </p>
+                </div>
+              </article>
+            )
+          })}
         </div>
       </section>
 
       {/* --------------------------------------------------- the two doors */}
       <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] lg:gap-10">
         {/* Door one: start something. */}
-        <section className="border-2 border-ink bg-stock p-6">
+        <section className="border-2 border-ink bg-sheet-white p-6 sm:p-7">
           <h2 className="font-display text-xl leading-tight" style={DISPLAY}>
             Open a table
           </h2>
@@ -285,7 +299,7 @@ export function LobbyEntry() {
                         {lobby.lobbyId}
                       </span>
                     </p>
-                    <p className="mt-2 font-mono text-[0.6875rem] text-ink-soft">
+                    <p className="mt-2 font-mono text-xs text-ink-soft">
                       <span className="tabular-nums text-ink">
                         {lobby.seated}/{lobby.capacity}
                       </span>

@@ -107,6 +107,13 @@ export const FLAT_PAPER = `reg-flat ${PRESS} ${PAPER}`
  * greeted you anywhere else. A social place should say your name back to you on
  * every screen, so it sits in the chrome now.
  */
+/** The three doors, in the order the home page argues for them. */
+const NAV = [
+  { href: '/wall', label: 'wall' },
+  { href: '/rooms', label: 'video room' },
+  { href: '/lobby', label: 'play' },
+] as const
+
 export function SiteHeader({ session }: { session: AnonymousSession | null }) {
   return (
     <header className="border-b-2 border-ink bg-paper">
@@ -115,15 +122,21 @@ export function SiteHeader({ session }: { session: AnonymousSession | null }) {
       >
         {/* Masthead. The name is long, so it is set as a stacked lockup
             rather than squeezed onto one line. */}
-        <Link href="/" className="group shrink-0 leading-none">
+        {/* The lockup carries a pin, the same mark every note on the wall
+            wears — the one shape this site owns, used as its signature. */}
+        <Link
+          href="/"
+          className="group flex shrink-0 items-center gap-2.5 leading-none"
+        >
           <span
-            className="block font-display text-[1.0625rem] leading-none tracking-[-0.02em] group-hover:text-pink"
+            aria-hidden="true"
+            className="size-3.5 rounded-full border-2 border-ink bg-pink transition-transform duration-150 group-hover:-rotate-12 group-hover:scale-110"
+          />
+          <span
+            className="block font-display text-[1.1875rem] leading-none tracking-[-0.02em]"
             style={{ fontVariationSettings: "'wght' 800, 'wdth' 90" }}
           >
-            SOCIAL AACHEN
-          </span>
-          <span className="mt-1 block font-mono text-[0.625rem] uppercase tracking-[0.34em] text-ink-soft">
-            website
+            Social Aachen
           </span>
         </Link>
 
@@ -133,16 +146,16 @@ export function SiteHeader({ session }: { session: AnonymousSession | null }) {
             see `marker-hover`. The px-1 is permanent so the marker has a little
             bleed around the word; putting it on hover instead would shift the
             whole nav sideways every time the pointer crossed it. */}
-        <nav className="order-3 flex items-baseline gap-5 font-mono text-xs sm:order-none sm:flex-1">
-          <Link href="/wall" className="marker-hover px-1">
-            wall
-          </Link>
-          <Link href="/rooms" className="marker-hover px-1">
-            video room
-          </Link>
-          <Link href="/lobby" className="marker-hover px-1">
-            play
-          </Link>
+        <nav className="order-3 -mx-1 flex items-center gap-2 font-mono text-sm sm:order-none sm:flex-1 sm:gap-4">
+          {NAV.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="marker-hover inline-flex min-h-11 items-center px-1.5"
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
 
         <div className="flex shrink-0 items-center gap-x-5 gap-y-2">
@@ -157,105 +170,53 @@ export function SiteHeader({ session }: { session: AnonymousSession | null }) {
 }
 
 /**
- * The inks this site is printed in, in the order the stylesheet declares them.
+ * The foot of the board.
  *
- * This is the colour bar a real print job carries out in the trim area so the
- * operator can see, at a glance, that every plate is inking correctly. Here it
- * does the same job for a different reader: it says the palette was SPECIFIED —
- * five inks, chosen, not a theme's defaults — to someone who would never think
- * to open a stylesheet.
- */
-const INKS = [
-  { name: 'paper', swatch: 'bg-paper' },
-  { name: 'stock', swatch: 'bg-stock' },
-  { name: 'ink', swatch: 'bg-ink' },
-  { name: 'pink', swatch: 'bg-pink' },
-  { name: 'yellow', swatch: 'bg-yellow' },
-] as const
-
-/**
- * A registration target — the crosshair-in-a-circle printed outside the trim so
- * the plates can be lined up against each other. It is the single most legible
- * mark in all of printing: nobody needs it explained, and nothing else looks
- * remotely like it.
- */
-function RegistrationMark() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1"
-      className="shrink-0 text-ink-soft"
-    >
-      <circle cx="8" cy="8" r="4.5" />
-      <path d="M8 0v16M0 8h16" />
-    </svg>
-  )
-}
-
-/**
- * The trim edge.
- *
- * Everything in the top row is print furniture: marks that belong to the SHEET
- * rather than to the message, and which a printer would guillotine off. Keeping
- * them is the joke and the point — this is a printed object that never gets
- * trimmed, so its furniture stays visible.
- *
- * All of it is `aria-hidden`. A screen reader announcing "paper stock ink pink
- * yellow" is noise; the marks carry their meaning entirely by looking like
- * themselves.
+ * It used to carry a colour bar, registration marks and a colophon naming the
+ * typefaces — print furniture that spoke to whoever designed the page rather
+ * than to whoever is reading it. What a visitor actually wants at the bottom is
+ * the three doors again and the two facts that decide whether they trust the
+ * place: where it works, and what it keeps.
  */
 export function SiteFooter() {
   return (
-    <footer className="mt-auto border-t-2 border-ink">
-      <div className={`${SHELL} py-6`}>
-        <div
-          aria-hidden="true"
-          className="flex items-center gap-x-5 gap-y-3 border-b border-rule pb-4"
-        >
-          <RegistrationMark />
-
-          <ul className="flex items-end gap-2">
-            {INKS.map((ink) => (
-              <li key={ink.name} className="flex flex-col items-center gap-1.5">
-                <span
-                  className={`block size-3.5 border border-rule ${ink.swatch}`}
-                />
-                <span className="font-mono text-[0.5rem] lowercase tracking-wide text-ink-soft">
-                  {ink.name}
-                </span>
-              </li>
-            ))}
-          </ul>
-
-          <span className="ml-auto hidden font-mono text-[0.5625rem] uppercase tracking-[0.3em] text-ink-soft sm:block">
-            five inks · one sheet
-          </span>
-
-          <RegistrationMark />
+    <footer className="mt-auto border-t-2 border-ink bg-ink text-paper">
+      <div
+        className={`${SHELL} grid gap-x-10 gap-y-8 py-10 sm:grid-cols-[1fr_auto] sm:items-end`}
+      >
+        <div>
+          <p
+            className="flex items-center gap-2.5 font-display text-2xl leading-none tracking-[-0.02em]"
+            style={{ fontVariationSettings: "'wght' 800, 'wdth' 90" }}
+          >
+            <span
+              aria-hidden="true"
+              className="size-3.5 rounded-full border-2 border-paper bg-pink"
+            />
+            Social Aachen
+          </p>
+          <p className="mt-4 max-w-[46ch] text-[0.9375rem] leading-relaxed text-paper/85">
+            Nothing here is kept: notes come down after 48 hours, tables are
+            cleared when the last person leaves, and video never touches the
+            server.
+          </p>
         </div>
 
-        {/*
-          The colophon — the note at the back of a book saying how it was made.
-          Every claim in it is checkable, and the favicon caveat is not padding:
-          the first draft said "no image files at all", which `app/favicon.ico`
-          makes false on every single page load. A colophon that overstates is
-          worse than no colophon, because the whole reason it earns any trust is
-          that a reader could go and check it.
-        */}
-        <p className="mt-4 max-w-[64ch] font-mono text-[0.6875rem] leading-relaxed text-ink-soft">
-          Set in Bricolage Grotesque, Karla and Courier Prime. The paper grain
-          and the halftone are drawn in CSS rather than photographed — apart
-          from the favicon, this page loads no images.
+        <nav className="flex flex-wrap gap-x-5 gap-y-1 font-mono text-sm">
+          {NAV.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="inline-flex min-h-11 items-center underline decoration-paper/40 underline-offset-4 hover:decoration-yellow"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
+        <p className="border-t border-paper/25 pt-5 font-mono text-xs text-paper/75 sm:col-span-2">
+          only reachable from Germany · nur aus Deutschland · hanya dari Jerman
         </p>
-
-        <div className="mt-4 flex flex-wrap items-baseline justify-between gap-3 font-mono text-[0.6875rem] text-ink-soft">
-          <span>social aachen website</span>
-          <span>only reachable from Germany · nur aus Deutschland</span>
-        </div>
       </div>
     </footer>
   )
@@ -298,7 +259,7 @@ export function ConnectionStatus({
   detail?: string
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[0.6875rem] text-ink-soft">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-ink-soft">
       <span className="flex items-center gap-1.5">
         {/* Breathing only while connected. A dropped connection must read as
             STOPPED — an indicator that keeps moving after the socket has gone

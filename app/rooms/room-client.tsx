@@ -49,9 +49,12 @@ const STAGE_SHELL = WIDE
  */
 const STAGE_HEIGHT = 'h-[calc(100svh-10.5rem)] min-h-[18rem]'
 
-/** A floating chip on the call controls. Flat ink, no pretend hardware. */
+/**
+ * A floating chip on the call controls, printed for the dark plate the stage
+ * sits on: paper while it is on, pink while it is off, never a pretend button.
+ */
 const CONTROL =
-  'border-2 border-ink px-4 py-2.5 font-mono text-xs transition-colors'
+  'min-h-11 border-2 px-4 py-2 font-mono text-sm transition-colors'
 
 export function RoomClient() {
   const {
@@ -85,20 +88,25 @@ export function RoomClient() {
   // Off is a pink stamp rather than a dimmed button: muted is a state other
   // people are affected by, so it has to read across the room, not on inspection.
   const micChip = micEnabled
-    ? `${CONTROL} bg-ink text-paper hover:bg-pink hover:text-ink`
-    : `${CONTROL} bg-pink text-ink`
+    ? `${CONTROL} border-paper bg-paper text-ink hover:bg-yellow hover:border-yellow`
+    : `${CONTROL} border-pink bg-pink text-ink`
   const cameraChip = cameraEnabled
-    ? `${CONTROL} bg-ink text-paper hover:bg-pink hover:text-ink`
-    : `${CONTROL} bg-pink text-ink`
+    ? `${CONTROL} border-paper bg-paper text-ink hover:bg-yellow hover:border-yellow`
+    : `${CONTROL} border-pink bg-pink text-ink`
 
   if (inRoom) {
     return (
-      <div className={`${STAGE_SHELL} py-4`}>
+      <>
+      {/* THE STAGE IS THE DARK PLATE — the same one the home page prints its
+          video section on. Faces want a dark surround, and it separates the
+          call from the paper the games below are played on. */}
+      <div className="bg-ink pb-4 text-paper">
+      <div className={`${STAGE_SHELL} pt-4`}>
         {/* Room bar. Everything the lobby asked is settled by the time you are
             in here, so this is one line: where you are, and whether it is up. */}
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
           <div className="flex items-baseline gap-2">
-            <span className="font-mono text-[0.6875rem] lowercase tracking-wide text-ink-soft">
+            <span className="font-mono text-sm lowercase text-paper/75">
               room
             </span>
             <span className="bg-yellow px-1.5 font-mono text-sm text-ink">
@@ -106,11 +114,13 @@ export function RoomClient() {
             </span>
           </div>
 
-          <ConnectionStatus
-            connected
-            nickname={session?.nickname ?? null}
-            detail={peer ? peer.connectionState : 'waiting for a partner'}
-          />
+          <p className="flex items-center gap-2 font-mono text-sm text-paper/75">
+            <span
+              aria-hidden="true"
+              className="size-2 animate-breathe rounded-full bg-pink"
+            />
+            {peer ? peer.connectionState : 'waiting for a partner'}
+          </p>
         </div>
 
         {error && (
@@ -143,6 +153,7 @@ export function RoomClient() {
               label={session ? `${session.nickname} (you)` : 'You'}
               muted
               mirrored
+              tone="you"
               status={cameraEnabled && localStream ? undefined : 'camera off'}
             />
           </div>
@@ -152,6 +163,7 @@ export function RoomClient() {
               className="h-full w-full"
               stream={peer.stream}
               label={peer.nickname}
+              tone="them"
               status={
                 peer.connectionState === 'connected'
                   ? undefined
@@ -163,7 +175,7 @@ export function RoomClient() {
           {!peer && (
             // Clear of both the tile's own centred placeholder and the control
             // bar under it.
-            <p className="pointer-events-none absolute inset-x-0 bottom-[4.5rem] z-10 mx-auto w-fit max-w-[calc(100%-1.5rem)] border-2 border-ink bg-ink px-4 py-2 text-center font-mono text-xs text-paper">
+            <p className="pointer-events-none absolute inset-x-0 bottom-[4.5rem] z-10 mx-auto w-fit max-w-[calc(100%-1.5rem)] bg-paper px-4 py-2 text-center font-mono text-sm text-ink">
               Waiting for somebody else to join{' '}
               <span className="bg-yellow px-1 text-ink">{roomId}</span>
             </p>
@@ -193,13 +205,16 @@ export function RoomClient() {
             <button
               type="button"
               onClick={leave}
-              className={`pointer-events-auto ${CONTROL} bg-paper text-ink hover:bg-pink`}
+              className={`pointer-events-auto ${CONTROL} border-paper bg-ink text-paper hover:border-pink hover:bg-pink hover:text-ink`}
             >
               Leave
             </button>
           </div>
         </section>
+      </div>
+      </div>
 
+      <div className={`${STAGE_SHELL} py-6`}>
         {/*
          * One room, two things to do in it. Each panel owns its own view of the
          * running game and shuts its own Start button when the other one is
@@ -209,7 +224,7 @@ export function RoomClient() {
          * Side by side once the screen is wide enough that stacking them would
          * leave half the page empty next to each panel.
          */}
-        <div className="mt-4 grid gap-4 xl:grid-cols-2 xl:items-start">
+        <div className="grid gap-5 xl:grid-cols-2 xl:items-start">
           <GameBoard
             socket={socket}
             roomId={roomId}
@@ -224,6 +239,7 @@ export function RoomClient() {
           />
         </div>
       </div>
+      </>
     )
   }
 
@@ -254,11 +270,11 @@ export function RoomClient() {
        *
        * These used to be two full-width blocks with an "or" rule set between
        * them, which spent most of a screen saying that a button and a text
-       * field are alternatives. The hairline between the halves says it
-       * instead: a 2px gap over an ink ground is the same rule, drawn once.
+       * field are alternatives. Two sheets of different paper side by side
+       * say it instead — two separate notices, pick one.
        */}
-      <section className="mt-8 grid gap-0.5 border-2 border-ink bg-ink sm:grid-cols-[1.15fr_1fr]">
-        <div className="flex flex-col justify-between gap-5 bg-stock p-6">
+      <section className="mt-8 grid gap-5 sm:grid-cols-[1.15fr_1fr] sm:gap-6">
+        <div className="flex flex-col justify-between gap-5 bg-sheet-yellow p-6 sm:p-7">
           <div>
             <h2
               className="font-display text-xl leading-tight"
@@ -294,7 +310,7 @@ export function RoomClient() {
         </div>
 
         <form
-          className="flex flex-col justify-between gap-5 bg-stock p-6"
+          className="flex flex-col justify-between gap-5 bg-sheet-blue p-6 sm:p-7"
           onSubmit={(event) => {
             event.preventDefault()
             if (input.trim()) void join(input.trim())
@@ -319,7 +335,7 @@ export function RoomClient() {
               disabled={busy || searching}
               placeholder="aachen-1"
               aria-label="Room ID"
-              className="min-w-32 flex-1 border-2 border-ink bg-paper px-4 py-2.5 font-mono text-sm text-ink outline-none placeholder:text-ink-soft/70 disabled:opacity-50"
+              className="min-h-11 min-w-32 flex-1 border-2 border-ink bg-sheet-white px-4 py-2.5 font-mono text-sm text-ink outline-none placeholder:text-ink-soft/70 disabled:opacity-50"
             />
             <button
               type="submit"

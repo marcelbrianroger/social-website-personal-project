@@ -72,15 +72,22 @@ export function WallClient() {
         />
       </div>
 
-      {/* A blank slip, waiting to be filled in. */}
+      {/* A blank slip, waiting to be filled in — the same white sheet and pin
+          a note will wear once it is up, so writing one looks like what it
+          becomes. */}
       <form
-        className="mt-10 border-2 border-ink bg-stock p-5"
+        className="relative mt-10 border-2 border-ink bg-sheet-white px-5 pt-9 pb-5 sm:px-7"
         onSubmit={async (event) => {
           event.preventDefault();
           if (!canPost) return;
           if (await post(draft)) setDraft("");
         }}
       >
+        <span
+          aria-hidden="true"
+          className="absolute left-[12px] top-[12px] size-3 rounded-full border-2 border-ink bg-pink"
+        />
+
         <textarea
           value={draft}
           onChange={(event) => {
@@ -121,24 +128,28 @@ export function WallClient() {
         </SystemNote>
       )}
 
-      {messages.length === 0 ? (
-        <p className="mt-10 border-2 border-dashed border-rule px-5 py-16 text-center text-ink-soft">
-          The wall is empty. Pin up the first one.
-        </p>
-      ) : (
-        <ul className={`${BOARD} mt-10`}>
-          {messages.map((message, index) => (
-            <WallSlip
-              key={message.id}
-              message={message}
-              slot={index}
-              onOpen={() => openNoteById(message.id)}
-            />
-          ))}
-        </ul>
-      )}
+      {/* The board: the darker stock and its halftone, so every note is
+          visibly pinned to something. */}
+      <div className="board-ground mt-10 border-2 border-ink p-2 sm:p-4">
+        {messages.length === 0 ? (
+          <p className="mx-auto my-12 max-w-md -rotate-1 bg-sheet-white px-6 py-10 text-center text-[1.0625rem] text-ink">
+            The wall is empty. Pin up the first one.
+          </p>
+        ) : (
+          <ul className={BOARD}>
+            {messages.map((message, index) => (
+              <WallSlip
+                key={message.id}
+                message={message}
+                slot={index}
+                onOpen={() => openNoteById(message.id)}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
 
-      <p className="mt-10 max-w-2xl border-t-2 border-ink pt-5 text-sm leading-relaxed text-ink-soft">
+      <p className="mt-10 max-w-2xl border-t-2 border-ink pt-5 text-[0.9375rem] leading-relaxed text-ink-soft">
         Everything goes through a filter before it shows up. No links, and no
         more than five notes a minute — replies included.
       </p>

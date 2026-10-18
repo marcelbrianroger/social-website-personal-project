@@ -43,14 +43,19 @@ export const SECONDARY = `${PRESS_PAPER} px-5 py-2.5 text-sm`
 
 /** Text entry. Square, typed, no focus ring of its own — `:focus-visible` is global. */
 export const FIELD =
-  'w-full border-2 border-ink bg-paper px-3 py-2.5 font-mono text-sm text-ink outline-none placeholder:text-ink-soft/70 disabled:opacity-50'
+  'min-h-11 w-full border-2 border-ink bg-sheet-white px-3 py-2.5 font-mono text-sm text-ink outline-none placeholder:text-ink-soft/70 disabled:opacity-50'
 
 /** Small caps label above a block. The mono face does the "typed" work. */
 export const EYEBROW =
-  'font-mono text-[0.6875rem] lowercase tracking-wide text-ink-soft'
+  'font-mono text-xs lowercase tracking-wide text-ink-soft'
 
-/** Panel. Square corners, fat rule, second paper stock — never a shadow. */
-export const PANEL = 'border-2 border-ink bg-stock'
+/**
+ * Panel. A sheet of white stock laid on the page — square corners, no outline,
+ * never a shadow. It used to be the grey stock inside a fat ink rule, and with
+ * four of those on one screen the table read as a form; a sheet against the
+ * paper is separation enough, and leaves the ink rule for the table itself.
+ */
+export const PANEL = 'bg-sheet-white'
 
 /** Display heading, at the weight and width the rest of the site uses. */
 export const DISPLAY_HEADING: React.CSSProperties = {
@@ -95,7 +100,7 @@ export function Timestamp({ at, className = '' }: { at: number; className?: stri
   return (
     <time
       dateTime={new Date(at).toISOString()}
-      className={`font-mono text-[0.625rem] tabular-nums text-ink-soft ${className}`}
+      className={`font-mono text-xs tabular-nums text-ink-soft ${className}`}
     >
       {label}
     </time>

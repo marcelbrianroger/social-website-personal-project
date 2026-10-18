@@ -178,7 +178,7 @@ export function GameBoard({
   }
 
   return (
-    <section className="border-2 border-ink bg-stock p-6">
+    <section className="bg-sheet-yellow p-6 sm:p-7">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2
@@ -194,7 +194,7 @@ export function GameBoard({
             {mine && mine.finished && outcomeText(mine)}
             {mine && !mine.finished && state && turnText(state)}
             {mine && !mine.finished && myMark && (
-              <span className="ml-2 bg-yellow px-1.5 font-mono text-[0.6875rem]">
+              <span className="ml-2 bg-ink px-1.5 font-mono text-xs text-paper">
                 you are {myMark}
               </span>
             )}
@@ -217,7 +217,7 @@ export function GameBoard({
           // replay even when the same rejection repeats, but remounting would
           // re-draw every win stroke on the grid along with it. The nonce only
           // ever increments, so consecutive rejections always flip the parity.
-          className={`relative mt-6 grid w-full max-w-[26rem] grid-cols-3 gap-0.5 border-2 border-ink bg-ink ${
+          className={`relative mt-6 grid w-full max-w-[32rem] grid-cols-3 gap-0.5 border-2 border-ink bg-ink ${
             rejection
               ? rejectionNonce % 2 === 0
                 ? 'animate-reject'
@@ -266,7 +266,7 @@ export function GameBoard({
                         aria-label={`Board ${board + 1}, square ${cell + 1}${
                           mark ? `, ${mark}` : ', empty'
                         }`}
-                        className={`grid aspect-square place-items-center font-display text-lg text-ink ${cellTone} ${
+                        className={`grid aspect-square place-items-center font-display text-xl text-ink ${cellTone} ${
                           playable
                             ? 'cursor-pointer hover:bg-yellow'
                             : 'cursor-not-allowed'
@@ -325,7 +325,7 @@ export function GameBoard({
       )}
 
       {state && !finished && (
-        <p className="mt-3 font-mono text-[0.6875rem] text-ink-soft">
+        <p className="mt-3 font-mono text-xs text-ink-soft">
           {anywhere
             ? 'The board you were sent to is already decided. This turn is free.'
             : 'The square you take names the board they have to answer in.'}
@@ -339,7 +339,7 @@ export function GameBoard({
       )}
 
       {mine && (
-        <p className="mt-5 font-mono text-[0.6875rem] text-ink-soft">
+        <p className="mt-5 font-mono text-xs text-ink-soft">
           v{mine.version} ·{' '}
           {mine.players.map((player) => player.nickname).join(' vs ')}
         </p>

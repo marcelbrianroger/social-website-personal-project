@@ -72,7 +72,7 @@ export function IdentityChip({ session }: { session: AnonymousSession | null }) 
 
   if (!session) {
     return (
-      <span className="font-mono text-[0.6875rem] text-ink-soft">
+      <span className="font-mono text-xs text-ink-soft">
         no name yet
       </span>
     )
@@ -162,7 +162,7 @@ export function IdentityChip({ session }: { session: AnonymousSession | null }) 
         </span>
         <span
           aria-hidden="true"
-          className="shrink-0 font-mono text-[0.5625rem] uppercase tracking-wide"
+          className="shrink-0 font-mono text-xs uppercase tracking-wide"
         >
           edit
         </span>
@@ -177,7 +177,7 @@ export function IdentityChip({ session }: { session: AnonymousSession | null }) 
           // left-anchored panel would hang off the viewport on mobile. The
           // entry scales from that same top-right corner — see `pop-open` in
           // globals.css — so the panel visibly belongs to the chip above it.
-          className="animate-pop-open absolute right-0 z-40 mt-2 w-[17rem] border-2 border-ink bg-stock p-4"
+          className="animate-pop-open absolute right-0 z-40 mt-2 w-[17rem] border-2 border-ink bg-sheet-white p-4"
         >
           <form
             onSubmit={(event) => {
@@ -187,7 +187,7 @@ export function IdentityChip({ session }: { session: AnonymousSession | null }) 
           >
             <label
               htmlFor="nickname"
-              className="block font-mono text-[0.6875rem] lowercase tracking-wide text-ink-soft"
+              className="block font-mono text-xs lowercase tracking-wide text-ink-soft"
             >
               your name here
             </label>
@@ -210,7 +210,7 @@ export function IdentityChip({ session }: { session: AnonymousSession | null }) 
               style={{ fontVariationSettings: "'wght' 700, 'wdth' 95" }}
             />
 
-            <p className="mt-2 font-mono text-[0.625rem] leading-relaxed text-ink-soft">
+            <p className="mt-2 font-mono text-xs leading-relaxed text-ink-soft">
               {looksGenerated(nickname)
                 ? 'The site issued this one. It is yours to overwrite.'
                 : 'You chose this one.'}{' '}
@@ -219,7 +219,7 @@ export function IdentityChip({ session }: { session: AnonymousSession | null }) 
 
             <div className="mt-3 flex items-center justify-between gap-2">
               <span
-                className={`font-mono text-[0.625rem] tabular-nums ${
+                className={`font-mono text-xs tabular-nums ${
                   remaining < 0 ? 'bg-pink px-1 text-paper' : 'text-ink-soft'
                 }`}
               >
@@ -248,7 +248,7 @@ export function IdentityChip({ session }: { session: AnonymousSession | null }) 
             {error && (
               <p
                 role="alert"
-                className="mt-3 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-[0.6875rem] leading-relaxed text-ink"
+                className="mt-3 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-xs leading-relaxed text-ink"
               >
                 {error}
               </p>

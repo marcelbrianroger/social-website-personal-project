@@ -25,7 +25,7 @@ import {
 } from '@/lib/game/werewolf-view'
 
 import { DISPLAY_HEADING, EYEBROW, PANEL, PRIMARY, SECONDARY } from './controls'
-import { TableStage, type SeatTargeting } from './table-stage'
+import { TableStage, type SeatTargeting, type TablePlate } from './table-stage'
 
 /** Werewolf's own limits, mirrored from `server/src/games/werewolf.ts`. */
 const MIN_PLAYERS = 5
@@ -62,6 +62,19 @@ const MAX_PLAYERS = 8
  * before anything is sent. The Witch has two independent potions and may spend
  * both in a night, so her panel stays open until she says she is done.
  */
+/**
+ * Which light the table is in. The deal, Cupid's beat, the pack and the Witch
+ * all happen with eyes closed, so they are night; everything from dawn to the
+ * verdict is played in the open. A finished game drops back to plain stock —
+ * the table is done, it has no time of day any more.
+ */
+const NIGHT_PHASES = new Set(['reveal', 'nightZero', 'night', 'witch'])
+
+function plateFor(table: WerewolfTable | null): TablePlate {
+  if (!table || table.phase === 'finished') return null
+  return NIGHT_PHASES.has(table.phase) ? 'night' : 'day'
+}
+
 export function WerewolfActions({
   table,
   summary,
@@ -341,6 +354,7 @@ export function WerewolfActions({
         capacity={capacity}
         started={table !== null}
         targeting={targeting()}
+        plate={plateFor(table)}
       />
 
       <section className={`${PANEL} p-4`} aria-label="Your move">
@@ -365,7 +379,7 @@ export function WerewolfActions({
 
 function Waiting({ children }: { children: React.ReactNode }) {
   return (
-    <p className="font-mono text-[0.6875rem] leading-relaxed text-ink-soft">
+    <p className="font-mono text-xs leading-relaxed text-ink-soft">
       {children}
     </p>
   )
@@ -373,7 +387,7 @@ function Waiting({ children }: { children: React.ReactNode }) {
 
 function Lede({ children }: { children: React.ReactNode }) {
   return (
-    <p className="font-mono text-[0.6875rem] leading-relaxed text-ink">
+    <p className="font-mono text-xs leading-relaxed text-ink">
       {children}
     </p>
   )
@@ -387,7 +401,7 @@ function Lede({ children }: { children: React.ReactNode }) {
  */
 function AtTheTable({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mt-3 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-[0.6875rem] leading-relaxed text-ink">
+    <p className="mt-3 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-xs leading-relaxed text-ink">
       {children}
     </p>
   )
@@ -412,12 +426,12 @@ function NotInThisRound() {
         You are in from the next round
       </p>
 
-      <p className="mt-2 font-mono text-[0.6875rem] leading-relaxed text-ink-soft">
+      <p className="mt-2 font-mono text-xs leading-relaxed text-ink-soft">
         This one was dealt before you sat down, so it runs without you. The next
         deal takes everyone at the table, and your chair is already there.
       </p>
 
-      <p className="mt-3 font-mono text-[0.625rem] leading-relaxed text-ink-soft">
+      <p className="mt-3 font-mono text-xs leading-relaxed text-ink-soft">
         Chat is shut until then — watching players cannot talk to a table
         mid-game.
       </p>
@@ -457,7 +471,7 @@ function StartGate({
             : 'Ready when you are'}
       </p>
 
-      <p className="mt-2 font-mono text-[0.6875rem] leading-relaxed text-ink-soft">
+      <p className="mt-2 font-mono text-xs leading-relaxed text-ink-soft">
         {short
           ? `Werewolf needs ${MIN_PLAYERS}. ${seated} here so far.`
           : crowded
@@ -475,7 +489,7 @@ function StartGate({
           {starting ? 'Dealing…' : 'Deal the roles'}
         </button>
       ) : (
-        <p className="mt-4 font-mono text-[0.6875rem] leading-relaxed text-ink-soft">
+        <p className="mt-4 font-mono text-xs leading-relaxed text-ink-soft">
           {hostNickname ?? 'Whoever opened this table'} starts it.
         </p>
       )}
@@ -517,8 +531,8 @@ function NightZero({
 
       <AtTheTable>
         {bond.length === 0
-          ? 'Click two chairs at the table. Either one comes back off until the pair is complete.'
-          : 'Click the second chair. Or click the first again to take it back.'}
+          ? 'Click two cards on the board. Either one comes back off until the pair is complete.'
+          : 'Click the second card. Or click the first again to take it back.'}
       </AtTheTable>
     </div>
   )
@@ -570,14 +584,14 @@ function Night({ table, you }: { table: WerewolfTable; you: string | null }) {
             . Click another chair to change it, any time before the night ends.
           </>
         ) : (
-          'Click their chair at the table.'
+          'Click their card on the board.'
         )}
       </AtTheTable>
 
       {/* Wolves only: `wolfVotes` is `{}` in everyone else's payload, so this
           is empty for them rather than something hidden in the UI. */}
       {action === 'kill' && Object.keys(pack).length > 0 && (
-        <p className="mt-3 font-mono text-[0.625rem] leading-relaxed text-ink-soft">
+        <p className="mt-3 font-mono text-xs leading-relaxed text-ink-soft">
           the pack so far ·{' '}
           {Object.entries(pack)
             .map(([id, count]) => `${nicknameOf(table, id) ?? '?'} ${count}`)
@@ -639,7 +653,7 @@ function Witch({
 
       {/* ------------------------------------------------------------- heal */}
       {table.witchHealed ? (
-        <p className="mt-3 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-[0.625rem] leading-relaxed text-ink">
+        <p className="mt-3 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-xs leading-relaxed text-ink">
           You spent the heal. They wake in the morning, and the table is told
           only that nobody died.
         </p>
@@ -663,7 +677,7 @@ function Witch({
         <p className={EYEBROW}>the other bottle</p>
 
         {table.witchPoison ? (
-          <p className="mt-1.5 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-[0.625rem] leading-relaxed text-ink">
+          <p className="mt-1.5 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-xs leading-relaxed text-ink">
             You poisoned{' '}
             <span className="font-semibold">
               {nicknameOf(table, table.witchPoison) ?? 'somebody'}
@@ -723,7 +737,7 @@ function Revenge({ table, you }: { table: WerewolfTable; you: string | null }) {
         you.
       </Lede>
 
-      <AtTheTable>Click the chair of whoever it is for.</AtTheTable>
+      <AtTheTable>Click the card of whoever it is for.</AtTheTable>
     </div>
   )
 }
@@ -773,7 +787,7 @@ function Day({
 
       <p
         aria-live="polite"
-        className="mt-2 font-mono text-[0.625rem] text-ink-soft"
+        className="mt-2 font-mono text-xs text-ink-soft"
       >
         <span className="tabular-nums text-ink">
           {ready} of {needed}
@@ -823,7 +837,7 @@ function Vote({
             . Click another chair to move it.
           </>
         ) : (
-          'Click their chair at the table. Your own counts, if it comes to that.'
+          'Click their card on the board. Your own counts, if it comes to that.'
         )}
       </AtTheTable>
     </div>
@@ -844,7 +858,7 @@ function Collateral({
   if (also.length === 0) return null
 
   return (
-    <p className="mt-2 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-[0.625rem] leading-relaxed text-ink">
+    <p className="mt-2 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-xs leading-relaxed text-ink">
       <span className="font-semibold">{nicknamesOf(table, also)}</span> died in
       the same moment — somebody here was tied to a person who was not going to
       live through it.
@@ -884,7 +898,7 @@ function Dawn({ table }: { table: WerewolfTable }) {
 
       {/* Announced, never attributed. From the body this is another kill. */}
       {poisoned && (
-        <p className="mt-2 font-mono text-[0.6875rem] leading-relaxed text-ink">
+        <p className="mt-2 font-mono text-xs leading-relaxed text-ink">
           <span className="bg-yellow px-1 font-semibold">{poisoned}</span> was
           found dead as well. Nothing says who did it.
         </p>
@@ -948,7 +962,7 @@ function ShotNote({ table }: { table: WerewolfTable }) {
   const shot = nicknameOf(table, table.lastShot) ?? 'somebody'
 
   return (
-    <p className="mb-3 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-[0.625rem] leading-relaxed text-ink">
+    <p className="mb-3 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-xs leading-relaxed text-ink">
       {hunter ? `${hunter}, dying, ` : 'The dying Hunter '}took{' '}
       <span className="bg-yellow px-1 font-semibold">{shot}</span> with them.
     </p>
@@ -1004,7 +1018,7 @@ function Finished({
       </p>
 
       {table.result && (
-        <p className="mt-3 font-mono text-[0.6875rem] leading-relaxed text-ink-soft">
+        <p className="mt-3 font-mono text-xs leading-relaxed text-ink-soft">
           {!playing
             ? 'You watched this one.'
             : won
@@ -1017,7 +1031,7 @@ function Finished({
       {/* The host is about to press deal, and the roster they are dealing is
           bigger than the one they just played. Worth saying before, not after. */}
       {waiting > 0 && (
-        <p className="mt-2 font-mono text-[0.625rem] leading-relaxed text-ink">
+        <p className="mt-2 font-mono text-xs leading-relaxed text-ink">
           <span className="bg-yellow px-1">
             {waiting} more {waiting === 1 ? 'person' : 'people'}
           </span>{' '}
@@ -1026,7 +1040,7 @@ function Finished({
       )}
 
       {table.lovers.length === 2 && (
-        <p className="mt-2 font-mono text-[0.625rem] leading-relaxed text-ink-soft">
+        <p className="mt-2 font-mono text-xs leading-relaxed text-ink-soft">
           Cupid tied{' '}
           <span className="text-ink">{nicknamesOf(table, table.lovers)}</span>{' '}
           together on the first night.

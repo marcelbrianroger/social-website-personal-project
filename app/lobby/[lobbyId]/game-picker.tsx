@@ -53,7 +53,7 @@ export function GamePicker({
         >
           {current?.label ?? 'Not chosen yet'}
         </p>
-        <p className="mt-2 font-mono text-[0.6875rem] leading-relaxed text-ink-soft">
+        <p className="mt-2 font-mono text-xs leading-relaxed text-ink-soft">
           {hostNickname ?? 'Whoever opened this table'} picks, and starts it.
         </p>
       </section>
@@ -89,7 +89,7 @@ export function GamePicker({
 
                   {/* Says why, not just that it is unavailable — "needs 5" is
                       actionable, a greyed-out row is not. */}
-                  <span className="shrink-0 font-mono text-[0.5625rem] uppercase tracking-wide text-ink-soft">
+                  <span className="shrink-0 font-mono text-xs uppercase tracking-wide text-ink-soft">
                     {fits
                       ? `${game.minPlayers}–${game.maxPlayers}`
                       : seated < game.minPlayers
@@ -98,7 +98,7 @@ export function GamePicker({
                   </span>
                 </span>
 
-                <span className="mt-1 block font-mono text-[0.625rem] leading-relaxed text-ink-soft">
+                <span className="mt-1 block font-mono text-xs leading-relaxed text-ink-soft">
                   {game.pitch}
                 </span>
               </button>

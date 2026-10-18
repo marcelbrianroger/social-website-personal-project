@@ -128,7 +128,7 @@ export function ChatPanel({
       className={`${PANEL} flex h-full min-h-[30rem] flex-col`}
       aria-label="Table talk"
     >
-      <div className="flex items-baseline justify-between gap-3 border-b-2 border-ink px-4 py-3">
+      <div className="flex items-baseline justify-between gap-3 border-b border-ink/20 px-4 py-3">
         <h2
           className="font-display text-base leading-none"
           style={DISPLAY_HEADING}
@@ -156,7 +156,7 @@ export function ChatPanel({
         role="log"
         aria-live="polite"
         aria-label="Messages"
-        className="halftone flex-1 overflow-y-auto overflow-x-hidden px-4 py-4"
+        className="board-ground flex-1 overflow-y-auto overflow-x-hidden px-4 py-4"
       >
         {entries.length === 0 ? (
           <div className="pt-6 text-center">
@@ -166,7 +166,7 @@ export function ChatPanel({
             >
               Nothing said yet
             </p>
-            <p className="mt-1.5 font-mono text-[0.6875rem] text-ink-soft">
+            <p className="mt-1.5 font-mono text-xs text-ink-soft">
               Somebody has to go first.
             </p>
           </div>
@@ -191,12 +191,12 @@ export function ChatPanel({
       </div>
 
       {/* ----------------------------------------------------------- compose */}
-      <form onSubmit={submit} className="border-t-2 border-ink px-4 py-3">
+      <form onSubmit={submit} className="border-t border-ink/20 px-4 py-3">
         {/* Said above the field, not inside it: a placeholder disappears the
             moment you start typing, which is exactly when getting the audience
             wrong costs you the game. */}
         <p
-          className={`mb-2 font-mono text-[0.625rem] leading-snug ${
+          className={`mb-2 font-mono text-xs leading-snug ${
             audience === 'your pack only'
               ? 'border-l-2 border-pink pl-2 text-ink'
               : 'text-ink-soft'
@@ -225,7 +225,7 @@ export function ChatPanel({
             disabled={!open}
             placeholder={open ? 'say something' : '—'}
             autoComplete="off"
-            className="w-full border-2 border-ink bg-paper px-3 py-2.5 font-mono text-sm text-ink outline-none placeholder:text-ink-soft/70 disabled:border-rule disabled:bg-stock disabled:placeholder:text-ink-soft/40"
+            className="min-h-11 w-full border-2 border-ink bg-sheet-white px-3 py-2.5 font-mono text-sm text-ink outline-none placeholder:text-ink-soft/70 disabled:border-rule disabled:bg-stock disabled:placeholder:text-ink-soft/40"
           />
 
           <button
@@ -240,7 +240,7 @@ export function ChatPanel({
         {/* Only shown once it matters — a permanent counter is noise. */}
         {draft.length > MAX_MESSAGE_LENGTH - 40 && (
           <p
-            className={`mt-2 font-mono text-[0.625rem] tabular-nums ${
+            className={`mt-2 font-mono text-xs tabular-nums ${
               over ? 'bg-yellow px-1 text-ink' : 'text-ink-soft'
             }`}
           >
@@ -253,7 +253,7 @@ export function ChatPanel({
         {error && (
           <p
             role="alert"
-            className="mt-2 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-[0.6875rem] leading-relaxed text-ink"
+            className="mt-2 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-xs leading-relaxed text-ink"
           >
             {error}
           </p>
@@ -289,7 +289,7 @@ function Channel({
 
   return (
     <p
-      className={`shrink-0 truncate px-1.5 font-mono text-[0.5625rem] uppercase tracking-wide ${
+      className={`shrink-0 truncate px-1.5 font-mono text-xs uppercase tracking-wide ${
         loud
           ? 'border border-ink bg-pink text-ink'
           : 'border border-rule text-ink-soft'
@@ -311,7 +311,7 @@ function PhaseBreak({ text }: { text: string }) {
   return (
     <li className="flex items-center gap-2.5 py-1.5">
       <span aria-hidden="true" className="h-px flex-1 bg-rule" />
-      <span className="shrink-0 font-mono text-[0.5625rem] uppercase tracking-[0.18em] text-ink-soft">
+      <span className="shrink-0 font-mono text-xs uppercase tracking-[0.18em] text-ink-soft">
         {text}
       </span>
       <span aria-hidden="true" className="h-px flex-1 bg-rule" />
@@ -344,13 +344,16 @@ function Slip({
   const dead = entry.channel === 'dead'
   const pack = entry.channel === 'pack'
 
+  // Sheets, like the wall: your own lines on yellow stock, everyone else's on
+  // white, the pack's on pink with its rule — and the dead on no stock at all,
+  // only a dashed edge, because they are off the board.
   const paper = dead
-    ? 'border-dashed border-rule bg-paper'
+    ? 'border-2 border-dashed border-rule bg-paper'
     : pack
-      ? 'border-ink border-l-4 border-l-pink bg-paper'
+      ? 'border-l-4 border-l-pink bg-sheet-pink'
       : mine
-        ? 'border-ink bg-yellow'
-        : 'border-ink bg-paper'
+        ? 'bg-sheet-yellow'
+        : 'bg-sheet-white'
 
   return (
     <li className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
@@ -364,20 +367,20 @@ function Slip({
             transform: `rotate(${tilt}deg)`,
           } as React.CSSProperties
         }
-        className={`animate-lay-down max-w-[85%] min-w-0 border-2 px-3 py-2 ${paper}`}
+        className={`animate-lay-down max-w-[85%] min-w-0 px-3 py-2 ${paper}`}
       >
         <p className="flex items-baseline gap-1.5">
           {seat !== undefined && (
             <span
               aria-hidden="true"
-              className="shrink-0 font-mono text-[0.625rem] tabular-nums text-ink-soft"
+              className="shrink-0 font-mono text-xs tabular-nums text-ink-soft"
             >
               {seat + 1}
             </span>
           )}
 
           <span
-            className={`min-w-0 truncate font-mono text-[0.6875rem] ${
+            className={`min-w-0 truncate font-mono text-xs ${
               dead ? 'text-ink-soft' : 'text-ink'
             }`}
           >
@@ -385,7 +388,7 @@ function Slip({
           </span>
 
           {(dead || pack) && (
-            <span className="shrink-0 font-mono text-[0.5625rem] uppercase tracking-wide text-ink-soft">
+            <span className="shrink-0 font-mono text-xs uppercase tracking-wide text-ink-soft">
               {dead ? 'dead' : 'pack'}
             </span>
           )}

@@ -21,7 +21,28 @@ import { useSlipDrag } from '@/lib/wall/use-slip-drag'
  * unit here.
  */
 export const BOARD =
-  'board grid grid-cols-1 items-start p-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+  'board grid grid-cols-1 items-start gap-y-2 p-3 sm:grid-cols-2 sm:p-5 lg:grid-cols-3 xl:grid-cols-4'
+
+/**
+ * The sheet a note is printed on.
+ *
+ * A mading is made of whatever coloured paper was in the cupboard, and a board
+ * of identical sheets reads as a grid of cards rather than as things people
+ * pinned up. Chosen from the note's id rather than its slot, so a note keeps
+ * its colour when a newer one arrives and pushes it along the board.
+ */
+const SHEETS = [
+  'bg-sheet-white',
+  'bg-sheet-yellow',
+  'bg-sheet-blue',
+  'bg-sheet-pink',
+] as const
+
+function sheetFor(id: string): string {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0
+  return SHEETS[Math.abs(hash) % SHEETS.length]!
+}
 
 /**
  * Deterministic per slot rather than random, so the server and the first client
@@ -132,21 +153,22 @@ export function WallSlip({
         } as React.CSSProperties
       }
       onClick={onOpen ? open : undefined}
-      className={`slip slip-drag relative flex min-h-44 flex-col justify-between border-2 border-ink bg-stock px-6 pt-10 pb-5 ${
-        arriving ? 'animate-pin-up' : ''
-      }`}
+      className={`slip slip-drag relative flex min-h-44 flex-col justify-between px-6 pt-10 pb-5 ${sheetFor(
+        message.id,
+      )} ${arriving ? 'animate-pin-up' : ''}`}
     >
-      {/* The pin. A printed mark, not a picture of a pushpin. */}
+      {/* The pin. A printed mark, not a picture of a pushpin — a pink head
+          with an ink rim, so it still reads on the pink sheet. */}
       <span
         aria-hidden="true"
-        className="absolute left-[13px] top-[13px] size-2.5 rounded-full bg-pink"
+        className="absolute left-[12px] top-[12px] size-3 rounded-full border-2 border-ink bg-pink"
       />
 
       <p className="whitespace-pre-wrap break-words text-[1.0625rem] leading-snug text-ink">
         {message.body}
       </p>
 
-      <div className="mt-6 flex items-baseline justify-between gap-3 font-mono text-[0.6875rem]">
+      <div className="mt-6 flex items-baseline justify-between gap-3 font-mono text-xs">
         <span className="truncate text-ink-soft">{message.nickname}</span>
 
         <div className="flex shrink-0 items-baseline gap-3">

@@ -1,13 +1,20 @@
 'use client'
 
-import { DISPLAY_HEADING, EYEBROW, SECONDARY } from './controls'
+import { useState } from 'react'
+
+import { DISPLAY_HEADING, EYEBROW, PRIMARY, SECONDARY } from './controls'
 
 /**
- * The lobby's masthead: which table you are at, and the way out.
+ * The lobby's masthead: which table you are at, how to get people to it, and
+ * the way out.
  *
  * The id is set as a marker highlight because it is the one string a player
  * reads off the screen and types into a chat to invite four more people. It
  * needs to survive being photographed badly.
+ *
+ * Next to it, the invite itself. Every game here needs four to eight people and
+ * the only way they arrive is somebody pasting a link into a group chat, so the
+ * link is one press away rather than something to fish out of the address bar.
  *
  * `onLeave` is a prop rather than a `router.push` so this stays presentational:
  * the socket owner decides whether leaving means `lobby:leave`, a redirect, or
@@ -32,6 +39,20 @@ export function RoomHeader({
   capacity: number
   onLeave: () => void
 }) {
+  const [copied, setCopied] = useState(false)
+
+  async function copyInvite() {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // No clipboard (an insecure origin, or permission refused). The id is
+      // still on screen in large type, which is what this falls back to.
+      setCopied(false)
+    }
+  }
+
   return (
     <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 border-b-2 border-ink pb-5">
       <div>
@@ -47,11 +68,16 @@ export function RoomHeader({
         </h1>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-        <p className="font-mono text-[0.6875rem] text-ink-soft">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+        <p className="font-mono text-sm text-ink-soft">
           <span className="tabular-nums text-ink">{seated}</span> / {capacity}{' '}
           seated
         </p>
+
+        <button type="button" onClick={copyInvite} className={PRIMARY}>
+          {/* Announced, because the button's own label is the confirmation. */}
+          <span aria-live="polite">{copied ? 'Link copied' : 'Copy invite link'}</span>
+        </button>
 
         <button type="button" onClick={onLeave} className={SECONDARY}>
           Leave room

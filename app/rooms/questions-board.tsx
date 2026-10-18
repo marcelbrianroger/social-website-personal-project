@@ -73,12 +73,18 @@ function QuestionCard({
 }) {
   if (isMyTurn(table, sessionId)) {
     return (
-      <div className="mt-6 border-2 border-ink bg-paper p-6">
-        <p className="font-mono text-[0.6875rem] uppercase tracking-wide text-ink-soft">
+      // The card itself, pinned up for you to read off — white stock on the
+      // blue sheet, a shade crooked, the way a card held up is never level.
+      <div className="relative mt-6 -rotate-[0.6deg] bg-sheet-white px-6 pt-9 pb-7 sm:px-8">
+        <span
+          aria-hidden="true"
+          className="absolute left-1/2 top-3 size-3 -translate-x-1/2 rounded-full border-2 border-ink bg-pink"
+        />
+        <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
           Your turn to read
         </p>
         <p
-          className="mt-3 font-display text-2xl leading-snug text-ink"
+          className="mt-3 font-display text-[clamp(1.5rem,2.6vw,2rem)] leading-snug text-ink"
           style={{ fontVariationSettings: "'wght' 800, 'wdth' 95" }}
         >
           {table.question}
@@ -90,8 +96,8 @@ function QuestionCard({
   return (
     // Hatched rather than blank: an empty panel reads as something failing to
     // load, and this is a card lying face down on purpose.
-    <div className="mt-6 border-2 border-dashed border-rule bg-stock p-6">
-      <p className="font-mono text-[0.6875rem] uppercase tracking-wide text-ink-soft">
+    <div className="mt-6 border-2 border-dashed border-ink/30 p-6">
+      <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
         {askerNickname(table)} is holding the card
       </p>
       <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-soft">
@@ -125,7 +131,7 @@ function DarePanel({
 
   return (
     <div className="mt-6 border-2 border-ink bg-yellow p-6">
-      <p className="font-mono text-[0.6875rem] uppercase tracking-wide text-ink">
+      <p className="font-mono text-xs uppercase tracking-wide text-ink">
         {mine ? 'Your penalty' : `Penalty for ${performer}`}
         {' · '}
         {/* Skipping is what the veto bought; naming it keeps the cost visible. */}
@@ -159,7 +165,7 @@ function DarePanel({
         {seconds !== null && (
           // The partner holds the only button, so the clock is the promise that
           // the room cannot be frozen by one person wandering off.
-          <span className="ml-auto font-mono text-[0.6875rem] text-ink">
+          <span className="ml-auto font-mono text-xs text-ink">
             moves on automatically in {Math.floor(seconds / 60)}:
             {String(seconds % 60).padStart(2, '0')}
           </span>
@@ -197,7 +203,7 @@ export function QuestionsBoard({
   const dare = table?.activeDare ?? null
 
   return (
-    <section className="border-2 border-ink bg-stock p-6">
+    <section className="bg-sheet-blue p-6 sm:p-7">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2
@@ -231,7 +237,7 @@ export function QuestionsBoard({
         <>
           {/* Progress reads as a printed rule filling up, not a loading bar. */}
           <div className="mt-6 flex items-center gap-3">
-            <span className="font-mono text-[0.6875rem] text-ink-soft">
+            <span className="font-mono text-xs text-ink-soft">
               {Math.min(table.questionIndex + 1, table.totalQuestions)}/
               {table.totalQuestions}
             </span>
@@ -284,7 +290,7 @@ export function QuestionsBoard({
                 Veto
               </button>
 
-              <span className="font-mono text-[0.6875rem] text-ink-soft">
+              <span className="font-mono text-xs text-ink-soft">
                 {myVetos > 0
                   ? `${myVetos} veto left · there is a penalty`
                   : 'your veto is spent'}
@@ -302,7 +308,7 @@ export function QuestionsBoard({
       )}
 
       {table && (
-        <p className="mt-5 font-mono text-[0.6875rem] text-ink-soft">
+        <p className="mt-5 font-mono text-xs text-ink-soft">
           v{table.version} ·{' '}
           {table.players.map((player) => player.nickname).join(' & ')}
         </p>

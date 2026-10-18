@@ -24,16 +24,27 @@
  */
 
 @theme {
-  /* Cheap paper, greyed rather than cream. Two stocks, as a real print job. */
-  --color-paper: #e9e5d8;
-  --color-stock: #ded8c7;
+  /* Cheap paper, warm enough that a coloured sheet laid on it reads as colour
+     rather than as a slightly different grey. Two stocks, as a real print job. */
+  --color-paper: #efe9dc;
+  --color-stock: #e2dac6;
 
   /* The key ink. Reads black in mass, unmistakably blue in the thin strokes. */
   --color-ink: #16284b;
-  --color-ink-soft: #46536c;
+  --color-ink-soft: #44516a;
 
   /* Rules and hairlines, so borders never go pure black. */
-  --color-rule: #b9b3a2;
+  --color-rule: #bab2a0;
+
+  /*
+   * Coloured stock — what a riso is actually fed, and what a mading is actually
+   * made of. These are SURFACES, not accents: each one is a pale enough sheet
+   * that ink sits on it above 10:1, so a note's colour never costs it legibility.
+   */
+  --color-sheet-white: #fbf8f1;
+  --color-sheet-yellow: #fbe7a1;
+  --color-sheet-pink: #f9d2de;
+  --color-sheet-blue: #d6deee;
 
   /* Fluorescent pink. Cheap, loud, joyful — the point is that it is not tasteful. */
   --color-pink: #ff4e8e;
@@ -89,6 +100,69 @@ body {
 
 .slip {
   mix-blend-mode: multiply;
+}
+
+/*
+ * The board itself.
+ *
+ * Notes used to sit straight on the page, which made them look like cards in a
+ * layout rather than paper on a wall. A mading is a SURFACE first — so the board
+ * gets the darker stock and the halftone screen, and a sheet laid on it has
+ * something to be laid on.
+ */
+.board-ground {
+  background-color: var(--color-stock);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='7'%3E%3Ccircle cx='1.6' cy='1.6' r='1.1' fill='%2316284b' fill-opacity='0.09'/%3E%3C/svg%3E");
+  background-size: 7px 7px;
+}
+
+/*
+ * The same board at night: the ink plate, its screen printed in paper. Used by
+ * the game board when Werewolf goes dark — see `TablePlate` in
+ * app/lobby/[lobbyId]/table-stage.tsx.
+ */
+.board-night {
+  background-color: var(--color-ink);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns=http://www.w3.org/2000/svg width=7 height=7%3E%3Ccircle cx=1.6 cy=1.6 r=1.1 fill=%23efe9dc fill-opacity=0.12/%3E%3C/svg%3E");
+  background-size: 7px 7px;
+}
+
+/*
+ * ===========================================================================
+ * THE CUT-OUT HEADER
+ * ===========================================================================
+ *
+ * Every mading has one: the title made of letters cut out of coloured paper,
+ * each glued on by a different hand, none of them quite straight. It is the most
+ * recognisable thing about the object for anyone who went to school in
+ * Indonesia, and nothing else on the web looks like it.
+ *
+ * Used once, on the home hero. The letters are decorative copies — the heading
+ * text exists as real text for assistive tech, see `CutOut` in app/page.tsx.
+ *
+ * Each letter is pinned up in turn and settles onto its own tilt. The keyframe
+ * ends on exactly the resting transform, which the letter also carries inline,
+ * so `backwards` fill is enough and nothing jumps when it finishes.
+ */
+@keyframes stick {
+  from {
+    opacity: 0;
+    transform: rotate(calc(var(--tilt, 0deg) - 10deg)) translateY(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(var(--tilt, 0deg)) translateY(0);
+  }
+}
+
+.cutout-letter {
+  transform: rotate(var(--tilt, 0deg));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cutout-letter {
+    animation: stick 420ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+  }
 }
 
 /*
@@ -837,37 +911,6 @@ body {
 }
 
 /*
- * Seats around the rim.
- *
- * Absolute placement is a WIDE-SCREEN LAYOUT ONLY. Below `lg` the same list
- * renders as a two-column grid — a ring of eight cards on a phone is six
- * illegible cards and two off the edge. The inline left/top the component sets
- * are simply ignored while the seat is statically positioned, so one list
- * serves both layouts and nothing is rendered twice.
- *
- * Width is in container units so the whole board scales as one object: the
- * ellipse radius is 39cqw and a card is 22cqw wide, which is what keeps the
- * outermost card flush with the board's edge at every size rather than
- * escaping it on a narrow column.
- */
-/*
- * Halftone.
- *
- * The one riso artifact the wall never needed and the table does: a printed
- * surface, at the size a cheap duplicator actually screens at. It gives the
- * transcript a ground, so the gaps between slips read as the table they are
- * lying on rather than as an empty box.
- *
- * The alpha is baked into the SVG rather than applied as `opacity`, which would
- * fade every slip sitting on top of it. Generated rather than an image file,
- * for the same reason the grain is: nothing external loads.
- */
-.halftone {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='7'%3E%3Ccircle cx='1.6' cy='1.6' r='1.1' fill='%2316284b' fill-opacity='0.075'/%3E%3C/svg%3E");
-  background-size: 7px 7px;
-}
-
-/*
  * A line laid down on the table.
  *
  * Paper arriving, not a message appearing: it comes in a shade over-rotated and
@@ -896,36 +939,6 @@ body {
   animation: lay-down 260ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
 
-.table-board {
-  container-type: inline-size;
-}
-
-/*
- * The clock, sweeping.
- *
- * The board re-renders on a 250ms tick, which without this walks the rim round
- * the table in four visible jerks a second. The transition is a touch longer
- * than the tick so one leg is always still running when the next value lands
- * and the edge never stalls; linear, because a countdown that eases is lying
- * about how fast time is passing.
- *
- * A new phase resets the offset and this runs backwards over it, which is the
- * right picture: the clock winding back up.
- */
-.clock-sweep {
-  transition: stroke-dashoffset 260ms linear;
-}
-
-@media (min-width: 64rem) {
-  .table-seat {
-    position: absolute;
-    width: 22cqw;
-    min-width: 6.5rem;
-    max-width: 9.5rem;
-    transform: translate(-50%, -50%);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .animate-deal,
   .animate-tap {
@@ -951,11 +964,5 @@ body {
    */
   .reg-orbit {
     animation: none;
-  }
-
-  /* The clock still has to move, or it stops being a clock. It steps with the
-     tick instead of sweeping between them. */
-  .clock-sweep {
-    transition: none;
   }
 }

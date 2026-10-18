@@ -8,35 +8,38 @@ import { DISPLAY_HEADING } from './controls'
 import { PhaseDial } from './phase-dial'
 
 /**
- * The table itself: chairs round the rim, a clock in the middle, and the board
- * as the thing you point at.
+ * The board: everybody at this game, pinned up as a card, with the clock above.
  *
- * WHY THIS REPLACED THE RAIL. The room used to draw its players as a list down
- * the left-hand side while every choice — vote, eat, read, cover, poison — was
- * made in a separate panel on the right. That works, and it reads as a form. A
- * social deduction game is played by pointing at a person, so the seats are the
- * control now: roster and picker are one object, and the rule for the whole
- * room is POINT AT PEOPLE ON THE BOARD, PRESS THINGS IN YOUR HAND.
+ * WHY A BOARD AND NOT A TABLE. This used to be an octagonal table with chairs
+ * on an ellipse round its rim. It made the room look like a diagram, it cut
+ * every nickname in half to fit a chair, and on a phone it collapsed into a
+ * plain list anyway. A deduction game is about PEOPLE — who is lying, who is
+ * out, who everyone is pointing at — so each person now gets a card with a
+ * face-sized portrait: their initial cut out of their own colour of paper, the
+ * same scraps as the masthead on the home page. It reads as the wall of
+ * suspects every detective story pins up, and that is what this game is.
+ *
+ * THE RULE IS UNCHANGED: POINT AT PEOPLE ON THE BOARD, PRESS THINGS IN YOUR
+ * HAND. The cards are the control — roster and picker are one object — and a
+ * card is a button only while there is something to pick.
  *
  * STILL GAME-AGNOSTIC. It reads `TableSummary`, which both Mr. White and
  * Werewolf project themselves down to, plus a `SeatTargeting` descriptor saying
  * which seats are live right now and what happens when one is clicked. The
  * board never learns which game built it — see `lib/game/table-view.ts`.
  *
- * NOTHING HERE DECIDES LEGALITY. `blockedFor` greys a seat and says why, which
+ * NOTHING HERE DECIDES LEGALITY. `blockedFor` greys a card and says why, which
  * is a hint to a player and not enforcement; the server validates every intent
- * regardless, exactly as it does for the panels.
+ * regardless.
  *
- * YOU SIT AT THE BOTTOM. Chairs are rotated so your own is always at six
- * o'clock, the way you are always at the near edge of a real table. Seat
- * NUMBERS survive that rotation untouched and are still shown, because several
- * phases walk the table in join order and reading who acts next depends on it.
+ * JOIN ORDER, NOT "YOU FIRST". Several phases walk the board in seat order, so
+ * the cards stay in it and your own is marked rather than moved.
  */
 
 export interface SeatTargeting {
-  /** What the board is asking for, in words. Labels the seat list. */
+  /** What the board is asking for, in words. Labels the card list. */
   label: string
-  /** Session ids that are live targets. Everything else is just a seat. */
+  /** Session ids that are live targets. Everything else is just a card. */
   targets: readonly string[]
   /** Your current pick, or picks — Cupid commits two at once. */
   chosen: readonly string[]
@@ -45,77 +48,60 @@ export interface SeatTargeting {
   onPick: (sessionId: string) => void
 }
 
-/** Ellipse the chairs sit on, as a percentage of the board box. */
-const SEAT_RX = 39
-const SEAT_RY = 38
+/**
+ * Which plate the board is printed on.
+ *
+ * Werewolf is played in two lights. The night is the INK plate — the board goes
+ * dark, its screen turns to paper dots, a moon comes up over the clock — and
+ * the day is the ordinary stock. It is the one thing on this screen you can
+ * read from across the room, and it tells you before anything else whether to
+ * keep your mouth shut. Null is the plain stock every other game sits on.
+ */
+export type TablePlate = 'night' | 'day' | null
 
 /**
- * The table top, and the clock printed round its edge.
- *
- * The viewBox is 120×100 and the board box is 6/5, so the two match exactly and
- * `preserveAspectRatio="none"` scales without distorting. That is not tidiness:
- * `pathLength` normalises the countdown over the path's length in USER units,
- * so under a non-uniform scale the sweep would cross the stretched edges faster
- * than the others and the clock would visibly speed up and slow down.
- *
- * The shape is an octagon on an ellipse — a table is wider than it is deep —
- * drawn small enough that the chairs straddle its rim, which is what makes them
- * read as people sitting AT it rather than as counters lying ON it.
- *
- * IT STARTS AT TWELVE. The path opens at the midpoint of the top edge and runs
- * clockwise, so the remaining time is drawn from twelve round to wherever it
- * has got to, and retreats back to twelve as it runs out. Starting at a vertex
- * — the default for a polygon — drained the rim from the lower right, which
- * looks like an accident rather than a clock.
+ * Each person's paper. Chosen from their session id, so a player keeps the
+ * same colour for the whole evening however the seats shuffle.
  */
-const BOARD_W = 120
-const BOARD_H = 100
-const TABLE_RX = 40.8
-const TABLE_RY = 34
+const PORTRAIT_PAPER = [
+  'bg-sheet-yellow',
+  'bg-sheet-blue',
+  'bg-sheet-pink',
+  'bg-yellow',
+  'bg-sheet-white',
+] as const
 
-const TABLE_PATH = (() => {
-  const cx = BOARD_W / 2
-  const cy = BOARD_H / 2
+function paperFor(id: string): string {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0
+  return PORTRAIT_PAPER[Math.abs(hash) % PORTRAIT_PAPER.length]!
+}
 
-  const corner = (index: number) => {
-    const angle = Math.PI / 8 + (index * Math.PI) / 4
+/** The scrap's slight crookedness, also fixed per person. */
+function tiltFor(id: string): number {
+  let hash = 7
+  for (let i = 0; i < id.length; i++) hash = (hash * 17 + id.charCodeAt(i)) | 0
+  return ((Math.abs(hash) % 7) - 3) * 0.9
+}
 
-    return `${(cx + TABLE_RX * Math.cos(angle)).toFixed(2)},${(
-      cy +
-      TABLE_RY * Math.sin(angle)
-    ).toFixed(2)}`
-  }
-
-  // Twelve o'clock, then every corner clockwise from the one just right of it.
-  const noon = `${cx},${(cy - TABLE_RY * Math.cos(Math.PI / 8)).toFixed(2)}`
-  const clockwise = [6, 7, 0, 1, 2, 3, 4, 5].map(corner)
-
-  return `M${noon}L${clockwise.join('L')}Z`
-})()
-
-/** Where chair `index` of `total` sits. Index 0 is bottom-centre, then clockwise. */
-function chairAt(index: number, total: number) {
-  const angle = Math.PI / 2 + (index * 2 * Math.PI) / total
-
-  return {
-    left: `${(50 + SEAT_RX * Math.cos(angle)).toFixed(3)}%`,
-    top: `${(50 + SEAT_RY * Math.sin(angle)).toFixed(3)}%`,
-  }
+/** The letter on the portrait. Generated names start with a capital word. */
+function initialOf(nickname: string): string {
+  return nickname.trim().charAt(0).toUpperCase() || '?'
 }
 
 /**
- * One place at the table.
+ * One place on the board.
  *
- * Three kinds, because a chair genuinely means three different things: someone
+ * Three kinds, because a place genuinely means three different things: someone
  * in this round, someone in the room who is not (they arrived after the deal),
  * and a place nobody has taken.
  */
-type ChairSlot =
+type CardSlot =
   | { kind: 'seat'; seat: TableSeat }
   | { kind: 'waiting'; member: LobbyMember }
   | { kind: 'empty' }
 
-function occupantOf(slot: ChairSlot): string | null {
+function occupantOf(slot: CardSlot): string | null {
   if (slot.kind === 'seat') return slot.seat.sessionId
   if (slot.kind === 'waiting') return slot.member.sessionId
   return null
@@ -128,6 +114,7 @@ export function TableStage({
   capacity,
   started,
   targeting = null,
+  plate = null,
 }: {
   summary: TableSummary
   /**
@@ -135,19 +122,22 @@ export function TableStage({
    * Empty before the deal, when everybody seated is a player.
    */
   waiting: readonly LobbyMember[]
-  /** Your sessionId, so your chair goes to the near edge. Null while connecting. */
+  /** Your sessionId, so your card is marked. Null while connecting. */
   you: string | null
-  /** `LOBBY_CAPACITY` — how many chairs to draw before the deal. */
+  /** `LOBBY_CAPACITY` — how many places to draw before the deal. */
   capacity: number
-  /** False while the lobby is still filling: empty chairs, and no clock. */
+  /** False while the lobby is still filling: empty places, and no clock. */
   started: boolean
   targeting?: SeatTargeting | null
+  /** Night, day, or the plain stock. See `TablePlate`. */
+  plate?: TablePlate
 }) {
   const { seats } = summary
+  const night = plate === 'night'
 
   // One interval for the whole board. The phase clock and every reconnect
   // window are measured against the same server clock, so they share it rather
-  // than opening a timer per seat.
+  // than opening a timer per card.
   const dropped = seats.some((seat) => seat.droppedUntil !== null)
   const now = useServerNow(
     summary.serverNow,
@@ -160,127 +150,68 @@ export function TableStage({
 
   /**
    * Fraction of the phase still to run, or null when nothing is being timed.
-   *
-   * Taken from the raw milliseconds rather than the rounded seconds: the rim
-   * moves continuously and would otherwise step a whole second at a time even
-   * with the transition smoothing it. The dial reads the rounded value, which
-   * is what a person counting down out loud actually says.
+   * From the raw milliseconds rather than the rounded seconds, so the bar moves
+   * continuously; the dial reads the rounded value, which is what a person
+   * counting down out loud actually says.
    */
   const left =
     remainingMs !== null && summary.phaseSeconds
       ? Math.min(1, Math.max(0, remainingMs / (summary.phaseSeconds * 1000)))
       : null
 
-  const filled: ChairSlot[] = [
+  const filled: CardSlot[] = [
     ...seats.map((seat) => ({ kind: 'seat' as const, seat })),
     ...waiting.map((member) => ({ kind: 'waiting' as const, member })),
   ]
 
-  const ordered = rotateToYou(filled, you)
-  const chairs = started ? ordered.length : Math.max(ordered.length, capacity)
+  // Before the deal the empty places are drawn too — "are we five yet" is the
+  // question the lobby is asking. Once dealt, only the people.
+  const places = started ? filled.length : Math.max(filled.length, capacity)
 
   /**
-   * Whether one seat alone holds the floor.
-   *
-   * During a vote every living player is an actor, and eight cards all knocking
-   * for attention says nothing at all. One is a signal.
+   * Whether one card alone holds the floor. During a vote every living player
+   * is an actor, and eight cards all knocking for attention says nothing at
+   * all. One is a signal.
    */
   const actors = seats.filter((seat) => seat.actor)
   const soleActor = actors.length === 1 ? actors[0]!.sessionId : null
 
   return (
     <section
-      className="table-board relative lg:aspect-[6/5]"
-      aria-label="The table"
+      aria-label="The board"
+      className={`border-2 border-ink p-3 transition-colors duration-700 ease-in-out motion-reduce:transition-none sm:p-4 ${
+        night ? 'board-night' : 'board-ground'
+      }`}
     >
-      {/* ------------------------------------------------------ the table top */}
-      {/* Decorative twice over: the shape is furniture, and the depleting rim
-          only restates the countdown the dial reads out in digits. */}
-      <svg
-        aria-hidden="true"
-        viewBox={`0 0 ${BOARD_W} ${BOARD_H}`}
-        preserveAspectRatio="none"
-        className="pointer-events-none absolute inset-0 hidden size-full lg:block"
-      >
-        {/* Screened, at the size a cheap duplicator actually prints at. The
-            transcript carries the same halftone, which is what makes the two
-            read as one surface rather than a drawing next to a text box. */}
-        <defs>
-          <pattern
-            id="table-halftone"
-            width={2.4}
-            height={2.4}
-            patternUnits="userSpaceOnUse"
-          >
-            <circle cx={0.6} cy={0.6} r={0.42} className="fill-ink" opacity={0.09} />
-          </pattern>
-        </defs>
-
-        <path
-          d={TABLE_PATH}
-          className="fill-stock stroke-ink"
-          strokeWidth={2}
-          strokeLinejoin="round"
-          vectorEffect="non-scaling-stroke"
-        />
-
-        <path d={TABLE_PATH} fill="url(#table-halftone)" stroke="none" />
-
-        {/* The edge of the table is printed pink for as long as there is time
-            left on it, and drops back to ink as that runs out. */}
-        {left !== null && (
-          <path
-            d={TABLE_PATH}
-            fill="none"
-            className="clock-sweep stroke-pink"
-            strokeWidth={4}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            pathLength={1}
-            strokeDasharray={1}
-            strokeDashoffset={1 - left}
-            vectorEffect="non-scaling-stroke"
-          />
-        )}
-      </svg>
-
-      {/* First in the DOM so a phone gets the clock before the roster — under a
-          forty-five second deadline that is what is being looked for. On a wide
-          screen it is lifted into the middle of the table instead. */}
       <PhaseDial
         phaseLabel={summary.phaseLabel}
         roundLabel={summary.roundLabel}
         seconds={seconds}
         fractionLeft={left}
         finished={summary.finished}
-        className="mb-4 lg:absolute lg:left-[28%] lg:top-[32%] lg:mb-0 lg:h-[36%] lg:w-[44%]"
+        night={night}
       />
 
-      {/* ---------------------------------------------------------- the chairs */}
-      {/* Keyed on the deal so the cards go round the table again when a game
-          starts. Seats persist across that transition, so without the remount
+      {/* Keyed on the deal so the cards are dealt out again when a game
+          starts. Places persist across that transition, so without the remount
           the roles would simply appear on the board that was already there. */}
       <ul
         key={started ? 'dealt' : 'waiting'}
         aria-label={targeting?.label ?? 'Players'}
-        className="grid grid-cols-2 gap-2 lg:block"
+        className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 2xl:grid-cols-4"
       >
-        {Array.from({ length: chairs }, (_, index) => {
-          const slot = ordered[index] ?? { kind: 'empty' as const }
+        {Array.from({ length: places }, (_, index) => {
+          const slot = filled[index] ?? { kind: 'empty' as const }
           const occupant = occupantOf(slot)
 
           return (
-            <li
-              key={occupant ?? `empty-${index}`}
-              className="table-seat"
-              style={chairAt(index, chairs)}
-            >
+            <li key={occupant ?? `empty-${index}`}>
               <div
-                className="animate-deal"
+                className="animate-deal h-full"
                 style={{ animationDelay: `${index * 55}ms` }}
               >
                 {slot.kind === 'seat' ? (
-                  <Chair
+                  <PlayerCard
                     seat={slot.seat}
                     isYou={slot.seat.sessionId === you}
                     started={started}
@@ -289,12 +220,12 @@ export function TableStage({
                     targeting={targeting}
                   />
                 ) : slot.kind === 'waiting' ? (
-                  <WaitingChair
+                  <WaitingCard
                     member={slot.member}
                     isYou={slot.member.sessionId === you}
                   />
                 ) : (
-                  <EmptyChair />
+                  <EmptyCard night={night} />
                 )}
               </div>
             </li>
@@ -306,25 +237,69 @@ export function TableStage({
 }
 
 /**
- * Put your own chair at the near edge.
+ * The portrait: an initial cut out of the player's paper.
  *
- * A rotation, never a sort: the seats keep their join order relative to each
- * other, so "whoever is next clockwise" stays true on the board for the phases
- * that walk the table in order.
+ * Decorative — the name under it is the real label — so it is hidden from
+ * assistive tech, and the stamp laid over it when somebody is out is too.
  */
-function rotateToYou(slots: ChairSlot[], you: string | null): ChairSlot[] {
-  const mine =
-    you === null ? -1 : slots.findIndex((slot) => occupantOf(slot) === you)
-  if (mine <= 0) return slots
+function Portrait({
+  id,
+  nickname,
+  out = false,
+}: {
+  id: string
+  nickname: string
+  out?: boolean
+}) {
+  return (
+    <span
+      aria-hidden="true"
+      className="relative grid aspect-[5/4] w-full place-items-center overflow-hidden bg-paper"
+    >
+      {/* Once somebody is out their scrap comes off the board and only the
+          stamp is left — stamped over the letter, neither could be read. */}
+      {!out && (
+        <span
+          className={`grid size-[62%] place-items-center font-display text-[clamp(2rem,4.2vw,3.25rem)] leading-none text-ink ${paperFor(id)}`}
+          style={{
+            ...DISPLAY_HEADING,
+            transform: `rotate(${tiltFor(id)}deg)`,
+          }}
+        >
+          {initialOf(nickname)}
+        </span>
+      )}
 
-  return [...slots.slice(mine), ...slots.slice(0, mine)]
+      {/* The pin holding the portrait up. */}
+      <span className="absolute left-1/2 top-2 size-3 -translate-x-1/2 rounded-full border-2 border-ink bg-pink" />
+
+      {out && (
+        <span
+          className="slip animate-stamp absolute inset-0 grid place-items-center"
+        >
+          <span
+            // Its own patch of white with ink letters inside the pink frame:
+            // stamped straight onto the initial, pink-on-ink read as neither.
+            className="-rotate-12 border-[3px] border-pink bg-sheet-white px-3 py-0.5 font-display text-2xl uppercase leading-tight tracking-wide text-ink"
+            style={DISPLAY_HEADING}
+          >
+            out
+          </span>
+        </span>
+      )}
+    </span>
+  )
 }
 
-/** A chair nobody has taken. Reads as a place to fill, not as a missing thing. */
-function EmptyChair() {
+/** A place nobody has taken. Reads as a place to fill, not as a missing thing. */
+function EmptyCard({ night }: { night: boolean }) {
   return (
-    <p className="grid h-[3.25rem] place-items-center border-2 border-dashed border-rule font-mono text-[0.625rem] lowercase tracking-[0.2em] text-ink-soft">
-      empty
+    <p
+      className={`grid h-full min-h-40 place-items-center border-2 border-dashed font-mono text-xs lowercase tracking-[0.2em] ${
+        night ? 'border-paper/40 text-paper/75' : 'border-ink/30 text-ink-soft'
+      }`}
+    >
+      empty seat
     </p>
   )
 }
@@ -332,12 +307,12 @@ function EmptyChair() {
 /**
  * Someone in the room who is not in this round.
  *
- * They pulled a chair up after the cards were dealt, so the game does not know
- * them — but the room does, and the next deal takes everyone seated. Drawn as a
- * real chair with a dashed rule rather than left off the board entirely: a
- * person who cannot see themselves at the table assumes they failed to join.
+ * They arrived after the cards were dealt, so the game does not know them —
+ * but the room does, and the next deal takes everyone seated. Drawn as a real
+ * card with a dashed edge rather than left off the board: a person who cannot
+ * see themselves on it assumes they failed to join.
  */
-function WaitingChair({
+function WaitingCard({
   member,
   isYou,
 }: {
@@ -345,49 +320,44 @@ function WaitingChair({
   isYou: boolean
 }) {
   return (
-    <div className="w-full border-2 border-dashed border-ink bg-paper px-2.5 py-2">
-      <span className="flex items-baseline gap-1.5">
-        <span
-          aria-hidden="true"
-          className="font-mono text-[0.625rem] text-ink-soft"
-        >
-          ·
-        </span>
+    <div className="flex h-full flex-col border-2 border-dashed border-ink bg-sheet-white p-2">
+      <Portrait id={member.sessionId} nickname={member.nickname} />
 
+      <span className="px-1 pt-2.5">
         <span
-          className="min-w-0 flex-1 truncate font-display text-[0.9375rem] leading-tight text-ink"
+          className="block truncate font-display text-[0.9375rem] leading-tight text-ink sm:text-base"
           style={DISPLAY_HEADING}
+          title={member.nickname}
         >
           {member.nickname}
         </span>
 
-        {isYou && (
-          <span className="shrink-0 font-mono text-[0.5625rem] uppercase tracking-wide text-ink-soft">
-            you
-          </span>
-        )}
-      </span>
-
-      <span className="mt-1 block font-mono text-[0.625rem] uppercase leading-snug tracking-wide text-ink-soft">
-        next round
+        <span className="mt-1 flex items-baseline gap-1.5 font-mono text-xs leading-snug text-ink-soft">
+          <span className="min-w-0 flex-1 truncate">next round</span>
+          {isYou && <YouTag />}
+        </span>
       </span>
     </div>
   )
 }
 
+function YouTag() {
+  return <span className="shrink-0 bg-ink px-1 lowercase text-paper">you</span>
+}
+
 /**
- * One player at the table.
+ * One player on the board.
  *
  * A BUTTON ONLY WHEN THERE IS SOMETHING TO CLICK. Outside a targeting phase
- * this is a plain card — a seat that looks pressable but refuses every press
+ * this is a plain card — a card that looks pressable but refuses every press
  * teaches a player to stop trusting the board.
  *
- * "Out" is `text-ink-soft` — the palette's actual grey — plus a strike and a
- * dashed rule, never `opacity`. Fading ink toward paper drops it under 4.5:1
- * and makes the roster unreadable for exactly the players who spend the rest of
- * the game re-reading it.
+ * "Out" is the stamp across the portrait plus `text-ink-soft` and a strike on
+ * the name, never `opacity`: fading ink toward paper drops it under 4.5:1 and
+ * makes the roster unreadable for exactly the players who spend the rest of the
+ * game re-reading it.
  */
-function Chair({
+function PlayerCard({
   seat,
   isYou,
   started,
@@ -400,7 +370,7 @@ function Chair({
   started: boolean
   /** Server clock, shared by the whole board, for the reconnect window. */
   now: number
-  /** True when this is the one seat the table is waiting on. */
+  /** True when this is the one card the board is waiting on. */
   knocking: boolean
   targeting: SeatTargeting | null
 }) {
@@ -413,11 +383,17 @@ function Chair({
       ? null
       : toSeconds(Math.max(0, seat.droppedUntil - now))
 
+  // The card itself is white stock; picking it, or it holding the floor, turns
+  // it yellow — the marker pass, the way everything chosen on this site looks.
+  // A card you cannot pick drops to the plain stock rather than fading: an
+  // opacity over the night plate turned a yellow card the colour of mud.
   const fill = !seat.alive
-    ? 'border-dashed border-rule bg-paper -rotate-3'
-    : picked || seat.actor
-      ? 'border-ink bg-yellow'
-      : 'border-ink bg-paper'
+    ? 'border-dashed border-rule bg-paper'
+    : blocked !== null
+      ? 'border-ink/40 bg-stock'
+      : picked || seat.actor
+        ? 'border-ink bg-yellow'
+        : 'border-ink bg-sheet-white'
 
   // Out of register while it is yours to press; snapped flush once you commit.
   const ink = picked
@@ -430,73 +406,71 @@ function Chair({
 
   const body = (
     <>
-      <span className="flex items-baseline gap-1.5">
-        <span
-          aria-hidden="true"
-          className="font-mono text-[0.625rem] tabular-nums text-ink-soft"
-        >
-          {seat.seat + 1}
-        </span>
+      <Portrait id={seat.sessionId} nickname={seat.nickname} out={!seat.alive} />
 
+      <span className="block px-1 pt-2.5">
+        {/* One line and an ellipsis, full name on hover: on a phone card a
+            generated nickname is wider than the card and broke mid-word. */}
         <span
-          className={`min-w-0 flex-1 truncate font-display text-[0.9375rem] leading-tight ${
+          className={`block truncate font-display text-[0.9375rem] leading-tight sm:text-base ${
             seat.alive ? 'text-ink' : 'text-ink-soft line-through'
           }`}
           style={DISPLAY_HEADING}
+          title={seat.nickname}
         >
           {seat.nickname}
         </span>
 
-        {isYou && (
-          <span className="shrink-0 font-mono text-[0.5625rem] uppercase tracking-wide text-ink-soft">
-            you
+        {/* One status line per card, ranked and never doubled: out, then gone
+            but not yet out, then why you cannot pick them, then picked, then
+            holding the floor. "reconnecting" outranks "active" because a seat
+            can be both — a player who drops while holding the floor keeps it
+            until their window runs out, and the line has to say what is really
+            blocking. */}
+        <span className="mt-1 flex items-baseline gap-1.5 font-mono text-xs leading-snug text-ink-soft">
+          <span aria-hidden="true" className="tabular-nums">
+            {seat.seat + 1} ·
           </span>
-        )}
-      </span>
-
-      {/* One status line per seat, ranked and never doubled: out, then gone but
-          not yet out, then why you cannot pick them, then picked, then holding
-          the floor. "reconnecting" outranks "active" because a seat can be
-          both — a player who drops while holding the floor keeps it until their
-          window runs out, and the line has to say what is really blocking. */}
-      <span className="mt-1 block font-mono text-[0.625rem] leading-snug text-ink-soft">
-        {!started ? (
-          'seated'
-        ) : !seat.alive ? (
-          <span className="uppercase tracking-wide">out</span>
-        ) : reconnectingIn !== null ? (
-          <span className="uppercase tracking-wide text-ink">
-            reconnecting {reconnectingIn}s
+          <span className="min-w-0 flex-1 truncate">
+            {!started ? (
+              'seated'
+            ) : !seat.alive ? (
+              <span className="uppercase tracking-wide">out</span>
+            ) : reconnectingIn !== null ? (
+              <span className="uppercase tracking-wide text-ink">
+                reconnecting {reconnectingIn}s
+              </span>
+            ) : blocked ? (
+              <span className="uppercase tracking-wide">{blocked}</span>
+            ) : picked ? (
+              <span className="uppercase tracking-wide text-ink">your pick</span>
+            ) : seat.actor ? (
+              <span className="uppercase tracking-wide text-ink">active</span>
+            ) : (
+              'waiting'
+            )}
           </span>
-        ) : blocked ? (
-          <span className="uppercase tracking-wide">{blocked}</span>
-        ) : picked ? (
-          <span className="uppercase tracking-wide text-ink">your pick</span>
-        ) : seat.actor ? (
-          <span className="uppercase tracking-wide text-ink">active</span>
-        ) : (
-          'waiting'
-        )}
-      </span>
-
-      {seat.votes > 0 && <Tally count={seat.votes} />}
-
-      {/* Whatever the game wanted this seat to say — a clue, a revealed role, a
-          mark — arrives pre-worded. Set as a slip laid down in front of them,
-          on paper rather than a fill, so it survives the chair going yellow. */}
-      {seat.note && (
-        <span
-          className="mt-1 block truncate border border-ink bg-paper px-1.5 py-0.5 font-display text-[0.8125rem] leading-snug text-ink"
-          style={DISPLAY_HEADING}
-          title={seat.note}
-        >
-          {seat.note}
+          {isYou && <YouTag />}
         </span>
-      )}
+
+        {seat.votes > 0 && <Tally count={seat.votes} />}
+
+        {/* Whatever the game wanted this seat to say — a clue, a revealed role,
+            a mark — arrives pre-worded. Set as a slip laid on the card, on
+            white rather than a fill, so it survives the card going yellow. */}
+        {seat.note && (
+          <span
+            className="mt-2 block break-words bg-sheet-white px-2 py-1 font-display text-sm leading-snug text-ink outline outline-1 outline-ink/30"
+            style={DISPLAY_HEADING}
+          >
+            {seat.note}
+          </span>
+        )}
+      </span>
     </>
   )
 
-  const shell = `block w-full border-2 px-2.5 py-2 text-left transition-transform duration-300 ${fill} ${ink}`
+  const shell = `flex h-full w-full flex-col border-2 p-2 pb-3 text-left ${fill} ${ink}`
 
   if (!live) {
     return <div className={shell}>{body}</div>
@@ -509,7 +483,7 @@ function Chair({
       disabled={blocked !== null}
       title={blocked ?? undefined}
       onClick={() => targeting.onPick(seat.sessionId)}
-      className={`${shell} enabled:hover:bg-yellow disabled:opacity-40`}
+      className={`${shell} enabled:hover:bg-yellow disabled:cursor-not-allowed`}
     >
       {body}
     </button>
@@ -517,25 +491,22 @@ function Chair({
 }
 
 /**
- * Votes standing against a seat, counted the way a table actually counts them.
- *
- * A tally is a running total somebody kept by hand, which is what a vote count
- * is — and grouping in fives is what makes it countable at a glance, so the
- * digits would only be saying the same thing twice. They stay for screen
- * readers, which cannot see the strokes at all.
+ * Votes standing against a player, counted the way a table actually counts
+ * them: a tally somebody kept by hand, grouped in fives so it is countable at a
+ * glance. The digits stay for screen readers, which cannot see the strokes.
  */
 function Tally({ count }: { count: number }) {
   const groups = Math.ceil(count / 5)
 
   return (
-    <span className="mt-1 flex items-center gap-1.5">
+    <span className="mt-2 flex items-center gap-1.5">
       <svg
         aria-hidden="true"
-        height={13}
-        width={groups * 17}
+        height={16}
+        width={groups * 20}
         viewBox={`0 0 ${groups * 17} 13`}
-        className="shrink-0 stroke-ink"
-        strokeWidth={1.5}
+        className="shrink-0 stroke-pink"
+        strokeWidth={2}
         strokeLinecap="round"
       >
         {Array.from({ length: count }, (_, mark) => {
@@ -550,7 +521,7 @@ function Tally({ count }: { count: number }) {
         })}
       </svg>
 
-      <span className="sr-only">
+      <span className="font-mono text-xs tabular-nums text-ink">
         {count} vote{count === 1 ? '' : 's'}
       </span>
     </span>

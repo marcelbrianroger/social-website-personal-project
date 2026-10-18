@@ -7,6 +7,7 @@ import {
   ROLE_LABEL,
   type WerewolfTable,
 } from '@/lib/game/werewolf-view'
+import { RolePortrait } from '@/components/role-art'
 
 import { DISPLAY_HEADING, EYEBROW, PANEL } from './controls'
 
@@ -49,20 +50,21 @@ export function WerewolfRoleCard({
         <p className={EYEBROW}>your role</p>
 
         {dead && (
-          <p className="border border-ink px-1.5 font-mono text-[0.625rem] uppercase tracking-wide text-ink-soft">
+          <p className="border border-ink px-1.5 font-mono text-xs uppercase tracking-wide text-ink-soft">
             dead
           </p>
         )}
       </div>
 
-      <p
-        className="mt-1.5 font-display text-2xl leading-none"
-        style={DISPLAY_HEADING}
-      >
-        {role === null ? (waiting ? 'In next round' : 'Watching') : ROLE_LABEL[role]}
-      </p>
+      <div className="mt-1.5 flex items-end justify-between gap-3">
+        <p className="font-display text-2xl leading-none" style={DISPLAY_HEADING}>
+          {role === null ? (waiting ? 'In next round' : 'Watching') : ROLE_LABEL[role]}
+        </p>
 
-      <p className="mt-3 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-[0.6875rem] leading-relaxed text-ink">
+        {role !== null && <RolePortrait role={role} out={dead} />}
+      </div>
+
+      <p className="mt-3 border-l-4 border-pink bg-paper px-3 py-2 font-mono text-xs leading-relaxed text-ink">
         {role === null
           ? waiting
             ? 'You sat down after the roles were dealt, so this round runs without you. The next deal takes everyone at the table.'
@@ -93,7 +95,7 @@ export function WerewolfRoleCard({
           >
             {nicknameOf(table, table.yourLover) ?? 'someone'}
           </p>
-          <p className="mt-1.5 font-mono text-[0.625rem] leading-relaxed text-ink-soft">
+          <p className="mt-1.5 font-mono text-xs leading-relaxed text-ink-soft">
             Whichever of you dies first, the other goes in the same breath.
           </p>
         </div>
@@ -118,7 +120,7 @@ export function WerewolfRoleCard({
           <p className={EYEBROW}>what you have read</p>
           <ul className="mt-1 space-y-1">
             {Object.entries(table.inspections).map(([id, alignment]) => (
-              <li key={id} className="font-mono text-[0.6875rem] text-ink">
+              <li key={id} className="font-mono text-xs text-ink">
                 {nicknameOf(table, id) ?? id}
                 {' · '}
                 <span
@@ -138,7 +140,7 @@ export function WerewolfRoleCard({
 
       {/* --------------------------------------------------- the guard's log */}
       {role === 'guard' && table.lastProtected && (
-        <p className="mt-4 font-mono text-[0.625rem] leading-relaxed text-ink-soft">
+        <p className="mt-4 font-mono text-xs leading-relaxed text-ink-soft">
           Last night you covered{' '}
           <span className="text-ink">
             {nicknameOf(table, table.lastProtected) ?? '-'}
@@ -160,7 +162,7 @@ export function WerewolfRoleCard({
 
       {/* ---------------------------------------------- the hunter's promise */}
       {role === 'hunter' && (
-        <p className="mt-4 font-mono text-[0.625rem] leading-relaxed text-ink-soft">
+        <p className="mt-4 font-mono text-xs leading-relaxed text-ink-soft">
           Nothing to do at night. The moment you die you get one shot, and
           twenty seconds to decide who it is for.
         </p>
@@ -173,7 +175,7 @@ export function WerewolfRoleCard({
 function Potion({ label, spent }: { label: string; spent: boolean }) {
   return (
     <li
-      className={`flex-1 border-2 px-2 py-1 text-center font-mono text-[0.625rem] uppercase tracking-wide ${
+      className={`flex-1 border-2 px-2 py-1 text-center font-mono text-xs uppercase tracking-wide ${
         spent
           ? 'border-dashed border-rule text-ink-soft line-through'
           : 'border-ink bg-yellow text-ink'

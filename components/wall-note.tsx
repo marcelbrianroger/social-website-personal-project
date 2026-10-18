@@ -98,7 +98,7 @@ export function WallNote({
         // inside the panel would also land on the backdrop behind it.
         onClick={(event) => event.stopPropagation()}
         style={{ transformOrigin: 'center' }}
-        className="animate-pop-open relative my-auto w-full max-w-xl border-2 border-ink bg-stock px-6 pt-10 pb-6 sm:px-8"
+        className="animate-pop-open relative my-auto w-full max-w-xl border-2 border-ink bg-sheet-white px-6 pt-10 pb-6 sm:px-8"
       >
         {/* The same printed pin the slip carries, so this reads as that note. */}
         <span
@@ -110,7 +110,7 @@ export function WallNote({
           type="button"
           onClick={onClose}
           aria-label="Put the note back"
-          className="absolute right-3 top-3 px-1 font-mono text-[0.6875rem] text-ink-soft hover:bg-yellow hover:text-ink"
+          className="absolute right-3 top-3 px-1 font-mono text-xs text-ink-soft hover:bg-yellow hover:text-ink"
         >
           close
         </button>
@@ -119,7 +119,7 @@ export function WallNote({
           {note.body}
         </p>
 
-        <div className="mt-5 flex items-baseline justify-between gap-3 border-t border-rule pt-3 font-mono text-[0.6875rem] text-ink-soft">
+        <div className="mt-5 flex items-baseline justify-between gap-3 border-t border-rule pt-3 font-mono text-xs text-ink-soft">
           <span className="truncate">{note.nickname}</span>
           <span className="shrink-0">{timeLeft(note.expiresAt)}</span>
         </div>
@@ -141,7 +141,7 @@ export function WallNote({
                 <p className="whitespace-pre-wrap break-words text-[0.9375rem] leading-snug text-ink">
                   {reply.body}
                 </p>
-                <p className="mt-1.5 font-mono text-[0.6875rem] text-ink-soft">
+                <p className="mt-1.5 font-mono text-xs text-ink-soft">
                   {reply.nickname}
                 </p>
               </li>
@@ -196,12 +196,12 @@ export function WallNote({
         </form>
 
         {error && (
-          <p className="mt-3 border-2 border-pink px-3 py-2 font-mono text-[0.6875rem] text-ink">
+          <p className="mt-3 border-2 border-pink px-3 py-2 font-mono text-xs text-ink">
             {error}
           </p>
         )}
 
-        <div className="mt-3 flex items-baseline justify-between gap-3 font-mono text-[0.6875rem] leading-relaxed text-ink-soft">
+        <div className="mt-3 flex items-baseline justify-between gap-3 font-mono text-xs leading-relaxed text-ink-soft">
           <span>Replies come down with the note.</span>
 
           {/* Only once it is nearly relevant. A counter parked at 280 for the
